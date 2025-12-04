@@ -9,7 +9,7 @@ import { useBoard, addCard, voteCard, deleteCard, moveCard, updateBoardTimer, up
 import { useAuth } from '../../hooks/useAuth';
 import { useSnackbar } from '../../context/SnackbarContext';
 import { generateBoardSummary } from '../../services/ai';
-import { groupCardsSemantically } from '../../services/geminiService';
+import { groupCardsSemantically, generateDiscussionQuestions } from '../../services/geminiService';
 import jsPDF from 'jspdf';
 import * as XLSX from 'xlsx';
 
@@ -122,6 +122,8 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
   const [summaryStatus, setSummaryStatus] = useState<AISummaryStatus>(AISummaryStatus.IDLE);
   const [summaryResult, setSummaryResult] = useState<AISummaryResult | null>(null);
   const [isGrouping, setIsGrouping] = useState(false);
+  const [discussionQuestions, setDiscussionQuestions] = useState<string[] | null>(null);
+  const [isGeneratingQuestions, setIsGeneratingQuestions] = useState(false);
 
   // Timer
   const [timerInterval, setTimerInterval] = useState<ReturnType<typeof setInterval> | null>(null);
@@ -387,6 +389,27 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
     }
   };
 
+  const handleGenerateQuestions = async () => {
+    if (!board || cards.length < 3) {
+      showSnackbar("Need at least 3 cards to generate questions", "error");
+      return;
+    }
+    setIsGeneratingQuestions(true);
+    try {
+      const questions = await generateDiscussionQuestions(cards);
+      if (questions) {
+        setDiscussionQuestions(questions);
+      } else {
+        showSnackbar("Failed to generate questions. Try again.", "error");
+      }
+    } catch (e) {
+      console.error(e);
+      showSnackbar("AI Service Error", "error");
+    } finally {
+      setIsGeneratingQuestions(false);
+    }
+  };
+
   // --- Exports ---
 
   const exportPDF = () => {
@@ -577,6 +600,17 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
 
           {user?.uid === board.createdBy && (
             <button
+              onClick={handleGenerateQuestions}
+              disabled={isGeneratingQuestions}
+              className="flex items-center gap-2 px-4 py-2 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition-all text-sm font-bold font-mono disabled:opacity-50"
+            >
+              {isGeneratingQuestions ? <span className="animate-spin">🤖</span> : <span>🤖</span>}
+              {isGeneratingQuestions ? 'Thinking...' : 'Copilot'}
+            </button>
+          )}
+
+          {user?.uid === board.createdBy && (
+            <button
               onClick={handleGenerateSummary}
               disabled={summaryStatus === AISummaryStatus.LOADING}
               className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-dark-900 border border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-dark-800 transition-all text-sm font-bold font-mono disabled:opacity-50 disabled:cursor-not-allowed"
@@ -638,6 +672,48 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
           <HeaderDropdown user={user} onLogout={handleLogout} />
         </div>
       </div>
+
+
+
+      {/* Discussion Questions Modal */}
+      {discussionQuestions && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-300">
+          <div className="bg-white dark:bg-dark-900 rounded-xl shadow-2xl max-w-2xl w-full p-8 border border-indigo-100 dark:border-indigo-900/50 relative">
+            <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl blur opacity-20 -z-10"></div>
+            
+            <div className="flex justify-between items-start mb-6">
+              <div>
+                <h2 className="text-2xl font-bold dark:text-white mb-1 font-mono flex items-center gap-2">
+                  🤖 Facilitator Copilot
+                </h2>
+                <p className="text-indigo-600 dark:text-indigo-400 text-xs font-mono uppercase tracking-widest">Deep Dive Questions</p>
+              </div>
+              <button onClick={() => setDiscussionQuestions(null)} className="text-gray-400 hover:text-gray-900 dark:hover:text-white text-2xl">×</button>
+            </div>
+
+            <div className="space-y-4 mb-8">
+              {discussionQuestions.map((q, i) => (
+                <div key={i} className="p-4 bg-indigo-50 dark:bg-indigo-900/10 border border-indigo-100 dark:border-indigo-800 rounded-lg">
+                  <p className="text-lg text-gray-800 dark:text-gray-200 font-medium leading-relaxed">"{q}"</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex justify-end gap-3">
+              <button 
+                onClick={() => {
+                  navigator.clipboard.writeText(discussionQuestions.join('\n\n'));
+                  showSnackbar("Questions copied!", "success");
+                }}
+                className="px-4 py-2 bg-white dark:bg-dark-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-bold rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Copy All
+              </button>
+              <button onClick={() => setDiscussionQuestions(null)} className="px-6 py-2 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-700 transition-colors">Done</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* AI Summary Modal Overlay */}
       {summaryResult && (

@@ -117,3 +117,56 @@ export const groupCardsSemantically = async (cards: RetroCard[]): Promise<{ [key
     return null;
   }
 };
+
+export const generateDiscussionQuestions = async (cards: RetroCard[]): Promise<string[] | null> => {
+  const genAI = getAIClient();
+  if (!genAI) return null;
+
+  if (cards.length < 3) return null;
+
+  const model = genAI.getGenerativeModel({
+    model: "gemini-1.5-flash",
+    generationConfig: {
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: SchemaType.OBJECT,
+        properties: {
+          questions: {
+            type: SchemaType.ARRAY,
+            items: { type: SchemaType.STRING },
+            description: "3-5 open-ended discussion questions."
+          }
+        }
+      }
+    }
+  });
+
+  const cardsText = cards.map(c => `- ${c.text} (Votes: ${c.votes})`).join('\n');
+  const prompt = `
+    You are an expert Agile Coach. Analyze these retrospective cards and generate 3-5 deep, open-ended discussion questions.
+    Focus on:
+    1. Identifying underlying patterns or conflicts.
+    2. Encouraging the team to find root causes.
+    3. Moving from complaints to constructive action.
+    
+    Avoid generic questions like "What went well?". Be specific to the content.
+
+    Cards:
+    ${cardsText}
+  `;
+
+  try {
+    const result = await model.generateContent(prompt);
+    const response = result.response;
+    const text = response.text();
+
+    if (text) {
+      const parsed = JSON.parse(text);
+      return parsed.questions || [];
+    }
+    return null;
+  } catch (error) {
+    console.error("Gemini Questions Error:", error);
+    throw error;
+  }
+};

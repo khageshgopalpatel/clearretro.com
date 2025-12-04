@@ -22,16 +22,20 @@ service cloud.firestore {
         return get(/databases/$(database)/documents/boards/$(boardId)).data.isPublic == true;
       }
 
+      function isBoardOwner() {
+        return get(/databases/$(database)/documents/boards/$(boardId)).data.createdBy == request.auth.uid;
+      }
+
       match /cards/{cardId} {
         allow read: if isAuthenticated() || isBoardPublic();
         allow create: if isAuthenticated() || isBoardPublic();
         allow update: if isAuthenticated() || isBoardPublic(); // Allow guests to vote/edit if public
-        allow delete: if isAuthenticated() && isCreator(resource); // Only creators can delete (guests can't delete unless we track their ID locally in doc)
+        allow delete: if isAuthenticated() && (isCreator(resource) || isBoardOwner());
 
         match /replies/{replyId} {
           allow read: if isAuthenticated() || isBoardPublic();
           allow create: if isAuthenticated() || isBoardPublic();
-          allow update, delete: if isAuthenticated() && isCreator(resource);
+          allow update, delete: if isAuthenticated() && (isCreator(resource) || isBoardOwner());
         }
       }
 
