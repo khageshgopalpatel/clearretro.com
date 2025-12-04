@@ -1,0 +1,254 @@
+
+import React, { useState } from 'react';
+
+const Landing: React.FC = () => {
+   const faqs = [
+      {
+         q: "Is Clear Retro completely free?",
+         a: "Yes. We offer a generous free tier that includes unlimited boards and up to 5 participants per session. No credit card is required to get started."
+      },
+      {
+         q: "Do participants need an account?",
+         a: "No. We believe in removing friction. You can share a secure link, and teammates can join your board instantly as guests. Only the facilitator needs an account (optional for free tier)."
+      },
+      {
+         q: "How does the AI grouping work?",
+         a: "We use Google's Gemini 2.0 Flash model. It analyzes the semantic meaning of every card on the board and groups them into themes (e.g., 'Deployment', 'Communication') automatically, saving you 15 minutes per retro."
+      },
+      {
+         q: "Is my data secure?",
+         a: "Absolutely. All data is encrypted in transit and at rest. AI processing is stateless—your retrospective data is never used to train Google's models."
+      },
+      {
+         q: "Can I export the results?",
+         a: "Yes. You can export your board to a formatted PDF report for stakeholders or a CSV/Excel file for data analysis."
+      }
+   ];
+
+   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
+
+   const structuredData = {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": faqs.map(f => ({
+         "@type": "Question",
+         "name": f.q,
+         "acceptedAnswer": {
+            "@type": "Answer",
+            "text": f.a
+         }
+      }))
+   };
+
+   return (
+      <div className="relative overflow-hidden selection:bg-brand-500 selection:text-white">
+         {/* Inject JSON-LD */}
+         <script type="application/ld+json">{JSON.stringify(structuredData)}</script>
+
+         {/* Background Decor */}
+         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[1000px] bg-gradient-to-b from-brand-50/50 via-transparent to-transparent dark:from-brand-900/10 pointer-events-none" />
+         <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] bg-purple-500/10 rounded-full mix-blend-screen filter blur-[100px] opacity-30 animate-blob dark:bg-purple-900/20"></div>
+         <div className="absolute top-[-20%] right-[-10%] w-[600px] h-[600px] bg-brand-500/10 rounded-full mix-blend-screen filter blur-[100px] opacity-30 animate-blob animation-delay-2000 dark:bg-brand-900/20"></div>
+
+         {/* Hero Section */}
+         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16 lg:pt-32">
+            <div className="text-center max-w-4xl mx-auto">
+               <div className="inline-flex items-center px-4 py-1.5 rounded-full bg-brand-50/50 dark:bg-brand-900/20 text-brand-700 dark:text-brand-300 text-xs font-mono font-semibold mb-8 border border-brand-100 dark:border-brand-800/50 backdrop-blur-sm hover:border-brand-500/50 transition-colors cursor-default">
+                  <span className="animate-pulse w-2 h-2 bg-brand-500 rounded-full mr-2 shadow-[0_0_10px_rgba(45,212,191,0.6)]"></span>
+                  V2.0 Now Live: AI-Powered Grouping
+               </div>
+
+               <h1 className="text-5xl tracking-tight font-extrabold text-gray-900 dark:text-white sm:text-7xl md:text-8xl mb-8 font-mono leading-tight">
+                  Agile Retros <br />
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-500 via-brand-400 to-purple-500 animate-gradient">Reimagined</span>
+               </h1>
+
+               <p className="mt-8 text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto leading-relaxed font-light">
+                  The <span className="text-gray-900 dark:text-white font-medium">fastest</span> way for engineering teams to improve. Zero clutter, keyboard-first, and supercharged with Gemini AI.
+               </p>
+
+               <div className="mt-12 flex flex-col sm:flex-row justify-center gap-6">
+                  <a
+                     href="/dashboard"
+                     className="group relative px-8 py-4 bg-gray-900 dark:bg-white text-white dark:text-black text-lg font-bold rounded-xl shadow-[0_0_20px_rgba(0,0,0,0.2)] dark:shadow-[0_0_20px_rgba(255,255,255,0.3)] hover:shadow-[0_0_30px_rgba(45,212,191,0.4)] hover:-translate-y-1 transition-all duration-300 flex flex-col items-center border border-transparent hover:border-brand-500 overflow-hidden"
+                  >
+                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
+                     <span className="relative z-10">Start Free Retro →</span>
+                  </a>
+               </div>
+            </div>
+
+            {/* Demo Video Window */}
+            <div className="mt-24 max-w-6xl mx-auto">
+               <div className="relative rounded-xl overflow-hidden border border-gray-200 dark:border-gray-800/50 shadow-2xl bg-gray-900 aspect-video group cursor-pointer backdrop-blur-sm">
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent z-10"></div>
+
+                  {/* Fake UI Header */}
+                  <div className="absolute top-0 left-0 right-0 h-10 bg-black/40 border-b border-white/10 flex items-center px-4 gap-2 z-20 backdrop-blur-md">
+                     <div className="w-3 h-3 rounded-full bg-red-500/80"></div>
+                     <div className="w-3 h-3 rounded-full bg-yellow-500/80"></div>
+                     <div className="w-3 h-3 rounded-full bg-green-500/80"></div>
+                     <div className="ml-4 px-3 py-1 bg-white/10 rounded-md text-[10px] text-gray-400 font-mono w-64">clear-retro.com/board/demo</div>
+                  </div>
+
+                  <div className="absolute inset-0 flex items-center justify-center z-30 group-hover:scale-105 transition-transform duration-500">
+                     <div className="w-24 h-24 bg-brand-500/20 backdrop-blur-md rounded-full flex items-center justify-center border border-brand-400/50 shadow-[0_0_30px_rgba(45,212,191,0.3)] group-hover:bg-brand-500/30 transition-all">
+                        <div className="w-0 h-0 border-t-[12px] border-t-transparent border-l-[22px] border-l-brand-50 border-b-[12px] border-b-transparent ml-2"></div>
+                     </div>
+                  </div>
+
+                  <img src="https://placehold.co/1200x675/09090b/2dd4bf?text=Clear+Retro+UI+Demo" alt="Clear Retro Dashboard Demo" className="w-full h-full object-cover opacity-90" />
+               </div>
+            </div>
+         </div>
+
+         {/* Social Proof */}
+         <div className="border-y border-gray-200 dark:border-gray-800 bg-white/50 dark:bg-black/50 backdrop-blur-sm py-12">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+               <p className="text-center text-xs font-mono font-bold text-gray-400 uppercase tracking-[0.2em] mb-8">Powering Engineering Teams At</p>
+               <div className="grid grid-cols-2 md:grid-cols-4 gap-12 opacity-50 grayscale hover:grayscale-0 transition-all duration-700">
+                  <div className="flex items-center justify-center text-2xl font-black dark:text-white font-mono tracking-tighter hover:text-brand-500 cursor-default">ACME_CORP</div>
+                  <div className="flex items-center justify-center text-2xl font-black dark:text-white font-mono tracking-tighter hover:text-brand-500 cursor-default">CYBERDYNE</div>
+                  <div className="flex items-center justify-center text-2xl font-black dark:text-white font-mono tracking-tighter hover:text-brand-500 cursor-default">MASSIVE_DYNAMIC</div>
+                  <div className="flex items-center justify-center text-2xl font-black dark:text-white font-mono tracking-tighter hover:text-brand-500 cursor-default">GLOBEX</div>
+               </div>
+            </div>
+         </div>
+
+         {/* How It Works (UX Improvement) */}
+         <div className="py-24 bg-gray-50 dark:bg-[#08080a] relative">
+            <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-brand-500/50 to-transparent"></div>
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+               <div className="text-center mb-16">
+                  <h2 className="text-3xl font-bold text-gray-900 dark:text-white font-mono mb-4">Streamlined Workflow</h2>
+                  <p className="text-gray-500 dark:text-gray-400">From chaos to action items in three simple steps.</p>
+               </div>
+
+               <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                  {/* Step 1 */}
+                  <div className="relative p-8 bg-white dark:bg-dark-900 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm hover:border-brand-500/50 transition-colors group">
+                     <div className="absolute -top-4 -left-4 w-10 h-10 bg-gray-900 dark:bg-white text-white dark:text-black rounded-lg flex items-center justify-center font-bold font-mono shadow-lg group-hover:scale-110 transition-transform">1</div>
+                     <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 font-mono mt-2">Create & Share</h3>
+                     <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+                        Spin up a new board in seconds using templates like Start/Stop/Continue. Share one link, no login required for guests.
+                     </p>
+                  </div>
+
+                  {/* Step 2 */}
+                  <div className="relative p-8 bg-white dark:bg-dark-900 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm hover:border-brand-500/50 transition-colors group">
+                     <div className="absolute -top-4 -left-4 w-10 h-10 bg-gray-900 dark:bg-white text-white dark:text-black rounded-lg flex items-center justify-center font-bold font-mono shadow-lg group-hover:scale-110 transition-transform">2</div>
+                     <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 font-mono mt-2">Brainstorm & Group</h3>
+                     <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+                        Team members add cards in real-time. Use <strong>Private Mode</strong> to avoid bias, then let <strong>Gemini AI</strong> group duplicates instantly.
+                     </p>
+                  </div>
+
+                  {/* Step 3 */}
+                  <div className="relative p-8 bg-white dark:bg-dark-900 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm hover:border-brand-500/50 transition-colors group">
+                     <div className="absolute -top-4 -left-4 w-10 h-10 bg-gray-900 dark:bg-white text-white dark:text-black rounded-lg flex items-center justify-center font-bold font-mono shadow-lg group-hover:scale-110 transition-transform">3</div>
+                     <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 font-mono mt-2">Vote & Act</h3>
+                     <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+                        Upvote the most critical issues. Assign action items and export the results to PDF or CSV for your next sprint planning.
+                     </p>
+                  </div>
+               </div>
+            </div>
+         </div>
+
+         {/* Feature Highlight / Content */}
+         <div className="py-24 bg-white dark:bg-dark-950">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+               <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+                  <div>
+                     <h2 className="text-3xl font-bold text-gray-900 dark:text-white font-mono mb-6">Designed for Psychological Safety</h2>
+                     <div className="prose dark:prose-invert">
+                        <p className="text-lg text-gray-500 dark:text-gray-400 mb-6 leading-relaxed">
+                           A retrospective is only as good as the honesty of the feedback. Clear Retro is built with <strong className="text-brand-600 dark:text-brand-400">Psychological Safety</strong> at its core.
+                        </p>
+                        <ul className="space-y-4 mb-8">
+                           <li className="flex items-start">
+                              <span className="flex-shrink-0 w-6 h-6 bg-green-100 dark:bg-green-900/30 text-green-600 rounded-full flex items-center justify-center mr-3 mt-1 text-xs">✓</span>
+                              <span className="text-gray-600 dark:text-gray-300"><strong>Anonymous Guest Mode:</strong> Teammates can voice difficult concerns without fear.</span>
+                           </li>
+                           <li className="flex items-start">
+                              <span className="flex-shrink-0 w-6 h-6 bg-green-100 dark:bg-green-900/30 text-green-600 rounded-full flex items-center justify-center mr-3 mt-1 text-xs">✓</span>
+                              <span className="text-gray-600 dark:text-gray-300"><strong>Blur Mode:</strong> Prevent "anchoring bias" by hiding feedback until everyone has submitted.</span>
+                           </li>
+                           <li className="flex items-start">
+                              <span className="flex-shrink-0 w-6 h-6 bg-green-100 dark:bg-green-900/30 text-green-600 rounded-full flex items-center justify-center mr-3 mt-1 text-xs">✓</span>
+                              <span className="text-gray-600 dark:text-gray-300"><strong>Focus View:</strong> Discuss one card at a time to ensure everyone is heard.</span>
+                           </li>
+                        </ul>
+                     </div>
+                     <a href="/features" className="text-brand-600 dark:text-brand-400 font-bold hover:underline font-mono">Explore all features →</a>
+                  </div>
+                  <div className="relative group">
+                     <div className="absolute -inset-1 bg-gradient-to-r from-brand-500 to-purple-600 rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000"></div>
+                     <div className="relative bg-gray-900 rounded-2xl p-4 border border-gray-800 shadow-2xl">
+                        <img src="https://placehold.co/800x600/18181b/ffffff?text=Private+Mode+Enabled" alt="Private Mode Feature" className="rounded-lg opacity-90" width="800" height="600" />
+                     </div>
+                  </div>
+               </div>
+            </div>
+         </div>
+
+         {/* Comparison Grid */}
+         <div className="py-20 bg-gray-50 dark:bg-[#08080a] border-y border-gray-200 dark:border-gray-800">
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+               <h2 className="text-2xl font-bold text-gray-900 dark:text-white font-mono mb-8">Compare vs The Competition</h2>
+               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <a href="/vs/funretro" className="p-4 bg-white dark:bg-dark-900 border border-gray-200 dark:border-gray-800 rounded-xl hover:border-brand-500 hover:shadow-[0_0_15px_rgba(45,212,191,0.2)] transition-all">
+                     <span className="block text-xs text-gray-500 uppercase tracking-widest mb-1">vs</span>
+                     <span className="font-bold text-gray-900 dark:text-white">FunRetro</span>
+                  </a>
+                  <a href="/vs/easyretro" className="p-4 bg-white dark:bg-dark-900 border border-gray-200 dark:border-gray-800 rounded-xl hover:border-brand-500 hover:shadow-[0_0_15px_rgba(45,212,191,0.2)] transition-all">
+                     <span className="block text-xs text-gray-500 uppercase tracking-widest mb-1">vs</span>
+                     <span className="font-bold text-gray-900 dark:text-white">EasyRetro</span>
+                  </a>
+                  <a href="/vs/metroretro" className="p-4 bg-white dark:bg-dark-900 border border-gray-200 dark:border-gray-800 rounded-xl hover:border-brand-500 hover:shadow-[0_0_15px_rgba(45,212,191,0.2)] transition-all">
+                     <span className="block text-xs text-gray-500 uppercase tracking-widest mb-1">vs</span>
+                     <span className="font-bold text-gray-900 dark:text-white">Metro Retro</span>
+                  </a>
+                  <a href="/vs/retrospected" className="p-4 bg-white dark:bg-dark-900 border border-gray-200 dark:border-gray-800 rounded-xl hover:border-brand-500 hover:shadow-[0_0_15px_rgba(45,212,191,0.2)] transition-all">
+                     <span className="block text-xs text-gray-500 uppercase tracking-widest mb-1">vs</span>
+                     <span className="font-bold text-gray-900 dark:text-white">Retrospected</span>
+                  </a>
+               </div>
+            </div>
+         </div>
+
+         {/* FAQ Section */}
+         <div className="py-24 bg-white dark:bg-dark-950">
+            <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+               <div className="text-center mb-12">
+                  <h2 className="text-3xl font-bold text-gray-900 dark:text-white font-mono mb-4">Frequently Asked Questions</h2>
+                  <p className="text-gray-500 dark:text-gray-400">Everything you need to know about Clear Retro.</p>
+               </div>
+
+               <div className="space-y-4">
+                  {faqs.map((faq, index) => (
+                     <div key={index} className="border border-gray-200 dark:border-gray-800 rounded-2xl bg-gray-50 dark:bg-dark-900 overflow-hidden">
+                        <button
+                           onClick={() => setOpenFaqIndex(openFaqIndex === index ? null : index)}
+                           className="w-full flex justify-between items-center p-6 text-left focus:outline-none hover:bg-white dark:hover:bg-dark-800 transition-colors"
+                        >
+                           <span className="font-bold text-gray-900 dark:text-white font-mono">{faq.q}</span>
+                           <span className={`transform transition-transform duration-200 text-brand-500 text-xl font-bold ${openFaqIndex === index ? 'rotate-180' : ''}`}>
+                              ↓
+                           </span>
+                        </button>
+                        <div className={`transition-all duration-300 ease-in-out overflow-hidden ${openFaqIndex === index ? 'max-h-48 opacity-100' : 'max-h-0 opacity-0'}`}>
+                           <div className="p-6 pt-0 text-gray-600 dark:text-gray-400 leading-relaxed text-sm border-t border-gray-100 dark:border-gray-800/50 mt-2">
+                              {faq.a}
+                           </div>
+                        </div>
+                     </div>
+                  ))}
+               </div>
+            </div>
+         </div>
+      </div>
+   );
+};
+
+export default Landing;

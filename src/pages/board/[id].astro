@@ -1,0 +1,10 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Board from '../../components/pages/Board';
+
+const { id } = Astro.params;
+---
+
+<Layout title={`Retro Board ${id} | Clear Retro`}>
+  <Board client:only="react" id={id} />
+</Layout>

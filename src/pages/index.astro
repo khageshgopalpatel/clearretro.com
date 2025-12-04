@@ -1,0 +1,10 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Landing from '../components/pages/Landing';
+
+export const prerender = true;
+---
+
+<Layout title="Clear Retro | Real-Time Agile Retrospective Tool for Developers">
+  <Landing client:load />
+</Layout>

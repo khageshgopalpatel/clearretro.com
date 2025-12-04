@@ -1,0 +1,9 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Contact from '../components/pages/Contact';
+
+export const prerender = true;
+---
+<Layout title="Contact Us | Clear Retro">
+  <Contact client:load />
+</Layout>

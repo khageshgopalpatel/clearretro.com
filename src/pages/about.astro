@@ -1,0 +1,9 @@
+---
+import Layout from '../layouts/Layout.astro';
+import About from '../components/pages/About';
+
+export const prerender = true;
+---
+<Layout title="About | Clear Retro">
+  <About client:load />
+</Layout>

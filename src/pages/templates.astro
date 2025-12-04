@@ -1,0 +1,9 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Templates from '../components/pages/Templates';
+
+export const prerender = true;
+---
+<Layout title="Templates | Clear Retro">
+  <Templates client:load />
+</Layout>

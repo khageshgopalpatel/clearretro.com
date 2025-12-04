@@ -1,0 +1,9 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Blog from '../../components/pages/Blog';
+
+export const prerender = true;
+---
+<Layout title="Blog | Clear Retro">
+  <Blog client:load />
+</Layout>

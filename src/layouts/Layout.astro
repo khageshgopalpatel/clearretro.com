@@ -1,0 +1,51 @@
+---
+import Header from '../components/Header';
+import Footer from '../components/Footer';
+import '../styles/global.css';
+
+interface Props {
+	title: string;
+	description?: string;
+}
+
+const { title, description = "The minimalist, real-time Agile Retrospective tool designed for high-performing engineering teams." } = Astro.props;
+const currentPath = Astro.url.pathname;
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<meta name="generator" content={Astro.generator} />
+		<title>{title}</title>
+		<meta name="description" content={description} />
+		<meta name="keywords" content="agile retrospective, scrum retro, sprint retrospective tool, developer tools, remote team collaboration, AI retrospective, start stop continue" />
+		
+		<!-- Open Graph / Facebook -->
+		<meta property="og:type" content="website" />
+		<meta property="og:url" content="https://clear-retro.com/" />
+		<meta property="og:title" content="Clear Retro - Developer Focused Retrospectives" />
+		<meta property="og:description" content="Conduct focused, efficient sprint retrospectives with real-time sync and AI insights." />
+		<meta property="og:image" content="https://clear-retro.com/og-image.jpg" />
+
+		<!-- Twitter -->
+		<meta property="twitter:card" content="summary_large_image" />
+		<meta property="twitter:title" content="Clear Retro - Developer Focused Retrospectives" />
+		<meta property="twitter:description" content="The no-fluff retrospective tool built for developers." />
+
+		<link rel="preconnect" href="https://fonts.googleapis.com">
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+		<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@100..800&display=swap" rel="stylesheet">
+	</head>
+	<body class="bg-grid-pattern text-gray-900 dark:text-gray-100 transition-colors duration-200 antialiased selection:bg-brand-500 selection:text-white">
+		<div class="min-h-screen flex flex-col transition-colors duration-300 font-mono">
+			<Header client:load currentPath={currentPath} />
+			<main class="flex-grow">
+				<slot />
+			</main>
+			<Footer />
+		</div>
+	</body>
+</html>
