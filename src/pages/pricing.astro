@@ -1,9 +1,10 @@
 ---
-import Layout from '../layouts/Layout.astro';
-import Pricing from '../components/pages/Pricing';
+import Layout from "../layouts/Layout.astro";
+import PricingComponent from "../components/pages/Pricing";
 
 export const prerender = true;
 ---
+
 <Layout title="Pricing | Clear Retro">
-  <Pricing client:load />
+  <PricingComponent client:load />
 </Layout>

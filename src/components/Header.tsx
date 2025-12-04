@@ -43,9 +43,9 @@ const Header: React.FC<HeaderProps> = ({ currentPath }) => {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between items-center h-16">
                     <a href="/" className="flex items-center space-x-3 group">
-                        <div className="relative w-8 h-8 bg-black dark:bg-white rounded-lg flex items-center justify-center overflow-hidden">
+                        <div className="relative w-8 h-8 flex items-center justify-center overflow-hidden">
                             <div className="absolute inset-0 bg-brand-500 opacity-20 group-hover:opacity-40 transition-opacity"></div>
-                            <span className="text-white dark:text-black font-bold text-sm tracking-tighter">CR</span>
+                            <img src="/logo.svg" alt="Logo" className="w-full h-full object-contain" />
                         </div>
                         <span className="font-bold text-lg tracking-tight text-gray-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">Clear Retro</span>
                     </a>
@@ -57,8 +57,8 @@ const Header: React.FC<HeaderProps> = ({ currentPath }) => {
                                 key={link.path}
                                 href={link.path}
                                 className={`text-sm font-medium transition-all duration-200 ${currentPath === link.path || (link.path === '/blog' && currentPath.startsWith('/blog'))
-                                        ? 'text-brand-600 dark:text-brand-400'
-                                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                                    ? 'text-brand-600 dark:text-brand-400'
+                                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                                     }`}
                             >
                                 {link.label}

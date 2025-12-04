@@ -11,34 +11,43 @@ export interface RetroCard {
   columnId: string;
   text: string;
   votes: number;
-  userId: string;
-  createdAt: number;
-  isRevealed: boolean; // For private mode
-  mergedIds?: string[]; // IDs of cards merged into this one
+  createdBy: string;
+  creatorName?: string;
+  createdAt: any; // Firestore Timestamp
+  isRevealed?: boolean;
+  votedBy?: string[];
+  reactions?: Record<string, string[]>;
+  mergedFrom?: string[];
+  isActionItem?: boolean;
+  isDone?: boolean;
+  assigneeId?: string;
+  assigneeName?: string;
+  order?: number;
 }
 
 export interface RetroColumn {
   id: string;
   title: string;
-  color: string; // Tailwind color class suffix e.g., 'red-500'
+  color: string;
 }
 
 export interface RetroBoard {
   id: string;
-  title: string;
-  ownerId: string;
-  createdAt: number;
+  name: string; // Was title
+  createdBy: string; // Was ownerId
+  createdAt: any; // Firestore Timestamp
   columns: RetroColumn[];
-  cards: RetroCard[];
-  timer: {
-    isActive: boolean;
-    timeLeft: number; // in seconds
-    endTime?: number; // Timestamp when timer ends (for robust sync)
+  templateName?: string;
+  // cards: RetroCard[]; // Cards are subcollection now
+  timer?: {
+    status: 'running' | 'stopped';
+    duration: number;
+    endTime?: any; // Firestore Timestamp
   };
-  settings: {
-    isPrivate: boolean; // Blur cards
-    isFocusMode: boolean;
-  };
+  isPrivate?: boolean;
+  isPublic?: boolean;
+  teamId?: string | null;
+  status?: 'active' | 'completed';
 }
 
 export interface BoardTemplate {
@@ -58,4 +67,14 @@ export interface AISummaryResult {
   executiveSummary: string;
   sentimentScore: number;
   actionItems: string[];
+}
+
+export interface Team {
+  id: string;
+  name: string;
+  members: { uid: string; displayName: string }[];
+  admins: string[];
+  createdBy: string;
+  createdAt: any;
+  isAdmin?: boolean; // Computed property
 }

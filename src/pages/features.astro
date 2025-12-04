@@ -1,9 +1,10 @@
 ---
-import Layout from '../layouts/Layout.astro';
-import Features from '../components/pages/Features';
+import Layout from "../layouts/Layout.astro";
+import FeaturesComponent from "../components/pages/Features";
 
 export const prerender = true;
 ---
+
 <Layout title="Features | Clear Retro">
-  <Features client:load />
+  <FeaturesComponent client:load />
 </Layout>

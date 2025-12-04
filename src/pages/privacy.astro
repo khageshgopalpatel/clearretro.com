@@ -1,9 +1,10 @@
 ---
-import Layout from '../layouts/Layout.astro';
-import Privacy from '../components/pages/Privacy';
+import Layout from "../layouts/Layout.astro";
+import PrivacyComponent from "../components/pages/Privacy";
 
 export const prerender = true;
 ---
+
 <Layout title="Privacy Policy | Clear Retro">
-  <Privacy client:load />
+  <PrivacyComponent client:load />
 </Layout>

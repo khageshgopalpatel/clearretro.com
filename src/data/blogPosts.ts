@@ -157,7 +157,7 @@ export const BLOG_POSTS: BlogPost[] = [
       <h2 class="text-2xl font-bold text-gray-900 dark:text-white mt-10 mb-4 font-mono">Top Contenders</h2>
       
       <h3 class="text-xl font-bold text-gray-800 dark:text-gray-200 mt-6 mb-2">1. Clear Retro</h3>
-      <p class="mb-4">Built specifically for engineering teams. It strips away the clutter of generic whiteboards to focus on pure speed and insights. Features Gemini AI for sentiment analysis.</p>
+      <p class="mb-4">Built specifically for engineering teams. It strips away the clutter of generic whiteboards to focus on pure speed and insights. Features AI for sentiment analysis.</p>
 
       <h3 class="text-xl font-bold text-gray-800 dark:text-gray-200 mt-6 mb-2">2. Miro / Mural</h3>
       <p class="mb-4">Great for infinite canvas freedom, but can be overwhelming and resource-heavy for simple retro sessions.</p>

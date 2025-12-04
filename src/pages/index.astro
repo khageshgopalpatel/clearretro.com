@@ -1,10 +1,29 @@
 ---
-import Layout from '../layouts/Layout.astro';
-import Landing from '../components/pages/Landing';
+import Layout from "../layouts/Layout.astro";
+import Landing from "../components/pages/Landing";
+import { faqs } from "../data/faqs";
 
 export const prerender = true;
+
+const structuredData = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: f.a,
+    },
+  })),
+};
 ---
 
 <Layout title="Clear Retro | Real-Time Agile Retrospective Tool for Developers">
+  <script
+    type="application/ld+json"
+    slot="head"
+    set:html={JSON.stringify(structuredData)}
+  />
   <Landing client:load />
 </Layout>

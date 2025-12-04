@@ -1,9 +1,10 @@
 ---
-import Layout from '../layouts/Layout.astro';
-import Terms from '../components/pages/Terms';
+import Layout from "../layouts/Layout.astro";
+import TermsComponent from "../components/pages/Terms";
 
 export const prerender = true;
 ---
+
 <Layout title="Terms of Service | Clear Retro">
-  <Terms client:load />
+  <TermsComponent client:load />
 </Layout>

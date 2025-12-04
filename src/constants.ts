@@ -1,4 +1,4 @@
-import { BoardTemplate } from './types';
+import type { BoardTemplate } from './types';
 
 export const BOARD_TEMPLATES: BoardTemplate[] = [
   {

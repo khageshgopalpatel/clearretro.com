@@ -1,18 +1,38 @@
-import { GoogleGenAI, Type } from "@google/genai";
+import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
 import type { RetroCard, AISummaryResult } from '../types';
 
 const getAIClient = () => {
-  const apiKey = process.env.API_KEY;
+  const apiKey = import.meta.env.PUBLIC_GEMINI_API_KEY;
   if (!apiKey) {
-    console.error("API_KEY is missing");
+    console.error("PUBLIC_GEMINI_API_KEY is missing");
     return null;
   }
-  return new GoogleGenAI({ apiKey });
+  return new GoogleGenerativeAI(apiKey);
 };
 
 export const generateRetroSummary = async (cards: RetroCard[]): Promise<AISummaryResult | null> => {
-  const ai = getAIClient();
-  if (!ai) return null;
+  const genAI = getAIClient();
+  if (!genAI) return null;
+
+  const model = genAI.getGenerativeModel({
+    model: "gemini-1.5-flash",
+    generationConfig: {
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: SchemaType.OBJECT,
+        properties: {
+          executiveSummary: { type: SchemaType.STRING, description: "A concise 2-3 sentence summary of the retro." },
+          sentimentScore: { type: SchemaType.NUMBER, description: "A score from 1 (Negative) to 10 (Positive)." },
+          actionItems: {
+            type: SchemaType.ARRAY,
+            items: { type: SchemaType.STRING },
+            description: "3 suggested action items based on the feedback."
+          }
+        },
+        required: ["executiveSummary", "sentimentScore", "actionItems"]
+      }
+    }
+  });
 
   const cardsText = cards.map(c => `- ${c.text} (Votes: ${c.votes})`).join('\n');
   const prompt = `
@@ -22,29 +42,12 @@ export const generateRetroSummary = async (cards: RetroCard[]): Promise<AISummar
   `;
 
   try {
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: prompt,
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            executiveSummary: { type: Type.STRING, description: "A concise 2-3 sentence summary of the retro." },
-            sentimentScore: { type: Type.NUMBER, description: "A score from 1 (Negative) to 10 (Positive)." },
-            actionItems: {
-              type: Type.ARRAY,
-              items: { type: Type.STRING },
-              description: "3 suggested action items based on the feedback."
-            }
-          },
-          required: ["executiveSummary", "sentimentScore", "actionItems"]
-        }
-      }
-    });
+    const result = await model.generateContent(prompt);
+    const response = result.response;
+    const text = response.text();
 
-    if (response.text) {
-      return JSON.parse(response.text) as AISummaryResult;
+    if (text) {
+      return JSON.parse(text) as AISummaryResult;
     }
     return null;
   } catch (error) {
@@ -54,10 +57,32 @@ export const generateRetroSummary = async (cards: RetroCard[]): Promise<AISummar
 };
 
 export const groupCardsSemantically = async (cards: RetroCard[]): Promise<{ [key: string]: string[] } | null> => {
-  const ai = getAIClient();
-  if (!ai) return null;
+  const genAI = getAIClient();
+  if (!genAI) return null;
 
   if (cards.length < 3) return null;
+
+  const model = genAI.getGenerativeModel({
+    model: "gemini-1.5-flash",
+    generationConfig: {
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: SchemaType.OBJECT,
+        properties: {
+          groups: {
+            type: SchemaType.ARRAY,
+            items: {
+              type: SchemaType.OBJECT,
+              properties: {
+                groupName: { type: SchemaType.STRING },
+                cardIds: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } }
+              }
+            }
+          }
+        }
+      }
+    }
+  });
 
   const cardsInput = cards.map(c => JSON.stringify({ id: c.id, text: c.text })).join('\n');
 
@@ -71,37 +96,15 @@ export const groupCardsSemantically = async (cards: RetroCard[]): Promise<{ [key
   `;
 
   try {
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: prompt,
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            groups: {
-              type: Type.ARRAY,
-              items: {
-                type: Type.OBJECT,
-                properties: {
-                  groupName: { type: Type.STRING },
-                  cardIds: { type: Type.ARRAY, items: { type: Type.STRING } }
-                }
-              }
-            }
-          }
-        }
-      }
-    });
+    const result = await model.generateContent(prompt);
+    const response = result.response;
+    const text = response.text();
 
-    const result = JSON.parse(response.text || '{}');
+    const parsedResult = JSON.parse(text || '{}');
     const mapping: { [key: string]: string[] } = {};
 
-    // Transform to simpler structure for the UI to consume if needed, 
-    // or just return the raw grouping. 
-    // For this app, let's return { groupName: [cardId, cardId] }
-    if (result.groups) {
-      result.groups.forEach((g: any) => {
+    if (parsedResult.groups) {
+      parsedResult.groups.forEach((g: any) => {
         mapping[g.groupName] = g.cardIds;
       });
       return mapping;
@@ -113,4 +116,4 @@ export const groupCardsSemantically = async (cards: RetroCard[]): Promise<{ [key
     console.error("Gemini Grouping Error", error);
     return null;
   }
-}
+};

@@ -1,50 +1,12 @@
 
 import React, { useState } from 'react';
+import { faqs } from '../../data/faqs';
 
 const Landing: React.FC = () => {
-   const faqs = [
-      {
-         q: "Is Clear Retro completely free?",
-         a: "Yes. We offer a generous free tier that includes unlimited boards and up to 5 participants per session. No credit card is required to get started."
-      },
-      {
-         q: "Do participants need an account?",
-         a: "No. We believe in removing friction. You can share a secure link, and teammates can join your board instantly as guests. Only the facilitator needs an account (optional for free tier)."
-      },
-      {
-         q: "How does the AI grouping work?",
-         a: "We use Google's Gemini 2.0 Flash model. It analyzes the semantic meaning of every card on the board and groups them into themes (e.g., 'Deployment', 'Communication') automatically, saving you 15 minutes per retro."
-      },
-      {
-         q: "Is my data secure?",
-         a: "Absolutely. All data is encrypted in transit and at rest. AI processing is stateless—your retrospective data is never used to train Google's models."
-      },
-      {
-         q: "Can I export the results?",
-         a: "Yes. You can export your board to a formatted PDF report for stakeholders or a CSV/Excel file for data analysis."
-      }
-   ];
-
    const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
-
-   const structuredData = {
-      "@context": "https://schema.org",
-      "@type": "FAQPage",
-      "mainEntity": faqs.map(f => ({
-         "@type": "Question",
-         "name": f.q,
-         "acceptedAnswer": {
-            "@type": "Answer",
-            "text": f.a
-         }
-      }))
-   };
 
    return (
       <div className="relative overflow-hidden selection:bg-brand-500 selection:text-white">
-         {/* Inject JSON-LD */}
-         <script type="application/ld+json">{JSON.stringify(structuredData)}</script>
-
          {/* Background Decor */}
          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[1000px] bg-gradient-to-b from-brand-50/50 via-transparent to-transparent dark:from-brand-900/10 pointer-events-none" />
          <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] bg-purple-500/10 rounded-full mix-blend-screen filter blur-[100px] opacity-30 animate-blob dark:bg-purple-900/20"></div>
@@ -55,7 +17,7 @@ const Landing: React.FC = () => {
             <div className="text-center max-w-4xl mx-auto">
                <div className="inline-flex items-center px-4 py-1.5 rounded-full bg-brand-50/50 dark:bg-brand-900/20 text-brand-700 dark:text-brand-300 text-xs font-mono font-semibold mb-8 border border-brand-100 dark:border-brand-800/50 backdrop-blur-sm hover:border-brand-500/50 transition-colors cursor-default">
                   <span className="animate-pulse w-2 h-2 bg-brand-500 rounded-full mr-2 shadow-[0_0_10px_rgba(45,212,191,0.6)]"></span>
-                  V2.0 Now Live: AI-Powered Grouping
+                  V2.1: Templates & Board Management
                </div>
 
                <h1 className="text-5xl tracking-tight font-extrabold text-gray-900 dark:text-white sm:text-7xl md:text-8xl mb-8 font-mono leading-tight">
@@ -64,12 +26,12 @@ const Landing: React.FC = () => {
                </h1>
 
                <p className="mt-8 text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto leading-relaxed font-light">
-                  The <span className="text-gray-900 dark:text-white font-medium">fastest</span> way for engineering teams to improve. Zero clutter, keyboard-first, and supercharged with Gemini AI.
+                  The <span className="text-gray-900 dark:text-white font-medium">fastest</span> way for engineering teams to improve. Zero clutter, keyboard-first, and supercharged with AI.
                </p>
 
                <div className="mt-12 flex flex-col sm:flex-row justify-center gap-6">
                   <a
-                     href="/dashboard"
+                     href="/signin"
                      className="group relative px-8 py-4 bg-gray-900 dark:bg-white text-white dark:text-black text-lg font-bold rounded-xl shadow-[0_0_20px_rgba(0,0,0,0.2)] dark:shadow-[0_0_20px_rgba(255,255,255,0.3)] hover:shadow-[0_0_30px_rgba(45,212,191,0.4)] hover:-translate-y-1 transition-all duration-300 flex flex-col items-center border border-transparent hover:border-brand-500 overflow-hidden"
                   >
                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
@@ -97,7 +59,7 @@ const Landing: React.FC = () => {
                      </div>
                   </div>
 
-                  <img src="https://placehold.co/1200x675/09090b/2dd4bf?text=Clear+Retro+UI+Demo" alt="Clear Retro Dashboard Demo" className="w-full h-full object-cover opacity-90" />
+                  <img src="https://placehold.co/1200x675/09090b/2dd4bf?text=Clear+Retro+Dashboard" alt="Clear Retro Dashboard Demo" className="w-full h-full object-cover opacity-90" />
                </div>
             </div>
          </div>
@@ -128,9 +90,9 @@ const Landing: React.FC = () => {
                   {/* Step 1 */}
                   <div className="relative p-8 bg-white dark:bg-dark-900 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm hover:border-brand-500/50 transition-colors group">
                      <div className="absolute -top-4 -left-4 w-10 h-10 bg-gray-900 dark:bg-white text-white dark:text-black rounded-lg flex items-center justify-center font-bold font-mono shadow-lg group-hover:scale-110 transition-transform">1</div>
-                     <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 font-mono mt-2">Create & Share</h3>
+                     <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 font-mono mt-2">Choose Template</h3>
                      <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
-                        Spin up a new board in seconds using templates like Start/Stop/Continue. Share one link, no login required for guests.
+                        Start fast with pre-built templates like Start/Stop/Continue, 4Ls, or Mad/Sad/Glad. No setup required.
                      </p>
                   </div>
 
@@ -139,7 +101,7 @@ const Landing: React.FC = () => {
                      <div className="absolute -top-4 -left-4 w-10 h-10 bg-gray-900 dark:bg-white text-white dark:text-black rounded-lg flex items-center justify-center font-bold font-mono shadow-lg group-hover:scale-110 transition-transform">2</div>
                      <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 font-mono mt-2">Brainstorm & Group</h3>
                      <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
-                        Team members add cards in real-time. Use <strong>Private Mode</strong> to avoid bias, then let <strong>Gemini AI</strong> group duplicates instantly.
+                        Team members add cards in real-time. Use <strong>Private Mode</strong> to avoid bias, then let <strong>AI</strong> group duplicates instantly.
                      </p>
                   </div>
 
@@ -155,38 +117,53 @@ const Landing: React.FC = () => {
             </div>
          </div>
 
-         {/* Feature Highlight / Content */}
+         {/* Bento Grid Feature Section */}
          <div className="py-24 bg-white dark:bg-dark-950">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-               <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-                  <div>
-                     <h2 className="text-3xl font-bold text-gray-900 dark:text-white font-mono mb-6">Designed for Psychological Safety</h2>
-                     <div className="prose dark:prose-invert">
-                        <p className="text-lg text-gray-500 dark:text-gray-400 mb-6 leading-relaxed">
-                           A retrospective is only as good as the honesty of the feedback. Clear Retro is built with <strong className="text-brand-600 dark:text-brand-400">Psychological Safety</strong> at its core.
-                        </p>
-                        <ul className="space-y-4 mb-8">
-                           <li className="flex items-start">
-                              <span className="flex-shrink-0 w-6 h-6 bg-green-100 dark:bg-green-900/30 text-green-600 rounded-full flex items-center justify-center mr-3 mt-1 text-xs">✓</span>
-                              <span className="text-gray-600 dark:text-gray-300"><strong>Anonymous Guest Mode:</strong> Teammates can voice difficult concerns without fear.</span>
-                           </li>
-                           <li className="flex items-start">
-                              <span className="flex-shrink-0 w-6 h-6 bg-green-100 dark:bg-green-900/30 text-green-600 rounded-full flex items-center justify-center mr-3 mt-1 text-xs">✓</span>
-                              <span className="text-gray-600 dark:text-gray-300"><strong>Blur Mode:</strong> Prevent "anchoring bias" by hiding feedback until everyone has submitted.</span>
-                           </li>
-                           <li className="flex items-start">
-                              <span className="flex-shrink-0 w-6 h-6 bg-green-100 dark:bg-green-900/30 text-green-600 rounded-full flex items-center justify-center mr-3 mt-1 text-xs">✓</span>
-                              <span className="text-gray-600 dark:text-gray-300"><strong>Focus View:</strong> Discuss one card at a time to ensure everyone is heard.</span>
-                           </li>
-                        </ul>
+               <div className="text-center mb-16">
+                  <h2 className="text-3xl font-bold text-gray-900 dark:text-white font-mono mb-4">Everything You Need</h2>
+                  <p className="text-gray-500 dark:text-gray-400">Powerful features to run effective retrospectives.</p>
+               </div>
+
+               <div className="grid grid-cols-1 md:grid-cols-3 grid-rows-2 gap-6 h-auto md:h-[600px]">
+                  {/* Large Item: Templates */}
+                  <div className="md:col-span-2 md:row-span-2 relative overflow-hidden rounded-3xl bg-gray-50 dark:bg-dark-900 border border-gray-200 dark:border-gray-800 p-8 group">
+                     <div className="absolute top-0 right-0 w-64 h-64 bg-brand-500/10 rounded-full blur-3xl -mr-16 -mt-16 transition-all group-hover:bg-brand-500/20"></div>
+                     <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 font-mono relative z-10">Ready-to-use Templates</h3>
+                     <p className="text-gray-500 dark:text-gray-400 mb-8 max-w-md relative z-10">
+                        Don't reinvent the wheel. Choose from industry-standard retrospective formats or create your own custom columns.
+                     </p>
+                     <div className="relative z-10 grid grid-cols-2 gap-4">
+                        {['Start, Stop, Continue', 'Mad, Sad, Glad', '4Ls (Liked, Learned...)', 'Lean Coffee'].map(t => (
+                           <div key={t} className="bg-white dark:bg-dark-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-lg bg-brand-100 dark:bg-brand-900/30 flex items-center justify-center text-brand-600 dark:text-brand-400">
+                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" /><path d="M3 9h18" /><path d="M9 21V9" /></svg>
+                              </div>
+                              <span className="font-medium text-sm text-gray-900 dark:text-white">{t}</span>
+                           </div>
+                        ))}
                      </div>
-                     <a href="/features" className="text-brand-600 dark:text-brand-400 font-bold hover:underline font-mono">Explore all features →</a>
                   </div>
-                  <div className="relative group">
-                     <div className="absolute -inset-1 bg-gradient-to-r from-brand-500 to-purple-600 rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000"></div>
-                     <div className="relative bg-gray-900 rounded-2xl p-4 border border-gray-800 shadow-2xl">
-                        <img src="https://placehold.co/800x600/18181b/ffffff?text=Private+Mode+Enabled" alt="Private Mode Feature" className="rounded-lg opacity-90" width="800" height="600" />
+
+                  {/* Small Item: Timer */}
+                  <div className="relative overflow-hidden rounded-3xl bg-gray-50 dark:bg-dark-900 border border-gray-200 dark:border-gray-800 p-8 group">
+                     <div className="flex items-center justify-between mb-4">
+                        <div className="w-10 h-10 rounded-xl bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center text-purple-600 dark:text-purple-400">
+                           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
+                        </div>
+                        <span className="text-2xl font-mono font-bold text-gray-900 dark:text-white">05:00</span>
                      </div>
+                     <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2 font-mono">Built-in Timer</h3>
+                     <p className="text-sm text-gray-500 dark:text-gray-400">Keep your meetings on track with a shared countdown timer.</p>
+                  </div>
+
+                  {/* Small Item: Focus Mode */}
+                  <div className="relative overflow-hidden rounded-3xl bg-gray-50 dark:bg-dark-900 border border-gray-200 dark:border-gray-800 p-8 group">
+                     <div className="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" /></svg>
+                     </div>
+                     <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2 font-mono">Focus Mode</h3>
+                     <p className="text-sm text-gray-500 dark:text-gray-400">Hide cards while writing to prevent groupthink and bias.</p>
                   </div>
                </div>
             </div>

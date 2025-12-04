@@ -49,7 +49,7 @@ export const COMPETITORS: Record<string, CompetitorData> = {
       { feature: 'Jira Integration', clearRetro: 'Pro Only', competitor: 'Pro Only' },
       { feature: 'Focus/Private Mode', clearRetro: true, competitor: true },
     ],
-    verdict: "EasyRetro lives up to its name, but Clear Retro takes it a step further by making retrospectives 'Smart' with Gemini AI and 'Fast' with a high-performance React architecture."
+    verdict: "EasyRetro lives up to its name, but Clear Retro takes it a step further by making retrospectives 'Smart' with AI and 'Fast' with a high-performance React architecture."
   },
   'metroretro': {
     slug: 'metroretro',

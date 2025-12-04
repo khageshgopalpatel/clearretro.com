@@ -1,0 +1,10 @@
+---
+import Layout from "../layouts/Layout.astro";
+import SignInPage from "../components/pages/SignInPage";
+
+export const prerender = true;
+---
+
+<Layout title="Sign In | Clear Retro">
+    <SignInPage client:load />
+</Layout>

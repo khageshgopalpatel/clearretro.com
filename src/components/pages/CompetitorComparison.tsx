@@ -118,7 +118,7 @@ const CompetitorComparison: React.FC<CompetitorComparisonProps> = ({ competitorS
                            <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-brand-100 dark:bg-brand-900/30 text-brand-600 flex items-center justify-center text-xl">🤖</div>
                            <div>
                               <h4 className="font-bold text-gray-900 dark:text-white">AI Automation</h4>
-                              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Stop spending 20 minutes grouping cards manually. Gemini AI does it instantly.</p>
+                              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Stop spending 20 minutes grouping cards manually. AI does it instantly.</p>
                            </div>
                         </li>
                         <li className="flex gap-4">

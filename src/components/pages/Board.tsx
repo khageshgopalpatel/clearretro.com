@@ -1,61 +1,88 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 
-import { DndContext, DragOverlay, closestCorners, KeyboardSensor, PointerSensor, useSensor, useSensors, type DragEndEvent, type DragStartEvent } from '@dnd-kit/core';
-import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
+import { DndContext, DragOverlay, closestCorners, KeyboardSensor, PointerSensor, useSensor, useSensors, useDroppable, type DragEndEvent, type DragStartEvent, type DragOverEvent } from '@dnd-kit/core';
+import { SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { type RetroBoard, type RetroCard, type RetroColumn, type AISummaryResult, AISummaryStatus } from '../../types';
-import { getBoardById, updateBoard } from '../../services/storageService';
-import { generateRetroSummary, groupCardsSemantically } from '../../services/geminiService';
-import { MOCK_USER } from '../../constants';
+import { useBoard, addCard, voteCard, deleteCard, moveCard, updateBoardTimer, updateCard, togglePrivateMode, completeRetro } from '../../hooks/useBoard';
+import { useAuth } from '../../hooks/useAuth';
+import { useSnackbar } from '../../context/SnackbarContext';
+import { generateBoardSummary } from '../../services/ai';
+import { groupCardsSemantically } from '../../services/geminiService';
 import jsPDF from 'jspdf';
 import * as XLSX from 'xlsx';
 
+// Components
+import Card from '../Card';
+import HeaderDropdown from '../HeaderDropdown';
+import FocusMode from '../FocusMode';
+import ConfirmDialog from '../ConfirmDialog';
+import { Providers } from '../Providers';
+
 // --- Sub Components ---
 
-interface SortableCardProps {
+interface SortableCardWrapperProps {
   card: RetroCard;
-  onDelete: (id: string) => void;
-  onVote: (id: string) => void;
+  boardId: string;
   isPrivate: boolean;
+  isCompleted?: boolean;
 }
 
-const SortableCard: React.FC<SortableCardProps> = ({ card, onDelete, onVote, isPrivate }) => {
-  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: card.id });
+const COLUMN_COLORS: Record<string, string> = {
+  green: 'bg-green-500',
+  red: 'bg-red-500',
+  blue: 'bg-blue-500',
+  yellow: 'bg-yellow-500',
+  purple: 'bg-purple-500',
+  pink: 'bg-pink-500',
+  indigo: 'bg-indigo-500',
+  gray: 'bg-gray-500',
+  default: 'bg-gray-500'
+};
+
+const SortableCardWrapper: React.FC<SortableCardWrapperProps> = ({ card, boardId, isPrivate, isCompleted }) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: card.id });
 
   const style = {
     transform: CSS.Translate.toString(transform),
     transition
   };
 
-  const shouldBlur = isPrivate;
+  return (
+    <Card
+      card={card}
+      boardId={boardId}
+      isPrivate={isPrivate}
+      isCompleted={isCompleted}
+      sortableProps={{
+        attributes,
+        listeners,
+        setNodeRef,
+        style,
+        isDragging
+      }}
+    />
+  );
+};
+
+interface DroppableColumnProps {
+  column: RetroColumn;
+  children: React.ReactNode;
+}
+
+const DroppableColumn: React.FC<DroppableColumnProps> = ({ column, children }) => {
+  const { setNodeRef } = useDroppable({
+    id: column.id,
+    data: { type: 'column', columnId: column.id }
+  });
 
   return (
     <div
       ref={setNodeRef}
-      style={style}
-      {...attributes}
-      {...listeners}
-      className={`bg-white dark:bg-[#18181b] p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800 mb-3 group relative hover:shadow-[0_0_15px_rgba(45,212,191,0.1)] hover:border-brand-500/30 transition-all duration-200 cursor-grab active:cursor-grabbing animate-in fade-in slide-in-from-bottom-2 duration-300 ${shouldBlur ? 'select-none' : ''}`}
+      className="flex-1 min-w-[20rem] flex flex-col h-full bg-white/30 dark:bg-dark-900/40 backdrop-blur-md rounded-lg border border-gray-200/60 dark:border-gray-700/60 shadow-sm transition-all duration-300 group hover:border-gray-300 dark:hover:border-gray-600 hover:shadow-lg"
     >
-      <div className={`text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap leading-relaxed font-mono ${shouldBlur ? 'blur-[5px] opacity-60' : ''}`}>
-        {card.text}
-      </div>
-
-      <div className="flex justify-between items-center mt-3 pt-3 border-t border-gray-100 dark:border-gray-800/50">
-        <button
-          onPointerDown={(e) => { e.stopPropagation(); onVote(card.id); }}
-          className={`text-xs flex items-center gap-1.5 px-2 py-1 rounded transition-colors border ${card.votes > 0 ? 'bg-brand-50 border-brand-200 text-brand-700 dark:bg-brand-900/20 dark:border-brand-800 dark:text-brand-400' : 'border-transparent text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'}`}
-        >
-          <span>👍</span> <span className="font-bold font-mono">{card.votes}</span>
-        </button>
-        <button
-          onPointerDown={(e) => { e.stopPropagation(); onDelete(card.id); }}
-          className="text-xs text-red-400 opacity-0 group-hover:opacity-100 hover:text-red-500 transition-all px-2 py-1"
-        >
-          Delete
-        </button>
-      </div>
+      {children}
     </div>
   );
 };
@@ -66,14 +93,30 @@ interface BoardProps {
   id: string;
 }
 
-const Board: React.FC<BoardProps> = ({ id }) => {
-  const [board, setBoard] = useState<RetroBoard | null>(null);
-  const [loading, setLoading] = useState(true);
+const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
+  const [id, setId] = useState(propId);
+
+  useEffect(() => {
+    if (!propId) {
+      // Extract ID from URL for SPA mode: /board/BOARD_ID
+      const pathParts = window.location.pathname.split('/');
+      const urlId = pathParts[pathParts.length - 1] || pathParts[pathParts.length - 2];
+      if (urlId && urlId !== 'board') {
+        setId(urlId);
+      }
+    }
+  }, [propId]);
+
+  const { board, cards, loading, error } = useBoard(id) as { board: RetroBoard | null, cards: RetroCard[], loading: boolean, error: any };
+  const { user, logout, loginAsGuest, loginWithGoogle } = useAuth();
+  const { showSnackbar } = useSnackbar();
   const [activeId, setActiveId] = useState<string | null>(null);
   const [newCardText, setNewCardText] = useState<{ [key: string]: string }>({});
 
   // UI States
   const [isPrivateMode, setIsPrivateMode] = useState(false);
+  const [focusModeIndex, setFocusModeIndex] = useState<number | null>(null);
+  const [showEndRetroDialog, setShowEndRetroDialog] = useState(false);
 
   // AI States
   const [summaryStatus, setSummaryStatus] = useState<AISummaryStatus>(AISummaryStatus.IDLE);
@@ -82,6 +125,7 @@ const Board: React.FC<BoardProps> = ({ id }) => {
 
   // Timer
   const [timerInterval, setTimerInterval] = useState<ReturnType<typeof setInterval> | null>(null);
+  const [tick, setTick] = useState(0);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -89,144 +133,222 @@ const Board: React.FC<BoardProps> = ({ id }) => {
   );
 
   useEffect(() => {
-    if (id) {
-      loadBoard(id);
-      const interval = setInterval(() => loadBoard(id), 5000);
-      return () => clearInterval(interval);
+    if (board) {
+      setIsPrivateMode(board.isPrivate || false);
     }
-  }, [id]);
+  }, [board?.isPrivate]);
 
   useEffect(() => {
     // If timer is active, update the local display based on endTime every second
-    if (board?.timer.isActive && board.timer.endTime) {
+    if (board?.timer?.status === 'running' && board.timer.endTime) {
       const int = setInterval(() => {
-        setBoard(prev => {
-          if (!prev || !prev.timer.isActive || !prev.timer.endTime) return prev;
-
-          const now = Date.now();
-          const remaining = Math.max(0, Math.ceil((prev.timer.endTime - now) / 1000));
-
-          if (remaining !== prev.timer.timeLeft) {
-            return { ...prev, timer: { ...prev.timer, timeLeft: remaining } };
-          }
-          return prev;
-        });
+        // Force re-render to update timer display
+        setTick(t => t + 1);
       }, 1000);
       setTimerInterval(int);
     } else if (timerInterval) {
       clearInterval(timerInterval);
+      setTimerInterval(null);
     }
     return () => { if (timerInterval) clearInterval(timerInterval); };
-  }, [board?.timer.isActive, board?.timer.endTime]);
+  }, [board?.timer?.status, board?.timer?.endTime]);
 
-  const loadBoard = async (boardId: string) => {
-    const data = await getBoardById(boardId);
-    if (data) {
-      // Correctly calculate current timeLeft if timer is running based on server endTime
-      if (data.timer.isActive && data.timer.endTime) {
-        const now = Date.now();
-        const remaining = Math.max(0, Math.ceil((data.timer.endTime - now) / 1000));
-        data.timer.timeLeft = remaining;
+  // Track the last notified end time to prevent duplicate alerts
+  const lastNotifiedTimeRef = useRef<string | null>(null);
 
-        // Auto-pause if time is up locally to prevent negative drift
-        if (remaining <= 0) {
-          data.timer.isActive = false;
+  useEffect(() => {
+    if (board?.timer?.status === 'running' && board.timer.endTime) {
+      const timeLeft = getTimeLeft();
+      // Use a unique identifier for the current timer session (e.g. end time)
+      // Firestore Timestamp to string or Date string
+      const endTimeStr = typeof board.timer.endTime.toString === 'function'
+        ? board.timer.endTime.toString()
+        : String(board.timer.endTime);
+
+      if (timeLeft === 0 && lastNotifiedTimeRef.current !== endTimeStr) {
+        showSnackbar("Time's up!", "info");
+        lastNotifiedTimeRef.current = endTimeStr;
+
+        // Owner automatically stops the timer to sync state
+        if (user?.uid === board.createdBy) {
+          updateBoardTimer(id, 'stopped');
         }
       }
-      setBoard(data);
     }
-    setLoading(false);
-  };
-
-  const saveBoard = async (newBoard: RetroBoard) => {
-    setBoard(newBoard);
-    await updateBoard(newBoard);
-  };
+  }, [tick, board?.timer, user?.uid, board?.createdBy, id, showSnackbar]);
 
   const toggleTimer = async () => {
-    if (!board) return;
+    if (!board || board.status === 'completed') return;
 
-    let newTimer = { ...board.timer };
-
-    if (newTimer.isActive) {
+    if (board.timer?.status === 'running') {
       // Pause
-      newTimer.isActive = false;
-      // Keep current timeLeft as the snapshot
-      newTimer.endTime = undefined;
+      await updateBoardTimer(id, 'stopped');
     } else {
-      // Start
-      newTimer.isActive = true;
-      // Set end time based on current timeLeft
-      newTimer.endTime = Date.now() + (newTimer.timeLeft * 1000);
+      // Start (default 5 mins if not set, or resume?)
+      await updateBoardTimer(id, 'running', 300);
     }
+  };
 
-    saveBoard({ ...board, timer: newTimer });
+  // Helper to get remaining time
+  const getTimeLeft = () => {
+    if (!board?.timer) return 0;
+    if (board.timer.status === 'stopped') return board.timer.duration || 0;
+    if (board.timer.endTime) {
+      const end = board.timer.endTime.toDate ? board.timer.endTime.toDate() : new Date(board.timer.endTime);
+      const now = new Date();
+      return Math.max(0, Math.ceil((end.getTime() - now.getTime()) / 1000));
+    }
+    return 0;
   };
 
   // --- Actions ---
+
+  // Local state for optimistic updates
+  const [items, setItems] = useState<RetroCard[]>([]);
+
+  useEffect(() => {
+    setItems(cards);
+  }, [cards]);
 
   const handleDragStart = (event: DragStartEvent) => {
     setActiveId(event.active.id as string);
   };
 
-  const handleDragEnd = (event: DragEndEvent) => {
+  const handleDragOver = (event: DragOverEvent) => {
+    const { active, over } = event;
+    if (!over) return;
+
+    const activeId = active.id as string;
+    const overId = over.id as string;
+
+    // Find the containers
+    const activeCard = items.find(c => c.id === activeId);
+    const overCard = items.find(c => c.id === overId);
+    const overColumn = board?.columns.find(c => c.id === overId);
+
+    if (!activeCard) return;
+
+    const activeColumnId = activeCard.columnId;
+    const overColumnId = overColumn ? overColumn.id : overCard?.columnId;
+
+    if (!activeColumnId || !overColumnId || activeColumnId === overColumnId) return;
+
+    // Optimistic update for moving between columns
+    setItems((prev) => {
+      const activeItems = prev.filter(c => c.columnId === activeColumnId);
+      const overItems = prev.filter(c => c.columnId === overColumnId);
+      const activeIndex = activeItems.findIndex(c => c.id === activeId);
+      const overIndex = overCard ? overItems.findIndex(c => c.id === overId) : overItems.length + 1;
+
+      let newIndex;
+      if (overCard) {
+        // If over a card, place relative to it
+        // We can't easily calculate exact index in the flat array without more logic,
+        // but for visual feedback, just changing the columnId is often enough for SortableContext
+        // to re-sort it if we use the right strategy.
+        // However, dnd-kit examples usually mutate the array order here.
+        // For simplicity in this flat structure, we just update the columnId.
+        // The SortableContext in the new column will pick it up.
+        // To make it appear in the right spot, we might need to adjust 'order' too, but
+        // 'order' is a float.
+        // Let's just update columnId for now.
+        return prev.map(c =>
+          c.id === activeId ? { ...c, columnId: overColumnId } : c
+        );
+      } else {
+        // Dropped on column
+        return prev.map(c =>
+          c.id === activeId ? { ...c, columnId: overColumnId } : c
+        );
+      }
+    });
+  };
+
+  const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
     setActiveId(null);
 
-    if (!over || !board) return;
+    if (!over || !board || board.status === 'completed') return;
 
-    const activeCard = board.cards.find(c => c.id === active.id);
+    const activeCard = items.find(c => c.id === active.id);
     if (!activeCard) return;
 
     const overColumn = board.columns.find(c => c.id === over.id);
-    const overCard = board.cards.find(c => c.id === over.id);
-    const overColumnId = overColumn ? overColumn.id : (overCard ? overCard.columnId : null);
+    const overCard = items.find(c => c.id === over.id);
 
-    if (overColumnId && activeCard.columnId !== overColumnId) {
-      const newCards = board.cards.map(c =>
-        c.id === activeCard.id ? { ...c, columnId: overColumnId } : c
-      );
-      saveBoard({ ...board, cards: newCards });
+    let overColumnId: string | null = null;
+    let newOrder: number | undefined = undefined;
+
+    if (overColumn) {
+      overColumnId = overColumn.id;
+      const columnCards = items.filter(c => c.columnId === overColumnId).sort((a, b) => (a.order || 0) - (b.order || 0));
+      const maxOrder = columnCards.length > 0 ? (columnCards[columnCards.length - 1].order || 0) : 0;
+      newOrder = maxOrder + 10000;
+    } else if (overCard) {
+      overColumnId = overCard.columnId;
+      const columnCards = items.filter(c => c.columnId === overColumnId).sort((a, b) => (a.order || 0) - (b.order || 0));
+      const overCardIndex = columnCards.findIndex(c => c.id === overCard.id);
+      const activeCardIndex = columnCards.findIndex(c => c.id === activeCard.id);
+
+      const isSameColumn = activeCard.columnId === overColumnId;
+
+      let prevOrder = 0;
+      let nextOrder = 0;
+
+      if (isSameColumn) {
+        if (activeCardIndex < overCardIndex) {
+          prevOrder = overCard.order || 0;
+          const nextCard = columnCards[overCardIndex + 1];
+          nextOrder = nextCard ? (nextCard.order || prevOrder + 20000) : (prevOrder + 10000);
+        } else {
+          nextOrder = overCard.order || 0;
+          const prevCard = columnCards[overCardIndex - 1];
+          prevOrder = prevCard ? (prevCard.order || 0) : (nextOrder - 10000);
+        }
+      } else {
+        // When moving to a different column and dropping on a card
+        // We need to be careful because 'activeCard' might already have the new columnId from onDragOver
+        // So 'isSameColumn' might be true even if it wasn't originally.
+        // But for calculating order, we just need the surrounding cards in the target column.
+
+        // If we treat it as "insert before overCard"
+        nextOrder = overCard.order || 0;
+        const prevCard = columnCards[overCardIndex - 1];
+        // If prevCard is the active card itself (because of optimistic update), skip it
+        const realPrevCard = prevCard?.id === activeCard.id ? columnCards[overCardIndex - 2] : prevCard;
+
+        prevOrder = realPrevCard ? (realPrevCard.order || 0) : (nextOrder - 10000);
+      }
+
+      newOrder = (prevOrder + nextOrder) / 2;
+    }
+
+    if (overColumnId) {
+      // Optimistic update final commit
+      setItems(prev => prev.map(c =>
+        c.id === activeCard.id ? { ...c, columnId: overColumnId!, order: newOrder } : c
+      ));
+
+      await moveCard(id, activeCard.id, overColumnId, newOrder);
+    } else {
+      // Revert if invalid drop
+      setItems(cards);
     }
   };
 
-  const addCard = (columnId: string) => {
-    if (!board || !newCardText[columnId]?.trim()) return;
-
-    const newCard: RetroCard = {
-      id: Math.random().toString(36).substr(2, 9),
-      columnId,
-      text: newCardText[columnId],
-      votes: 0,
-      userId: MOCK_USER.id,
-      createdAt: Date.now(),
-      isRevealed: true
-    };
-
-    saveBoard({ ...board, cards: [...board.cards, newCard] });
+  const handleAddCard = async (columnId: string) => {
+    if (!board || !newCardText[columnId]?.trim() || !user || board.status === 'completed') return;
+    await addCard(id, columnId, newCardText[columnId], user);
     setNewCardText({ ...newCardText, [columnId]: '' });
-  };
-
-  const deleteCard = (cardId: string) => {
-    if (!board) return;
-    saveBoard({ ...board, cards: board.cards.filter(c => c.id !== cardId) });
-  };
-
-  const voteCard = (cardId: string) => {
-    if (!board) return;
-    saveBoard({
-      ...board,
-      cards: board.cards.map(c => c.id === cardId ? { ...c, votes: c.votes + 1 } : c)
-    });
   };
 
   // --- AI Features ---
 
   const handleGenerateSummary = async () => {
-    if (!board || board.cards.length === 0) return;
+    if (!board || cards.length === 0) return;
     setSummaryStatus(AISummaryStatus.LOADING);
     try {
-      const result = await generateRetroSummary(board.cards);
+      const result = await generateBoardSummary(cards, board.columns);
       if (result) {
         setSummaryResult(result);
         setSummaryStatus(AISummaryStatus.SUCCESS);
@@ -234,26 +356,35 @@ const Board: React.FC<BoardProps> = ({ id }) => {
         setSummaryStatus(AISummaryStatus.ERROR);
       }
     } catch (e) {
+      console.error(e);
       setSummaryStatus(AISummaryStatus.ERROR);
     }
   };
 
   const handleSmartGrouping = async () => {
-    if (!board) return;
+    if (!board || board.status === 'completed') return;
     setIsGrouping(true);
-    const groups = await groupCardsSemantically(board.cards);
+    try {
+      const groups = await groupCardsSemantically(cards);
 
-    if (groups) {
-      const newCards = board.cards.map(card => {
-        let groupName = "Misc";
+      if (groups) {
+        // Update each card with its group
+        const updates = [];
         for (const [name, ids] of Object.entries(groups)) {
-          if (ids.includes(card.id)) groupName = name;
+          for (const cardId of ids) {
+            const card = cards.find(c => c.id === cardId);
+            if (card) {
+              updates.push(updateCard(id, cardId, { text: `[${name}] ${card.text}` }));
+            }
+          }
         }
-        return { ...card, text: `[${groupName}] ${card.text}` };
-      });
-      saveBoard({ ...board, cards: newCards });
+        await Promise.all(updates);
+      }
+    } catch (e) {
+      console.error("Grouping failed", e);
+    } finally {
+      setIsGrouping(false);
     }
-    setIsGrouping(false);
   };
 
   // --- Exports ---
@@ -262,36 +393,109 @@ const Board: React.FC<BoardProps> = ({ id }) => {
     if (!board) return;
     const doc = new jsPDF();
     doc.setFont('monospace');
-    doc.text(`Retro: ${board.title}`, 10, 10);
+    doc.text(`Retro: ${board.name}`, 10, 10);
     let y = 20;
     board.columns.forEach(col => {
       doc.text(`Column: ${col.title}`, 10, y);
       y += 10;
-      board.cards.filter(c => c.columnId === col.id).forEach(c => {
+      cards.filter(c => c.columnId === col.id).forEach(c => {
         const splitText = doc.splitTextToSize(`- ${c.text} (${c.votes})`, 180);
         doc.text(splitText, 15, y);
         y += (splitText.length * 7);
       });
       y += 10;
     });
-    doc.save(`${board.title}.pdf`);
+    doc.save(`${board.name}.pdf`);
   };
 
   const exportExcel = () => {
     if (!board) return;
-    const data = board.cards.map(c => ({
+    const data = cards.map(c => ({
       Column: board.columns.find(col => col.id === c.columnId)?.title,
       Text: c.text,
       Votes: c.votes,
-      User: c.userId
+      User: c.createdBy
     }));
     const ws = XLSX.utils.json_to_sheet(data);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Retro Data");
-    XLSX.writeFile(wb, `${board.title}.xlsx`);
+    XLSX.writeFile(wb, `${board.name}.xlsx`);
+  };
+
+  // --- New Features ---
+
+  const handleShare = () => {
+    navigator.clipboard.writeText(window.location.href);
+    showSnackbar('Board link copied to clipboard!', 'success');
+  };
+
+  const handleEndRetro = async () => {
+    if (!board) return;
+    await completeRetro(id);
+    await updateBoardTimer(id, 'stopped');
+    setShowEndRetroDialog(false);
+    showSnackbar('Retrospective ended. Board is now read-only.', 'success');
+  };
+
+  const handleLogout = async () => {
+    await logout();
+    window.location.href = '/signin';
   };
 
   if (loading || !board) return <div className="min-h-screen flex items-center justify-center dark:bg-[#050505] dark:text-brand-400 font-mono text-xl animate-pulse">System Initializing...</div>;
+
+  if (!user) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-300">
+        <div className="bg-white dark:bg-dark-900 rounded-2xl shadow-2xl max-w-md w-full p-8 border border-gray-100 dark:border-gray-800 relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-brand-400 to-purple-500"></div>
+
+          <div className="text-center mb-8">
+            <div className="w-16 h-16 bg-brand-50 dark:bg-brand-900/20 rounded-2xl flex items-center justify-center mx-auto mb-4 text-3xl shadow-sm">
+              🚀
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2 font-mono">Join Retrospective</h2>
+            <p className="text-gray-500 dark:text-gray-400 text-sm">
+              You've been invited to join <strong>{board.name}</strong>. Please sign in or continue as a guest to participate.
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            <button
+              onClick={() => loginWithGoogle()}
+              className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-white dark:bg-dark-800 text-gray-700 dark:text-white border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-dark-700 transition-all font-medium shadow-sm hover:shadow-md group"
+            >
+              <svg className="w-5 h-5 transition-transform group-hover:scale-110" viewBox="0 0 24 24">
+                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
+                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
+                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
+              </svg>
+              Sign in with Google
+            </button>
+
+            <div className="relative flex items-center py-2">
+              <div className="flex-grow border-t border-gray-100 dark:border-gray-800"></div>
+              <span className="flex-shrink-0 mx-4 text-gray-400 text-xs uppercase tracking-widest font-mono">Or</span>
+              <div className="flex-grow border-t border-gray-100 dark:border-gray-800"></div>
+            </div>
+
+            <button
+              onClick={() => loginAsGuest()}
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-xl hover:opacity-90 transition-all font-bold shadow-lg shadow-gray-500/20"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+              Continue as Guest
+            </button>
+
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const formatTime = (s: number) => {
     const mins = Math.floor(s / 60);
@@ -299,71 +503,139 @@ const Board: React.FC<BoardProps> = ({ id }) => {
     return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
   };
 
+  const isCompleted = board.status === 'completed';
+
   return (
     <div className="h-[calc(100vh-64px)] flex flex-col bg-[#f8fafc] dark:bg-[#050505] overflow-hidden bg-grid-pattern transition-colors duration-500">
       {/* Board Header */}
       <div className="px-6 py-3 border-b border-gray-200 dark:border-gray-800 bg-white/70 dark:bg-dark-950/70 backdrop-blur-xl flex justify-between items-center shrink-0 z-20 sticky top-0">
         <div className="flex items-center gap-6">
           <div className="flex flex-col">
-            <h1 className="text-xl font-bold text-gray-900 dark:text-white tracking-tight font-mono">{board.title}</h1>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-3 font-mono">
+              {board.name}
+              {isCompleted && <span className="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full border border-red-200">COMPLETED</span>}
+            </h1>
             <span className="text-[10px] text-gray-400 font-mono tracking-widest uppercase">{new Date().toDateString()}</span>
           </div>
 
           <div className="h-8 w-px bg-gray-200 dark:bg-gray-800 mx-2"></div>
 
-          <div className={`flex items-center gap-3 px-4 py-1.5 rounded-lg border transition-all ${board.timer.isActive ? 'border-brand-500 bg-brand-50/50 dark:bg-brand-900/10 shadow-[0_0_10px_rgba(45,212,191,0.2)]' : 'border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-dark-900'}`}>
-            <span className={`font-mono text-2xl font-bold ${board.timer.timeLeft < 60 ? 'text-red-500 animate-pulse' : 'text-gray-800 dark:text-gray-200'}`}>
-              {formatTime(board.timer.timeLeft)}
+          <div className={`flex items-center gap-3 px-4 py-1.5 rounded-lg border transition-all ${board.timer?.status === 'running' ? 'border-brand-500 bg-brand-50/50 dark:bg-brand-900/10 shadow-[0_0_10px_rgba(45,212,191,0.2)]' : 'border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-dark-900'}`}>
+            <span className={`font-mono text-2xl font-bold ${getTimeLeft() < 60 && board.timer?.status === 'running' ? 'text-red-500 animate-pulse' : 'text-gray-800 dark:text-gray-200'}`}>
+              {formatTime(getTimeLeft())}
             </span>
-            <button
-              onClick={toggleTimer}
-              className="ml-2 w-8 h-8 flex items-center justify-center rounded hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors"
-            >
-              {board.timer.isActive ? '⏸' : '▶️'}
-            </button>
+            {!isCompleted && user?.uid === board.createdBy && (
+              <button
+                onClick={toggleTimer}
+                className="ml-2 w-8 h-8 flex items-center justify-center rounded hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors"
+              >
+                {board.timer?.status === 'running' ? '⏸' : '▶️'}
+              </button>
+            )}
           </div>
         </div>
 
         <div className="flex items-center gap-3">
           {/* Private Mode Toggle */}
+          {user?.uid === board.createdBy && (
+            <button
+              onClick={() => togglePrivateMode(id, !isPrivateMode)}
+              className={`flex items-center justify-center w-10 h-10 rounded-lg border transition-all ${isPrivateMode ? 'bg-purple-100 dark:bg-purple-900/20 border-purple-500 text-purple-600 shadow-[0_0_15px_rgba(216,180,254,0.3)]' : 'bg-white dark:bg-dark-900 border-gray-200 dark:border-gray-800 text-gray-500'}`}
+              title={isPrivateMode ? "Private Mode: ON (Text Blurred)" : "Private Mode: OFF"}
+            >
+              {isPrivateMode ? '🙈' : '👁️'}
+            </button>
+          )}
+
+          {/* Focus Mode Button */}
           <button
-            onClick={() => setIsPrivateMode(!isPrivateMode)}
-            className={`flex items-center justify-center w-10 h-10 rounded-lg border transition-all ${isPrivateMode ? 'bg-purple-100 dark:bg-purple-900/20 border-purple-500 text-purple-600 shadow-[0_0_15px_rgba(216,180,254,0.3)]' : 'bg-white dark:bg-dark-900 border-gray-200 dark:border-gray-800 text-gray-500'}`}
-            title={isPrivateMode ? "Private Mode: ON (Text Blurred)" : "Private Mode: OFF"}
+            onClick={() => setFocusModeIndex(0)}
+            className="flex items-center justify-center w-10 h-10 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-dark-900 text-gray-500 hover:bg-gray-50 dark:hover:bg-dark-800 transition-colors"
+            title="Enter Focus Mode"
           >
-            {isPrivateMode ? '🙈' : '👁️'}
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M15 3h6v6"></path>
+              <path d="M9 21H3v-6"></path>
+              <path d="M21 3l-7 7"></path>
+              <path d="M3 21l7-7"></path>
+              <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
+            </svg>
           </button>
 
           <div className="h-8 w-px bg-gray-200 dark:bg-gray-800 mx-2"></div>
 
-          <button
-            onClick={handleSmartGrouping}
-            disabled={isGrouping}
-            className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-dark-900 border border-brand-200 dark:border-brand-900/50 text-brand-700 dark:text-brand-400 rounded-lg hover:shadow-[0_0_10px_rgba(45,212,191,0.2)] hover:border-brand-400 transition-all text-sm font-bold font-mono group"
-          >
-            {isGrouping ? <span className="animate-spin">⚡</span> : <span className="group-hover:animate-pulse">⚡</span>}
-            {isGrouping ? 'Grouping...' : 'AI Group'}
-          </button>
-
-          <button
-            onClick={handleGenerateSummary}
-            className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-dark-900 border border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-dark-800 transition-all text-sm font-bold font-mono"
-          >
-            📝 Summary
-          </button>
-
-          <div className="relative group">
-            <button className="px-4 py-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-lg hover:opacity-90 transition-all text-sm font-bold shadow-lg shadow-gray-500/20">
-              Export
+          {!isCompleted && user?.uid === board.createdBy && (
+            <button
+              onClick={handleSmartGrouping}
+              disabled={isGrouping}
+              className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-dark-900 border border-brand-200 dark:border-brand-900/50 text-brand-700 dark:text-brand-400 rounded-lg hover:shadow-[0_0_10px_rgba(45,212,191,0.2)] hover:border-brand-400 transition-all text-sm font-bold font-mono group"
+            >
+              {isGrouping ? <span className="animate-spin">⚡</span> : <span className="group-hover:animate-pulse">⚡</span>}
+              {isGrouping ? 'Grouping...' : 'AI Group'}
             </button>
-            {/* Invisible bridge with padding-top (pt-2) ensures hover state is maintained when moving cursor to dropdown */}
-            <div className="absolute right-0 top-full pt-2 w-40 hidden group-hover:block z-50">
-              <div className="bg-white dark:bg-dark-900 rounded-lg shadow-xl border border-gray-200 dark:border-gray-800 overflow-hidden">
-                <button onClick={exportPDF} className="block w-full text-left px-4 py-3 text-sm hover:bg-gray-50 dark:hover:bg-dark-800 dark:text-gray-200 border-b border-gray-100 dark:border-gray-800 transition-colors">📄 PDF Report</button>
-                <button onClick={exportExcel} className="block w-full text-left px-4 py-3 text-sm hover:bg-gray-50 dark:hover:bg-dark-800 dark:text-gray-200 transition-colors">📊 Excel / CSV</button>
+          )}
+
+          {user?.uid === board.createdBy && (
+            <button
+              onClick={handleGenerateSummary}
+              disabled={summaryStatus === AISummaryStatus.LOADING}
+              className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-dark-900 border border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-dark-800 transition-all text-sm font-bold font-mono disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {summaryStatus === AISummaryStatus.LOADING ? (
+                <>
+                  <svg className="animate-spin h-4 w-4 text-brand-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Generating...
+                </>
+              ) : (
+                <>📝 Summary</>
+              )}
+            </button>
+          )}
+
+          {user?.uid === board.createdBy && (
+            <div className="relative group">
+              <button className="px-4 py-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-lg hover:opacity-90 transition-all text-sm font-bold shadow-lg shadow-gray-500/20">
+                Export
+              </button>
+              <div className="absolute right-0 top-full pt-2 w-40 hidden group-hover:block z-50">
+                <div className="bg-white dark:bg-dark-900 rounded-lg shadow-xl border border-gray-200 dark:border-gray-800 overflow-hidden">
+                  <button onClick={exportPDF} className="block w-full text-left px-4 py-3 text-sm hover:bg-gray-50 dark:hover:bg-dark-800 dark:text-gray-200 border-b border-gray-100 dark:border-gray-800 transition-colors">📄 PDF Report</button>
+                  <button onClick={exportExcel} className="block w-full text-left px-4 py-3 text-sm hover:bg-gray-50 dark:hover:bg-dark-800 dark:text-gray-200 transition-colors">📊 Excel / CSV</button>
+                </div>
               </div>
             </div>
-          </div>
+          )}
+
+          <div className="h-8 w-px bg-gray-200 dark:bg-gray-800 mx-2"></div>
+
+          {/* Share Button */}
+          <button
+            onClick={handleShare}
+            className="flex items-center justify-center w-10 h-10 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-dark-900 text-gray-500 hover:text-brand-500 hover:border-brand-500 transition-colors"
+            title="Share Board Link"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
+              <polyline points="16 6 12 2 8 6"></polyline>
+              <line x1="12" y1="2" x2="12" y2="15"></line>
+            </svg>
+          </button>
+
+          {/* End Retro Button */}
+          {!isCompleted && user?.uid === board.createdBy && (
+            <button
+              onClick={() => setShowEndRetroDialog(true)}
+              className="px-4 py-2 bg-red-50 text-red-600 border border-red-200 rounded-lg hover:bg-red-100 transition-colors text-sm font-bold font-mono"
+            >
+              End Retro
+            </button>
+          )}
+
+          {/* User Dropdown */}
+          <HeaderDropdown user={user} onLogout={handleLogout} />
         </div>
       </div>
 
@@ -412,24 +684,46 @@ const Board: React.FC<BoardProps> = ({ id }) => {
         </div>
       )}
 
+      {/* Focus Mode Overlay */}
+      {focusModeIndex !== null && (
+        <FocusMode
+          cards={cards}
+          initialIndex={focusModeIndex}
+          onClose={() => setFocusModeIndex(null)}
+          boardId={id}
+        />
+      )}
+
+      {/* End Retro Confirmation */}
+      <ConfirmDialog
+        isOpen={showEndRetroDialog}
+        onClose={() => setShowEndRetroDialog(false)}
+        onConfirm={handleEndRetro}
+        title="End Retrospective?"
+        message="This will stop the timer and make the board read-only. You can still export results, but no new cards can be added."
+        confirmText="End Retro"
+        cancelText="Cancel"
+      />
+
       {/* Columns Area */}
       <div className="flex-grow overflow-x-auto overflow-y-hidden custom-scrollbar">
         <DndContext
           sensors={sensors}
           collisionDetection={closestCorners}
           onDragStart={handleDragStart}
+          onDragOver={handleDragOver}
           onDragEnd={handleDragEnd}
         >
           <div className="flex h-full p-8 gap-6 min-w-full">
             {board.columns.map((column) => (
-              <div key={column.id} className="flex-1 min-w-[20rem] flex flex-col h-full bg-white/30 dark:bg-dark-900/40 backdrop-blur-md rounded-lg border border-gray-200/60 dark:border-gray-700/60 shadow-sm transition-all duration-300 group hover:border-gray-300 dark:hover:border-gray-600 hover:shadow-lg">
+              <DroppableColumn key={column.id} column={column}>
                 {/* Column Header */}
                 <div className={`p-4 border-b border-gray-100 dark:border-gray-800 bg-white/40 dark:bg-dark-900/60 rounded-t-lg backdrop-blur-sm relative overflow-hidden`}>
-                  <div className={`absolute top-0 left-0 w-full h-1 bg-${column.color}`}></div>
+                  <div className={`absolute top-0 left-0 w-full h-1 ${COLUMN_COLORS[column.color] || COLUMN_COLORS.default}`}></div>
                   <h3 className="font-bold text-gray-900 dark:text-white flex justify-between items-center text-md font-mono relative z-10">
                     {column.title}
                     <span className="bg-white/50 dark:bg-white/10 px-2 py-0.5 rounded text-xs text-gray-600 dark:text-gray-300 font-mono">
-                      {board.cards.filter(c => c.columnId === column.id).length}
+                      {items.filter(c => c.columnId === column.id).length}
                     </span>
                   </h3>
                 </div>
@@ -437,56 +731,58 @@ const Board: React.FC<BoardProps> = ({ id }) => {
                 {/* Cards Container */}
                 <div className="flex-grow overflow-y-auto p-3 custom-scrollbar space-y-3">
                   <SortableContext
-                    items={board.cards.filter(c => c.columnId === column.id).map(c => c.id)}
+                    items={items.filter(c => c.columnId === column.id).map(c => c.id)}
                     strategy={verticalListSortingStrategy}
                   >
-                    {board.cards
+                    {items
                       .filter(c => c.columnId === column.id)
                       .map(card => (
-                        <SortableCard
+                        <SortableCardWrapper
                           key={card.id}
                           card={card}
-                          onDelete={deleteCard}
-                          onVote={voteCard}
+                          boardId={id}
                           isPrivate={isPrivateMode}
+                          isCompleted={isCompleted}
                         />
                       ))}
                   </SortableContext>
                 </div>
 
                 {/* Add Card Input */}
-                <div className="p-3 bg-white/40 dark:bg-dark-900/40 rounded-b-lg border-t border-gray-100 dark:border-gray-800/50 backdrop-blur-sm">
-                  <div className="relative group/input">
-                    <textarea
-                      placeholder="> Type input..."
-                      className="w-full text-sm p-3 pr-10 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#18181b] dark:text-white focus:ring-1 focus:ring-brand-500 focus:border-brand-500 focus:shadow-[0_0_10px_rgba(45,212,191,0.2)] outline-none resize-none shadow-inner transition-all font-mono"
-                      rows={2}
-                      value={newCardText[column.id] || ''}
-                      onChange={(e) => setNewCardText({ ...newCardText, [column.id]: e.target.value })}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' && !e.shiftKey) {
-                          e.preventDefault();
-                          addCard(column.id);
-                        }
-                      }}
-                    />
-                    <button
-                      onClick={() => addCard(column.id)}
-                      className="absolute bottom-2 right-2 p-1.5 text-gray-400 hover:text-brand-500 transition-colors opacity-50 group-hover/input:opacity-100"
-                      title="Add Card"
-                    >
-                      ↵
-                    </button>
+                {!isCompleted && (
+                  <div className="p-3 bg-white/40 dark:bg-dark-900/40 rounded-b-lg border-t border-gray-100 dark:border-gray-800/50 backdrop-blur-sm">
+                    <div className="relative group/input">
+                      <textarea
+                        placeholder="> Type input..."
+                        className="w-full text-sm p-3 pr-10 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#18181b] dark:text-white focus:ring-1 focus:ring-brand-500 focus:border-brand-500 focus:shadow-[0_0_10px_rgba(45,212,191,0.2)] outline-none resize-none shadow-inner transition-all font-mono"
+                        rows={2}
+                        value={newCardText[column.id] || ''}
+                        onChange={(e) => setNewCardText({ ...newCardText, [column.id]: e.target.value })}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            handleAddCard(column.id);
+                          }
+                        }}
+                      />
+                      <button
+                        onClick={() => handleAddCard(column.id)}
+                        className="absolute bottom-2 right-2 p-1.5 text-gray-400 hover:text-brand-500 transition-colors opacity-50 group-hover/input:opacity-100"
+                        title="Add Card"
+                      >
+                        ↵
+                      </button>
+                    </div>
                   </div>
-                </div>
-              </div>
+                )}
+              </DroppableColumn>
             ))}
           </div>
           <DragOverlay>
             {activeId ? (
               <div className="bg-white dark:bg-dark-800 p-4 rounded-lg shadow-2xl border border-brand-500 w-80 rotate-2 cursor-grabbing opacity-90 backdrop-blur-sm">
                 <p className="text-sm text-gray-800 dark:text-gray-200 font-medium font-mono">
-                  {board.cards.find(c => c.id === activeId)?.text}
+                  {cards.find(c => c.id === activeId)?.text}
                 </p>
               </div>
             ) : null}
@@ -494,6 +790,14 @@ const Board: React.FC<BoardProps> = ({ id }) => {
         </DndContext>
       </div>
     </div>
+  );
+};
+
+const Board: React.FC<BoardProps> = (props) => {
+  return (
+    <Providers>
+      <BoardContent {...props} />
+    </Providers>
   );
 };
 

@@ -44,7 +44,7 @@ const Privacy: React.FC = () => {
 
                     <h3>2. AI Processing & Data Privacy</h3>
                     <p>
-                        Clear Retro uses <strong>Google Gemini AI</strong> to provide features like "Smart Grouping" and "Retro Summaries".
+                        Clear Retro uses <strong>AI</strong> to provide features like "Smart Grouping" and "Retro Summaries".
                     </p>
                     <ul className="list-disc pl-6 space-y-2 marker:text-brand-500">
                         <li><strong>Transient Processing:</strong> Data sent to the AI model is used solely for the purpose of generating the requested output (grouping or summary).</li>
