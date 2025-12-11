@@ -46,7 +46,7 @@ export const post1: BlogPost = {
     </p>
     
     <div class="bg-blue-50 dark:bg-blue-900/20 p-6 rounded-xl border-l-4 border-blue-500 mb-8">
-      <h4 class="font-bold text-blue-700 dark:text-blue-300 mb-2">Key Metrics to Review:</h4>
+      <h3 class="text-xl font-bold text-blue-700 dark:text-blue-300 mb-2">Key Metrics to Review:</h3>
       <ul class="list-disc pl-6 space-y-2 text-gray-700 dark:text-gray-300">
         <li><strong>Cycle Time:</strong> How long does it take for a ticket to go from "In Progress" to "Done"?</li>
         <li><strong>PR Review Time:</strong> Are code reviews becoming a bottleneck?</li>
@@ -73,7 +73,7 @@ export const post1: BlogPost = {
     <p class="mb-4">
       <strong>Goal:</strong> Create a shared picture of what happened.
       <br />
-      <strong>2025 Twist:</strong> This is where your <a href="/#/dashboard" class="text-brand-500 underline">online retrospective tool</a> shines. Teams create cards for "What went well", "What didn't", etc. But now, we also overlay the <strong>Sprint Burndown Chart</strong> or <strong>DORA metrics</strong> on the screen.
+      <strong>2025 Twist:</strong> This is where your <a href="/#/dashboard" class="text-brand-700 dark:text-brand-400 underline">online retrospective tool</a> shines. Teams create cards for "What went well", "What didn't", etc. But now, we also overlay the <strong>Sprint Burndown Chart</strong> or <strong>DORA metrics</strong> on the screen.
     </p>
 
     <h3 class="text-2xl font-bold text-gray-800 dark:text-gray-200 mt-8 mb-4">3. Generate Insights</h3>
@@ -121,19 +121,19 @@ export const post1: BlogPost = {
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 my-8">
        <div class="p-6 bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/30 rounded-xl">
-          <h4 class="text-xl font-bold text-red-700 dark:text-red-400 mb-2">❌ The "Complaint Fest"</h4>
+          <h3 class="text-xl font-bold text-red-700 dark:text-red-400 mb-2">❌ The "Complaint Fest"</h3>
           <p class="text-sm">Everyone vents about problems, but no action items are assigned. The same problems re-occur next sprint.</p>
        </div>
        <div class="p-6 bg-green-50 dark:bg-green-900/10 border border-green-100 dark:border-green-900/30 rounded-xl">
-          <h4 class="text-xl font-bold text-green-700 dark:text-green-400 mb-2">✅ The Fix: Action Bias</h4>
+          <h3 class="text-xl font-bold text-green-700 dark:text-green-400 mb-2">✅ The Fix: Action Bias</h3>
           <p class="text-sm">Limit the discussion to the top 3 voted items. Assign a specific owner to each. If it's not assigned, it doesn't exist.</p>
        </div>
        <div class="p-6 bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/30 rounded-xl">
-          <h4 class="text-xl font-bold text-red-700 dark:text-red-400 mb-2">❌ The "Manager's Monologue"</h4>
+          <h3 class="text-xl font-bold text-red-700 dark:text-red-400 mb-2">❌ The "Manager's Monologue"</h3>
           <p class="text-sm">The manager or Scrum Master does all the talking. The team tunes out.</p>
        </div>
        <div class="p-6 bg-green-50 dark:bg-green-900/10 border border-green-100 dark:border-green-900/30 rounded-xl">
-          <h4 class="text-xl font-bold text-green-700 dark:text-green-400 mb-2">✅ The Fix: Rotate Facilitators</h4>
+          <h3 class="text-xl font-bold text-green-700 dark:text-green-400 mb-2">✅ The Fix: Rotate Facilitators</h3>
           <p class="text-sm">Let a different team member run the retro each time. This builds empathy and engagement.</p>
        </div>
     </div>
@@ -156,7 +156,7 @@ export const post1: BlogPost = {
       The Sprint Retrospective is the heartbeat of Agile. If you skip it, your team's growth stalls. By adopting a data-driven approach, leveraging AI tools, and fostering psychological safety, you can turn this meeting from a "chore" into a competitive advantage.
     </p>
     <p class="mb-6 font-bold">
-      Ready to run better retrospectives? <a href="/#/dashboard" class="text-brand-500 underline">Try Clear Retro for free</a> today.
+      Ready to run better retrospectives? <a href="/#/dashboard" class="text-brand-700 dark:text-brand-400 underline">Try Clear Retro for free</a> today.
     </p>
   `
 };

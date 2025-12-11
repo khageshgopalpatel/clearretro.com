@@ -50,18 +50,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                     photoURL: currentUser.photoURL
                 });
             } else {
-                // Check for guest session
-                const guestId = localStorage.getItem('guest_uid');
-                if (guestId) {
-                    setUser({
-                        uid: guestId,
-                        displayName: "Guest",
-                        isAnonymous: true,
-                        email: null
-                    });
-                } else {
-                    setUser(null);
-                }
+                setUser(null);
             }
             setLoading(false);
         }, (error) => {

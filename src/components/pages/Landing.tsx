@@ -1,9 +1,22 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { faqs } from '../../data/faqs';
 
 const Landing: React.FC = () => {
    const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
+   const [isPlaying, setIsPlaying] = useState(false);
+   const videoRef = useRef<HTMLVideoElement>(null);
+
+   const togglePlay = () => {
+      if (videoRef.current) {
+         if (isPlaying) {
+            videoRef.current.pause();
+         } else {
+            videoRef.current.play();
+         }
+         setIsPlaying(!isPlaying);
+      }
+   };
 
    return (
       <div className="relative overflow-hidden selection:bg-brand-500 selection:text-white">
@@ -42,40 +55,44 @@ const Landing: React.FC = () => {
 
             {/* Demo Video Window */}
             <div className="mt-24 max-w-6xl mx-auto">
-               <div className="relative rounded-xl overflow-hidden border border-gray-200 dark:border-gray-800/50 shadow-2xl bg-gray-900 aspect-video group cursor-pointer backdrop-blur-sm">
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent z-10"></div>
+               <div 
+                  className="relative rounded-xl overflow-hidden border border-gray-200 dark:border-gray-800/50 shadow-2xl bg-gray-900 aspect-video group cursor-pointer backdrop-blur-sm"
+                  onClick={togglePlay}
+               >
+                  <div className={`absolute inset-0 bg-gradient-to-t from-black/80 to-transparent z-10 ${isPlaying ? 'opacity-0 hover:opacity-100 transition-opacity duration-300' : ''}`}></div>
 
                   {/* Fake UI Header */}
-                  <div className="absolute top-0 left-0 right-0 h-10 bg-black/40 border-b border-white/10 flex items-center px-4 gap-2 z-20 backdrop-blur-md">
+                  <div className={`absolute top-0 left-0 right-0 h-10 bg-black/40 border-b border-white/10 flex items-center px-4 gap-2 z-20 backdrop-blur-md ${isPlaying ? 'opacity-0 hover:opacity-100 transition-opacity duration-300' : ''}`}>
                      <div className="w-3 h-3 rounded-full bg-red-500/80"></div>
                      <div className="w-3 h-3 rounded-full bg-yellow-500/80"></div>
                      <div className="w-3 h-3 rounded-full bg-green-500/80"></div>
                      <div className="ml-4 px-3 py-1 bg-white/10 rounded-md text-[10px] text-gray-400 font-mono w-64">clear-retro.com/board/demo</div>
                   </div>
 
-                  <div className="absolute inset-0 flex items-center justify-center z-30 group-hover:scale-105 transition-transform duration-500">
-                     <div className="w-24 h-24 bg-brand-500/20 backdrop-blur-md rounded-full flex items-center justify-center border border-brand-400/50 shadow-[0_0_30px_rgba(45,212,191,0.3)] group-hover:bg-brand-500/30 transition-all">
-                        <div className="w-0 h-0 border-t-[12px] border-t-transparent border-l-[22px] border-l-brand-50 border-b-[12px] border-b-transparent ml-2"></div>
+                  {!isPlaying && (
+                     <div className="absolute inset-0 flex items-center justify-center z-30 group-hover:scale-105 transition-transform duration-500">
+                        <div className="w-24 h-24 bg-brand-500/20 backdrop-blur-md rounded-full flex items-center justify-center border border-brand-400/50 shadow-[0_0_30px_rgba(45,212,191,0.3)] group-hover:bg-brand-500/30 transition-all">
+                           <div className="w-0 h-0 border-t-[12px] border-t-transparent border-l-[22px] border-l-brand-50 border-b-[12px] border-b-transparent ml-2"></div>
+                        </div>
                      </div>
-                  </div>
+                  )}
 
-                  <img src="https://placehold.co/1200x675/09090b/2dd4bf?text=Clear+Retro+Dashboard" alt="Clear Retro Dashboard Demo" className="w-full h-full object-cover opacity-90" />
+                  <video 
+                     ref={videoRef}
+                     className="w-full h-full object-cover opacity-90"
+                     loop 
+                     playsInline
+                     src="/demo.mp4"
+                     poster="https://placehold.co/1200x675/09090b/2dd4bf?text=Clear+Retro+Demo"
+                     onPlay={() => setIsPlaying(true)}
+                     onPause={() => setIsPlaying(false)}
+                     controls={isPlaying}
+                  />
                </div>
             </div>
          </div>
 
-         {/* Social Proof */}
-         <div className="border-y border-gray-200 dark:border-gray-800 bg-white/50 dark:bg-black/50 backdrop-blur-sm py-12">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-               <p className="text-center text-xs font-mono font-bold text-gray-400 uppercase tracking-[0.2em] mb-8">Powering Engineering Teams At</p>
-               <div className="grid grid-cols-2 md:grid-cols-4 gap-12 opacity-50 grayscale hover:grayscale-0 transition-all duration-700">
-                  <div className="flex items-center justify-center text-2xl font-black dark:text-white font-mono tracking-tighter hover:text-brand-500 cursor-default">ACME_CORP</div>
-                  <div className="flex items-center justify-center text-2xl font-black dark:text-white font-mono tracking-tighter hover:text-brand-500 cursor-default">CYBERDYNE</div>
-                  <div className="flex items-center justify-center text-2xl font-black dark:text-white font-mono tracking-tighter hover:text-brand-500 cursor-default">MASSIVE_DYNAMIC</div>
-                  <div className="flex items-center justify-center text-2xl font-black dark:text-white font-mono tracking-tighter hover:text-brand-500 cursor-default">GLOBEX</div>
-               </div>
-            </div>
-         </div>
+
 
          {/* How It Works (UX Improvement) */}
          <div className="py-24 bg-gray-50 dark:bg-[#08080a] relative">

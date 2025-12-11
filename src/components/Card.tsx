@@ -373,12 +373,6 @@ const Card = ({ card, boardId, isPrivate, sortableProps, isCompleted }: CardProp
                                 ) : (
                                     <div className="flex justify-between items-start group gap-2">
                                         <div className="flex-1">
-                                            <div className="flex items-center gap-2 mb-0.5">
-                                                <div className="w-4 h-4 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-[8px] font-bold text-gray-600 dark:text-gray-300">
-                                                    {reply.creatorName?.[0] || 'G'}
-                                                </div>
-                                                <span className="text-xs font-bold text-gray-500 dark:text-gray-400">{reply.creatorName || 'Guest'}</span>
-                                            </div>
                                             <p className="text-gray-700 dark:text-gray-300 leading-snug">{reply.text}</p>
                                         </div>
                                         <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">

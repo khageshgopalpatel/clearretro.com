@@ -8,9 +8,11 @@ interface User {
 interface HeaderDropdownProps {
     user: User | null;
     onLogout: () => void;
+    onExportPDF?: () => void;
+    onExportExcel?: () => void;
 }
 
-const HeaderDropdown = ({ user, onLogout }: HeaderDropdownProps) => {
+const HeaderDropdown = ({ user, onLogout, onExportPDF, onExportExcel }: HeaderDropdownProps) => {
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -69,6 +71,38 @@ const HeaderDropdown = ({ user, onLogout }: HeaderDropdownProps) => {
                         <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{user?.displayName || 'Guest User'}</p>
                     </div>
                     <ul className="py-1">
+                        {(onExportPDF || onExportExcel) && (
+                            <li className="border-b border-gray-100 dark:border-gray-800 mb-1 pb-1">
+                                {onExportPDF && (
+                                    <button
+                                        onClick={() => {
+                                            onExportPDF();
+                                            setIsOpen(false);
+                                        }}
+                                        className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-dark-800 flex items-center gap-3 text-gray-700 dark:text-gray-300 transition-colors"
+                                    >
+                                        <div className="p-1.5 rounded-md bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400">
+                                            <span className="text-xs font-bold">PDF</span>
+                                        </div>
+                                        <span>Export PDF</span>
+                                    </button>
+                                )}
+                                {onExportExcel && (
+                                    <button
+                                        onClick={() => {
+                                            onExportExcel();
+                                            setIsOpen(false);
+                                        }}
+                                        className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-dark-800 flex items-center gap-3 text-gray-700 dark:text-gray-300 transition-colors"
+                                    >
+                                        <div className="p-1.5 rounded-md bg-green-50 text-green-600 dark:bg-green-900/20 dark:text-green-400">
+                                            <span className="text-xs font-bold">XLS</span>
+                                        </div>
+                                        <span>Export Excel</span>
+                                    </button>
+                                )}
+                            </li>
+                        )}
                         <li>
                             <button
                                 onClick={() => setIsDarkMode(!isDarkMode)}

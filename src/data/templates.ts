@@ -30,5 +30,25 @@ export const BOARD_TEMPLATES: BoardTemplate[] = [
             { title: 'Discussing', color: 'yellow' },
             { title: 'Discussed', color: 'green' }
         ]
+    },
+    {
+        id: '4ls',
+        name: '4Ls (Liked, Learned, Lacked, Longed For)',
+        columns: [
+            { title: 'Liked', color: 'green' },
+            { title: 'Learned', color: 'blue' },
+            { title: 'Lacked', color: 'red' },
+            { title: 'Longed For', color: 'yellow' }
+        ]
+    },
+    {
+        id: 'sailboat',
+        name: 'Sailboat',
+        columns: [
+            { title: 'Wind', color: 'green' },
+            { title: 'Anchors', color: 'red' },
+            { title: 'Rocks', color: 'gray' },
+            { title: 'Goal', color: 'blue' }
+        ]
     }
 ];

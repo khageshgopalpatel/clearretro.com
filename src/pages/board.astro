@@ -1,8 +1,8 @@
 ---
 import Layout from "../layouts/Layout.astro";
-import Board from "../components/pages/Board";
+import BoardComponent from "../components/pages/Board";
 ---
 
-<Layout title="Retro Board | Clear Retro">
-  <Board client:only="react" id="" />
+<Layout title="Retro Board | Clear Retro" appLayout={true}>
+  <BoardComponent client:only="react" id="" />
 </Layout>

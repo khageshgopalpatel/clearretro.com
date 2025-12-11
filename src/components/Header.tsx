@@ -47,7 +47,7 @@ const Header: React.FC<HeaderProps> = ({ currentPath }) => {
                             <div className="absolute inset-0 bg-brand-500 opacity-20 group-hover:opacity-40 transition-opacity"></div>
                             <img src="/logo.svg" alt="Logo" className="w-full h-full object-contain" />
                         </div>
-                        <span className="font-bold text-lg tracking-tight text-gray-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">Clear Retro</span>
+                        <span className="font-bold text-lg tracking-tight text-gray-900 dark:text-white group-hover:text-brand-700 dark:group-hover:text-brand-400 transition-colors">Clear Retro</span>
                     </a>
 
                     {/* Desktop Nav */}
@@ -57,7 +57,7 @@ const Header: React.FC<HeaderProps> = ({ currentPath }) => {
                                 key={link.path}
                                 href={link.path}
                                 className={`text-sm font-medium transition-all duration-200 ${currentPath === link.path || (link.path === '/blog' && currentPath.startsWith('/blog'))
-                                    ? 'text-brand-600 dark:text-brand-400'
+                                    ? 'text-brand-700 dark:text-brand-400'
                                     : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                                     }`}
                             >
@@ -88,10 +88,15 @@ const Header: React.FC<HeaderProps> = ({ currentPath }) => {
                         <button
                             onClick={toggleTheme}
                             className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400"
+                            aria-label="Toggle Theme"
                         >
                             {isDark ? '☀️' : '🌙'}
                         </button>
-                        <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="text-gray-600 dark:text-gray-400">
+                        <button 
+                            onClick={() => setIsMenuOpen(!isMenuOpen)} 
+                            className="text-gray-600 dark:text-gray-400"
+                            aria-label="Toggle Menu"
+                        >
                             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={isMenuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"} />
                             </svg>
@@ -117,7 +122,7 @@ const Header: React.FC<HeaderProps> = ({ currentPath }) => {
                         <a
                             href="/dashboard"
                             onClick={() => setIsMenuOpen(false)}
-                            className="block w-full text-center mt-4 px-4 py-3 rounded-lg bg-brand-600 text-white font-bold"
+                            className="block w-full text-center mt-4 px-4 py-3 rounded-lg bg-brand-700 text-white font-bold"
                         >
                             Launch Dashboard
                         </a>

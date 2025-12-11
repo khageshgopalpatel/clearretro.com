@@ -8,9 +8,11 @@ import { useUserBoards, createBoard, updateBoardName, deleteBoard } from '../../
 import { useSnackbar } from '../../context/SnackbarContext.jsx';
 import { BOARD_TEMPLATES } from '../../data/templates';
 import ConfirmDialog from '../ConfirmDialog.jsx';
+import HeaderDropdown from '../HeaderDropdown';
 import type { RetroBoard } from '../../types';
 
 import { Providers } from '../Providers';
+import { Logo } from '../Logo';
 
 
 
@@ -116,19 +118,35 @@ const DashboardContent: React.FC = () => {
     }
   };
 
+  const handleLogout = async () => {
+    await logout();
+    window.location.href = '/signin';
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 min-h-[80vh]">
       <div className="flex justify-between items-center mb-10">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight font-mono">Dashboard</h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">Manage your team's retrospectives</p>
+        <div className="flex items-center gap-4">
+          <div className="p-2 bg-white dark:bg-dark-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+            <Logo className="w-8 h-8 text-brand-600 dark:text-brand-400" />
+          </div>
+          <div>
+            <div className="flex items-center gap-3">
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight font-mono">Clear Retro</h1>
+              <span className="px-2 py-0.5 rounded-full bg-brand-100 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300 text-xs font-bold uppercase tracking-wider">Dashboard</span>
+            </div>
+            <p className="text-gray-500 dark:text-gray-400 mt-1">Manage your team's retrospectives</p>
+          </div>
         </div>
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl shadow-lg shadow-brand-500/30 hover:shadow-brand-500/50 transition-all transform hover:-translate-y-0.5 font-medium flex items-center"
-        >
-          <span className="text-xl mr-2 leading-none">+</span> New Retro
-        </button>
+        <div className="flex items-center gap-4">
+            <button
+            onClick={() => setShowCreateModal(true)}
+            className="px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl shadow-lg shadow-brand-500/30 hover:shadow-brand-500/50 transition-all transform hover:-translate-y-0.5 font-medium flex items-center"
+            >
+            <span className="text-xl mr-2 leading-none">+</span> New Retro
+            </button>
+            <HeaderDropdown user={user} onLogout={handleLogout} />
+        </div>
       </div>
 
       {loading ? (

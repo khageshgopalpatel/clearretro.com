@@ -82,7 +82,7 @@ const EditableText = ({ value, onSave, onCancel, placeholder = "Enter text...", 
                 </button>
                 <button
                     onClick={handleSave}
-                    className="px-3 py-1.5 text-xs font-bold bg-brand-600 text-white hover:bg-brand-700 rounded-lg shadow-sm shadow-brand-500/30 transition-all hover:-translate-y-0.5"
+                    className="px-3 py-1.5 text-xs font-bold bg-brand-700 text-white hover:bg-brand-800 rounded-lg shadow-sm shadow-brand-500/30 transition-all hover:-translate-y-0.5"
                 >
                     Save
                 </button>

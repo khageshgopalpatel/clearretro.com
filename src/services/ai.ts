@@ -1,6 +1,7 @@
 import { getAuth } from 'firebase/auth';
+import type { RetroCard, RetroColumn } from '../types';
 
-export const generateBoardSummary = async (cards: any, columns: any) => {
+export const generateBoardSummary = async (cards: RetroCard[], columns: RetroColumn[]) => {
     const auth = getAuth();
     const user = auth.currentUser;
 
@@ -26,8 +27,3 @@ export const generateBoardSummary = async (cards: any, columns: any) => {
 
     return await response.json();
 };
-
-// Deprecated/Unused functions kept for reference or cleanup if needed
-export const getStoredApiKey = () => localStorage.getItem('gemini_api_key');
-export const setStoredApiKey = (key: string) => localStorage.setItem('gemini_api_key', key);
-export const removeStoredApiKey = () => localStorage.removeItem('gemini_api_key');

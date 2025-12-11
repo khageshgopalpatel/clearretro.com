@@ -41,7 +41,7 @@ const CompetitorComparison: React.FC<CompetitorComparisonProps> = ({ competitorS
                   {data.metaDescription}
                </p>
                <div className="flex justify-center gap-4">
-                  <a href="/dashboard" className="px-8 py-4 bg-brand-600 text-white font-bold rounded-lg shadow-[0_0_20px_rgba(45,212,191,0.3)] hover:bg-brand-500 transition-all transform hover:-translate-y-1">
+                  <a href="/dashboard" className="px-8 py-4 bg-brand-700 text-white font-bold rounded-lg shadow-[0_0_20px_rgba(45,212,191,0.3)] hover:bg-brand-600 transition-all transform hover:-translate-y-1">
                      Start Free Retro
                   </a>
                </div>
@@ -66,7 +66,7 @@ const CompetitorComparison: React.FC<CompetitorComparisonProps> = ({ competitorS
                   <thead>
                      <tr className="bg-gray-50 dark:bg-dark-900 border-b border-gray-200 dark:border-gray-800">
                         <th className="p-6 text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-1/3">Feature</th>
-                        <th className="p-6 text-lg font-bold text-brand-600 dark:text-brand-400 w-1/3 bg-brand-50/50 dark:bg-brand-900/10">Clear Retro</th>
+                        <th className="p-6 text-lg font-bold text-brand-700 dark:text-brand-400 w-1/3 bg-brand-50/50 dark:bg-brand-900/10">Clear Retro</th>
                         <th className="p-6 text-lg font-bold text-gray-500 w-1/3">{data.name}</th>
                      </tr>
                   </thead>

@@ -9,7 +9,7 @@ import { useBoard, addCard, voteCard, deleteCard, moveCard, updateBoardTimer, up
 import { useAuth } from '../../hooks/useAuth';
 import { useSnackbar } from '../../context/SnackbarContext';
 import { generateBoardSummary } from '../../services/ai';
-import { groupCardsSemantically, generateDiscussionQuestions } from '../../services/geminiService';
+
 import jsPDF from 'jspdf';
 import * as XLSX from 'xlsx';
 
@@ -19,6 +19,7 @@ import HeaderDropdown from '../HeaderDropdown';
 import FocusMode from '../FocusMode';
 import ConfirmDialog from '../ConfirmDialog';
 import { Providers } from '../Providers';
+import { Logo } from '../Logo';
 
 // --- Sub Components ---
 
@@ -80,7 +81,7 @@ const DroppableColumn: React.FC<DroppableColumnProps> = ({ column, children }) =
   return (
     <div
       ref={setNodeRef}
-      className="flex-1 min-w-[20rem] flex flex-col h-full bg-white/30 dark:bg-dark-900/40 backdrop-blur-md rounded-lg border border-gray-200/60 dark:border-gray-700/60 shadow-sm transition-all duration-300 group hover:border-gray-300 dark:hover:border-gray-600 hover:shadow-lg"
+      className="flex-1 min-w-[85vw] md:min-w-[20rem] snap-center flex flex-col h-full bg-white/30 dark:bg-dark-900/40 backdrop-blur-md rounded-lg border border-gray-200/60 dark:border-gray-700/60 shadow-sm transition-all duration-300 group hover:border-gray-300 dark:hover:border-gray-600 hover:shadow-lg"
     >
       {children}
     </div>
@@ -121,9 +122,8 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
   // AI States
   const [summaryStatus, setSummaryStatus] = useState<AISummaryStatus>(AISummaryStatus.IDLE);
   const [summaryResult, setSummaryResult] = useState<AISummaryResult | null>(null);
-  const [isGrouping, setIsGrouping] = useState(false);
-  const [discussionQuestions, setDiscussionQuestions] = useState<string[] | null>(null);
-  const [isGeneratingQuestions, setIsGeneratingQuestions] = useState(false);
+
+
 
   // Timer
   const [timerInterval, setTimerInterval] = useState<ReturnType<typeof setInterval> | null>(null);
@@ -193,14 +193,17 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
 
   // Helper to get remaining time
   const getTimeLeft = () => {
-    if (!board?.timer) return 0;
-    if (board.timer.status === 'stopped') return board.timer.duration || 0;
+    if (!board?.timer) return 300; // Default to 5 minutes if no timer state
+    if (board.timer.status === 'stopped') {
+        const duration = board.timer.duration || 0;
+        return duration > 0 ? duration : 300; // Default to 5 mins if stopped at 0
+    } 
     if (board.timer.endTime) {
       const end = board.timer.endTime.toDate ? board.timer.endTime.toDate() : new Date(board.timer.endTime);
       const now = new Date();
       return Math.max(0, Math.ceil((end.getTime() - now.getTime()) / 1000));
     }
-    return 0;
+    return 300;
   };
 
   // --- Actions ---
@@ -357,58 +360,14 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
       } else {
         setSummaryStatus(AISummaryStatus.ERROR);
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
+      showSnackbar("AI Analysis Failed", "error");
       setSummaryStatus(AISummaryStatus.ERROR);
     }
   };
 
-  const handleSmartGrouping = async () => {
-    if (!board || board.status === 'completed') return;
-    setIsGrouping(true);
-    try {
-      const groups = await groupCardsSemantically(cards);
 
-      if (groups) {
-        // Update each card with its group
-        const updates = [];
-        for (const [name, ids] of Object.entries(groups)) {
-          for (const cardId of ids) {
-            const card = cards.find(c => c.id === cardId);
-            if (card) {
-              updates.push(updateCard(id, cardId, { text: `[${name}] ${card.text}` }));
-            }
-          }
-        }
-        await Promise.all(updates);
-      }
-    } catch (e) {
-      console.error("Grouping failed", e);
-    } finally {
-      setIsGrouping(false);
-    }
-  };
-
-  const handleGenerateQuestions = async () => {
-    if (!board || cards.length < 3) {
-      showSnackbar("Need at least 3 cards to generate questions", "error");
-      return;
-    }
-    setIsGeneratingQuestions(true);
-    try {
-      const questions = await generateDiscussionQuestions(cards);
-      if (questions) {
-        setDiscussionQuestions(questions);
-      } else {
-        showSnackbar("Failed to generate questions. Try again.", "error");
-      }
-    } catch (e) {
-      console.error(e);
-      showSnackbar("AI Service Error", "error");
-    } finally {
-      setIsGeneratingQuestions(false);
-    }
-  };
 
   // --- Exports ---
 
@@ -504,7 +463,18 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
             </div>
 
             <button
-              onClick={() => loginAsGuest()}
+              onClick={async () => {
+                try {
+                  await loginAsGuest();
+                } catch (e: any) {
+                  console.error(e);
+                  if (e.message.includes('ADMIN_ONLY_OPERATION')) {
+                    showSnackbar("Guest login disabled in Firebase Console", "error");
+                  } else {
+                    showSnackbar("Failed to sign in as guest", "error");
+                  }
+                }
+              }}
               className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-xl hover:opacity-90 transition-all font-bold shadow-lg shadow-gray-500/20"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -531,20 +501,42 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
   return (
     <div className="h-[calc(100vh-64px)] flex flex-col bg-[#f8fafc] dark:bg-[#050505] overflow-hidden bg-grid-pattern transition-colors duration-500">
       {/* Board Header */}
-      <div className="px-6 py-3 border-b border-gray-200 dark:border-gray-800 bg-white/70 dark:bg-dark-950/70 backdrop-blur-xl flex justify-between items-center shrink-0 z-20 sticky top-0">
-        <div className="flex items-center gap-6">
-          <div className="flex flex-col">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-3 font-mono">
-              {board.name}
-              {isCompleted && <span className="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full border border-red-200">COMPLETED</span>}
-            </h1>
-            <span className="text-[10px] text-gray-400 font-mono tracking-widest uppercase">{new Date().toDateString()}</span>
+      <div className="px-4 md:px-6 py-3 border-b border-gray-200 dark:border-gray-800 bg-white/70 dark:bg-dark-950/70 backdrop-blur-xl flex justify-between items-center shrink-0 z-20 sticky top-0">
+        <div className="flex items-center gap-2 md:gap-6">
+          <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-4">
+            {/* Primary Branding */}
+            <div className="flex items-center gap-3">
+              <a href="/dashboard" className="flex items-center gap-3 group">
+                <div className="p-1.5 bg-white dark:bg-dark-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 group-hover:border-brand-500/50 transition-colors">
+                  <Logo className="w-8 h-8 md:w-10 md:h-10 text-brand-600 dark:text-brand-400" />
+                </div>
+                <h1 className="hidden md:block text-xl font-bold text-gray-900 dark:text-white tracking-tight font-mono group-hover:text-brand-600 transition-colors">
+                  Clear Retro
+                </h1>
+              </a>
+            </div>
+
+            {/* Divider */}
+            <div className="hidden md:block h-8 w-px bg-gray-200 dark:bg-gray-800"></div>
+
+            {/* Board Info (Secondary) */}
+            <div className="flex flex-col">
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg font-bold text-gray-700 dark:text-gray-200 font-mono truncate max-w-[150px] md:max-w-[300px]">
+                  {board.name}
+                </h2>
+                {isCompleted && <span className="text-[10px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded border border-red-200 uppercase font-bold tracking-wider">Completed</span>}
+              </div>
+              <span className="text-[10px] text-gray-400 font-mono tracking-widest uppercase truncate">
+                 {new Date().toDateString()}
+              </span>
+            </div>
           </div>
 
           <div className="h-8 w-px bg-gray-200 dark:bg-gray-800 mx-2"></div>
 
-          <div className={`flex items-center gap-3 px-4 py-1.5 rounded-lg border transition-all ${board.timer?.status === 'running' ? 'border-brand-500 bg-brand-50/50 dark:bg-brand-900/10 shadow-[0_0_10px_rgba(45,212,191,0.2)]' : 'border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-dark-900'}`}>
-            <span className={`font-mono text-2xl font-bold ${getTimeLeft() < 60 && board.timer?.status === 'running' ? 'text-red-500 animate-pulse' : 'text-gray-800 dark:text-gray-200'}`}>
+          <div className={`flex items-center gap-2 md:gap-3 px-2 py-1 md:px-4 md:py-1.5 rounded-lg border transition-all ${board.timer?.status === 'running' ? 'border-brand-500 bg-brand-50/50 dark:bg-brand-900/10 shadow-[0_0_10px_rgba(45,212,191,0.2)]' : 'border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-dark-900'}`}>
+            <span className={`font-mono text-lg md:text-2xl font-bold ${getTimeLeft() < 60 && board.timer?.status === 'running' ? 'text-red-500 animate-pulse' : 'text-gray-800 dark:text-gray-200'}`}>
               {formatTime(getTimeLeft())}
             </span>
             {!isCompleted && user?.uid === board.createdBy && (
@@ -563,7 +555,7 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
           {user?.uid === board.createdBy && (
             <button
               onClick={() => togglePrivateMode(id, !isPrivateMode)}
-              className={`flex items-center justify-center w-10 h-10 rounded-lg border transition-all ${isPrivateMode ? 'bg-purple-100 dark:bg-purple-900/20 border-purple-500 text-purple-600 shadow-[0_0_15px_rgba(216,180,254,0.3)]' : 'bg-white dark:bg-dark-900 border-gray-200 dark:border-gray-800 text-gray-500'}`}
+              className={`hidden md:flex items-center justify-center w-10 h-10 rounded-lg border transition-all ${isPrivateMode ? 'bg-purple-100 dark:bg-purple-900/20 border-purple-500 text-purple-600 shadow-[0_0_15px_rgba(216,180,254,0.3)]' : 'bg-white dark:bg-dark-900 border-gray-200 dark:border-gray-800 text-gray-500'}`}
               title={isPrivateMode ? "Private Mode: ON (Text Blurred)" : "Private Mode: OFF"}
             >
               {isPrivateMode ? '🙈' : '👁️'}
@@ -573,7 +565,7 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
           {/* Focus Mode Button */}
           <button
             onClick={() => setFocusModeIndex(0)}
-            className="flex items-center justify-center w-10 h-10 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-dark-900 text-gray-500 hover:bg-gray-50 dark:hover:bg-dark-800 transition-colors"
+            className="hidden md:flex items-center justify-center w-10 h-10 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-dark-900 text-gray-500 hover:bg-gray-50 dark:hover:bg-dark-800 transition-colors"
             title="Enter Focus Mode"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -587,33 +579,13 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
 
           <div className="h-8 w-px bg-gray-200 dark:bg-gray-800 mx-2"></div>
 
-          {!isCompleted && user?.uid === board.createdBy && (
-            <button
-              onClick={handleSmartGrouping}
-              disabled={isGrouping}
-              className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-dark-900 border border-brand-200 dark:border-brand-900/50 text-brand-700 dark:text-brand-400 rounded-lg hover:shadow-[0_0_10px_rgba(45,212,191,0.2)] hover:border-brand-400 transition-all text-sm font-bold font-mono group"
-            >
-              {isGrouping ? <span className="animate-spin">⚡</span> : <span className="group-hover:animate-pulse">⚡</span>}
-              {isGrouping ? 'Grouping...' : 'AI Group'}
-            </button>
-          )}
 
-          {user?.uid === board.createdBy && (
-            <button
-              onClick={handleGenerateQuestions}
-              disabled={isGeneratingQuestions}
-              className="flex items-center gap-2 px-4 py-2 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition-all text-sm font-bold font-mono disabled:opacity-50"
-            >
-              {isGeneratingQuestions ? <span className="animate-spin">🤖</span> : <span>🤖</span>}
-              {isGeneratingQuestions ? 'Thinking...' : 'Copilot'}
-            </button>
-          )}
 
           {user?.uid === board.createdBy && (
             <button
               onClick={handleGenerateSummary}
               disabled={summaryStatus === AISummaryStatus.LOADING}
-              className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-dark-900 border border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-dark-800 transition-all text-sm font-bold font-mono disabled:opacity-50 disabled:cursor-not-allowed"
+              className="hidden md:flex items-center gap-2 px-4 py-2 bg-white dark:bg-dark-900 border border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-dark-800 transition-all text-sm font-bold font-mono disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {summaryStatus === AISummaryStatus.LOADING ? (
                 <>
@@ -629,26 +601,14 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
             </button>
           )}
 
-          {user?.uid === board.createdBy && (
-            <div className="relative group">
-              <button className="px-4 py-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-lg hover:opacity-90 transition-all text-sm font-bold shadow-lg shadow-gray-500/20">
-                Export
-              </button>
-              <div className="absolute right-0 top-full pt-2 w-40 hidden group-hover:block z-50">
-                <div className="bg-white dark:bg-dark-900 rounded-lg shadow-xl border border-gray-200 dark:border-gray-800 overflow-hidden">
-                  <button onClick={exportPDF} className="block w-full text-left px-4 py-3 text-sm hover:bg-gray-50 dark:hover:bg-dark-800 dark:text-gray-200 border-b border-gray-100 dark:border-gray-800 transition-colors">📄 PDF Report</button>
-                  <button onClick={exportExcel} className="block w-full text-left px-4 py-3 text-sm hover:bg-gray-50 dark:hover:bg-dark-800 dark:text-gray-200 transition-colors">📊 Excel / CSV</button>
-                </div>
-              </div>
-            </div>
-          )}
+
 
           <div className="h-8 w-px bg-gray-200 dark:bg-gray-800 mx-2"></div>
 
           {/* Share Button */}
           <button
             onClick={handleShare}
-            className="flex items-center justify-center w-10 h-10 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-dark-900 text-gray-500 hover:text-brand-500 hover:border-brand-500 transition-colors"
+            className="hidden md:flex items-center justify-center w-10 h-10 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-dark-900 text-gray-500 hover:text-brand-500 hover:border-brand-500 transition-colors"
             title="Share Board Link"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -662,58 +622,25 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
           {!isCompleted && user?.uid === board.createdBy && (
             <button
               onClick={() => setShowEndRetroDialog(true)}
-              className="px-4 py-2 bg-red-50 text-red-600 border border-red-200 rounded-lg hover:bg-red-100 transition-colors text-sm font-bold font-mono"
+              className="hidden md:block px-4 py-2 bg-red-50 text-red-600 border border-red-200 rounded-lg hover:bg-red-100 transition-colors text-sm font-bold font-mono"
             >
               End Retro
             </button>
           )}
 
           {/* User Dropdown */}
-          <HeaderDropdown user={user} onLogout={handleLogout} />
+          <HeaderDropdown 
+            user={user} 
+            onLogout={handleLogout} 
+            onExportPDF={user?.uid === board.createdBy ? exportPDF : undefined}
+            onExportExcel={user?.uid === board.createdBy ? exportExcel : undefined}
+          />
         </div>
       </div>
 
 
 
-      {/* Discussion Questions Modal */}
-      {discussionQuestions && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-300">
-          <div className="bg-white dark:bg-dark-900 rounded-xl shadow-2xl max-w-2xl w-full p-8 border border-indigo-100 dark:border-indigo-900/50 relative">
-            <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl blur opacity-20 -z-10"></div>
-            
-            <div className="flex justify-between items-start mb-6">
-              <div>
-                <h2 className="text-2xl font-bold dark:text-white mb-1 font-mono flex items-center gap-2">
-                  🤖 Facilitator Copilot
-                </h2>
-                <p className="text-indigo-600 dark:text-indigo-400 text-xs font-mono uppercase tracking-widest">Deep Dive Questions</p>
-              </div>
-              <button onClick={() => setDiscussionQuestions(null)} className="text-gray-400 hover:text-gray-900 dark:hover:text-white text-2xl">×</button>
-            </div>
 
-            <div className="space-y-4 mb-8">
-              {discussionQuestions.map((q, i) => (
-                <div key={i} className="p-4 bg-indigo-50 dark:bg-indigo-900/10 border border-indigo-100 dark:border-indigo-800 rounded-lg">
-                  <p className="text-lg text-gray-800 dark:text-gray-200 font-medium leading-relaxed">"{q}"</p>
-                </div>
-              ))}
-            </div>
-
-            <div className="flex justify-end gap-3">
-              <button 
-                onClick={() => {
-                  navigator.clipboard.writeText(discussionQuestions.join('\n\n'));
-                  showSnackbar("Questions copied!", "success");
-                }}
-                className="px-4 py-2 bg-white dark:bg-dark-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-bold rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                Copy All
-              </button>
-              <button onClick={() => setDiscussionQuestions(null)} className="px-6 py-2 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-700 transition-colors">Done</button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* AI Summary Modal Overlay */}
       {summaryResult && (
@@ -723,7 +650,7 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
             <div className="flex justify-between items-start mb-6">
               <div>
                 <h2 className="text-2xl font-bold dark:text-white mb-1 font-mono">Retro Summary</h2>
-                <p className="text-brand-600 dark:text-brand-400 text-xs font-mono uppercase tracking-widest">Powered by Gemini 2.0</p>
+                <p className="text-brand-600 dark:text-brand-400 text-xs font-mono uppercase tracking-widest">Powered by Gemini 1.5</p>
               </div>
               <button onClick={() => setSummaryResult(null)} className="text-gray-400 hover:text-gray-900 dark:hover:text-white text-2xl">×</button>
             </div>
@@ -790,7 +717,7 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
           onDragOver={handleDragOver}
           onDragEnd={handleDragEnd}
         >
-          <div className="flex h-full p-8 gap-6 min-w-full">
+          <div className="flex h-full p-2 md:p-8 gap-3 md:gap-6 min-w-full snap-x snap-mandatory">
             {board.columns.map((column) => (
               <DroppableColumn key={column.id} column={column}>
                 {/* Column Header */}
@@ -843,7 +770,7 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
                       />
                       <button
                         onClick={() => handleAddCard(column.id)}
-                        className="absolute bottom-2 right-2 p-1.5 text-gray-400 hover:text-brand-500 transition-colors opacity-50 group-hover/input:opacity-100"
+                        className="absolute bottom-2 right-2 p-2 text-gray-400 hover:text-brand-500 transition-colors opacity-50 group-hover/input:opacity-100"
                         title="Add Card"
                       >
                         ↵

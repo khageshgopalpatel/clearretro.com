@@ -1,79 +1,12 @@
-
-import React, { useEffect, useState } from 'react';
-import { BLOG_POSTS, type FAQ } from '../../data/blogPosts';
-
-const FAQSection: React.FC<{ faqs: FAQ[] }> = ({ faqs }) => {
-  const [openIndex, setOpenIndex] = useState<number | null>(null);
-
-  return (
-    <div className="mt-12 pt-12 border-t border-gray-200 dark:border-gray-800">
-      <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 font-mono">Frequently Asked Questions</h3>
-      <div className="space-y-4">
-        {faqs.map((faq, idx) => (
-          <div key={idx} className="border border-gray-200 dark:border-gray-800 rounded-lg overflow-hidden bg-white dark:bg-dark-950">
-            <button
-              onClick={() => setOpenIndex(openIndex === idx ? null : idx)}
-              className="w-full text-left p-4 flex justify-between items-center focus:outline-none hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors"
-            >
-              <span className="font-bold text-gray-800 dark:text-gray-200 font-mono">{faq.question}</span>
-              <span className="text-brand-500 text-xl">{openIndex === idx ? '−' : '+'}</span>
-            </button>
-            {openIndex === idx && (
-              <div className="p-4 pt-0 text-gray-600 dark:text-gray-400 leading-relaxed border-t border-gray-100 dark:border-gray-800/50 bg-gray-50/50 dark:bg-dark-900/50">
-                {faq.answer}
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
+import React from 'react';
+import type { BlogPost as BlogPostType } from '../../data/blogPosts';
 
 interface BlogPostProps {
-  slug: string;
+  post: BlogPostType;
+  children?: React.ReactNode;
 }
 
-const BlogPost: React.FC<BlogPostProps> = ({ slug }) => {
-  const post = BLOG_POSTS.find(p => p.slug === slug);
-
-  useEffect(() => {
-    if (post) {
-      document.title = `${post.title} | Clear Retro Blog`;
-
-      const updateMeta = (name: string, content: string) => {
-        let element = document.querySelector(`meta[name="${name}"]`);
-        if (!element) {
-          element = document.createElement('meta');
-          element.setAttribute('name', name);
-          document.head.appendChild(element);
-        }
-        element.setAttribute('content', content);
-      };
-
-      updateMeta('description', post.excerpt);
-      updateMeta('keywords', post.keywords);
-
-      // Inject JSON-LD
-      if (post.jsonLd) {
-        let script = document.querySelector('#json-ld-data');
-        if (!script) {
-          script = document.createElement('script');
-          script.id = 'json-ld-data';
-          script.setAttribute('type', 'application/ld+json');
-          document.head.appendChild(script);
-        }
-        script.textContent = JSON.stringify(post.jsonLd);
-      }
-    }
-
-    return () => {
-      // Cleanup JSON-LD on unmount
-      const script = document.querySelector('#json-ld-data');
-      if (script) script.remove();
-    }
-  }, [post]);
-
+const BlogPost: React.FC<BlogPostProps> = ({ post, children }) => {
   if (!post) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center text-center px-4">
@@ -114,7 +47,7 @@ const BlogPost: React.FC<BlogPostProps> = ({ slug }) => {
         {post.imageAlt && (
           <div className="mb-10 rounded-xl overflow-hidden shadow-xl border border-gray-200 dark:border-gray-800">
             <img
-              src={`https://placehold.co/1200x630/18181b/2dd4bf?text=${encodeURIComponent(post.title)}`}
+              src="/blog-placeholder.svg"
               alt={post.imageAlt}
               className="w-full h-auto object-cover"
               width="1200"
@@ -127,8 +60,8 @@ const BlogPost: React.FC<BlogPostProps> = ({ slug }) => {
           <div dangerouslySetInnerHTML={{ __html: post.content }} />
         </article>
 
-        {/* FAQs */}
-        {post.faqs && <FAQSection faqs={post.faqs} />}
+        {/* FAQs and other children */}
+        {children}
 
         {/* CTA */}
         <div className="mt-20 p-10 bg-brand-50 dark:bg-brand-900/10 border border-brand-100 dark:border-brand-900/30 rounded-2xl text-center relative overflow-hidden">
@@ -140,7 +73,7 @@ const BlogPost: React.FC<BlogPostProps> = ({ slug }) => {
             <p className="text-gray-600 dark:text-gray-300 mb-8 max-w-lg mx-auto">
               Start your first retrospective in seconds. No credit card required. Experience the speed of Clear Retro today.
             </p>
-            <a href="/dashboard" className="inline-block px-8 py-4 bg-brand-600 text-white font-bold rounded-lg shadow-[0_0_20px_rgba(45,212,191,0.4)] hover:bg-brand-700 transition-all hover:-translate-y-1">
+            <a href="/dashboard" className="inline-block px-8 py-4 bg-brand-700 text-white font-bold rounded-lg shadow-[0_0_20px_rgba(45,212,191,0.4)] hover:bg-brand-800 transition-all hover:-translate-y-1">
               Start Free Retro Now
             </a>
           </div>

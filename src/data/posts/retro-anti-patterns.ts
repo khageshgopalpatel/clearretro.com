@@ -126,7 +126,7 @@ export const post15: BlogPost = {
       Recognizing these patterns is the first step to fixing them.
     </p>
     <p class="mb-6">
-      <strong>Want to avoid these traps?</strong> <a href="/#/dashboard" class="text-brand-500 underline">Clear Retro</a> is designed to guide you through a healthy process, forcing you to group, vote, and assign action items properly.
+      <strong>Want to avoid these traps?</strong> <a href="/#/dashboard" class="text-brand-700 dark:text-brand-400 underline">Clear Retro</a> is designed to guide you through a healthy process, forcing you to group, vote, and assign action items properly.
     </p>
   `
 };

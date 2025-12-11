@@ -3,6 +3,6 @@ import Layout from "../layouts/Layout.astro";
 import DashboardComponent from "../components/pages/Dashboard";
 ---
 
-<Layout title="Dashboard | Clear Retro">
+<Layout title="Dashboard | Clear Retro" appLayout={true}>
   <DashboardComponent client:only="react" />
 </Layout>

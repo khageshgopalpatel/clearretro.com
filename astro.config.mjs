@@ -30,6 +30,9 @@ export default defineConfig({
       return item;
     },
   })],
+  build: {
+    inlineStylesheets: 'auto',
+  },
   vite: {
     plugins: [
       {

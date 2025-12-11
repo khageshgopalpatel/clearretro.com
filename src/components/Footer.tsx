@@ -7,7 +7,7 @@ const Footer: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
                     <div className="col-span-1 md:col-span-1">
                         <div className="flex items-center space-x-2 mb-4">
-                            <div className="w-5 h-5 bg-brand-600 rounded-sm flex items-center justify-center text-white text-[10px] font-bold">CR</div>
+                            <div className="w-5 h-5 bg-brand-700 rounded-sm flex items-center justify-center text-white text-[10px] font-bold">CR</div>
                             <span className="font-bold text-md text-gray-900 dark:text-white">Clear Retro</span>
                         </div>
                         <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 leading-relaxed">
