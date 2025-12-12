@@ -28,9 +28,9 @@ const Landing: React.FC = () => {
          {/* Hero Section */}
          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16 lg:pt-32">
             <div className="text-center max-w-4xl mx-auto">
-               <div className="inline-flex items-center px-4 py-1.5 rounded-full bg-brand-50/50 dark:bg-brand-900/20 text-brand-700 dark:text-brand-300 text-xs font-mono font-semibold mb-8 border border-brand-100 dark:border-brand-800/50 backdrop-blur-sm hover:border-brand-500/50 transition-colors cursor-default">
-                  <span className="animate-pulse w-2 h-2 bg-brand-500 rounded-full mr-2 shadow-[0_0_10px_rgba(45,212,191,0.6)]"></span>
-                  V2.1: Templates & Board Management
+               <div className="inline-flex items-center px-4 py-1.5 rounded-full bg-green-50/50 dark:bg-green-900/20 text-green-700 dark:text-green-300 text-xs font-mono font-semibold mb-8 border border-green-100 dark:border-green-800/50 backdrop-blur-sm hover:border-green-500/50 transition-colors cursor-default">
+                  <span className="animate-pulse w-2 h-2 bg-green-500 rounded-full mr-2 shadow-[0_0_10px_rgba(34,197,94,0.6)]"></span>
+                  100% Free • Unlimited Boards • No Credit Card
                </div>
 
                <h1 className="text-5xl tracking-tight font-extrabold text-gray-900 dark:text-white sm:text-7xl md:text-8xl mb-8 font-mono leading-tight">
@@ -39,17 +39,20 @@ const Landing: React.FC = () => {
                </h1>
 
                <p className="mt-8 text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto leading-relaxed font-light">
-                  The <span className="text-gray-900 dark:text-white font-medium">fastest</span> way for engineering teams to improve. Zero clutter, keyboard-first, and supercharged with AI.
+                  The <span className="text-gray-900 dark:text-white font-medium">fastest</span> way for engineering teams to improve. <span className="text-brand-600 dark:text-brand-400 font-bold">Free forever</span>, zero clutter, and supercharged with AI.
                </p>
 
-               <div className="mt-12 flex flex-col sm:flex-row justify-center gap-6">
+               <div className="mt-12 flex flex-col items-center gap-4">
                   <a
                      href="/signin"
-                     className="group relative px-8 py-4 bg-gray-900 dark:bg-white text-white dark:text-black text-lg font-bold rounded-xl shadow-[0_0_20px_rgba(0,0,0,0.2)] dark:shadow-[0_0_20px_rgba(255,255,255,0.3)] hover:shadow-[0_0_30px_rgba(45,212,191,0.4)] hover:-translate-y-1 transition-all duration-300 flex flex-col items-center border border-transparent hover:border-brand-500 overflow-hidden"
+                     className="group relative px-8 py-4 bg-gray-900 dark:bg-white text-white dark:text-black text-lg font-bold rounded-xl shadow-[0_0_20px_rgba(0,0,0,0.2)] dark:shadow-[0_0_20px_rgba(255,255,255,0.3)] hover:shadow-[0_0_30px_rgba(45,212,191,0.4)] hover:-translate-y-1 transition-all duration-300 flex flex-col items-center border border-transparent hover:border-brand-500 overflow-hidden w-full sm:w-auto"
                   >
                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
                      <span className="relative z-10">Start Free Retro →</span>
                   </a>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 font-mono">
+                     No account required for demo • Unlimited history
+                  </p>
                </div>
             </div>
 
@@ -190,22 +193,26 @@ const Landing: React.FC = () => {
          <div className="py-20 bg-gray-50 dark:bg-[#08080a] border-y border-gray-200 dark:border-gray-800">
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
                <h2 className="text-2xl font-bold text-gray-900 dark:text-white font-mono mb-8">Compare vs The Competition</h2>
-               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <a href="/vs/funretro" className="p-4 bg-white dark:bg-dark-900 border border-gray-200 dark:border-gray-800 rounded-xl hover:border-brand-500 hover:shadow-[0_0_15px_rgba(45,212,191,0.2)] transition-all">
-                     <span className="block text-xs text-gray-500 uppercase tracking-widest mb-1">vs</span>
-                     <span className="font-bold text-gray-900 dark:text-white">FunRetro</span>
-                  </a>
+               <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                   <a href="/vs/easyretro" className="p-4 bg-white dark:bg-dark-900 border border-gray-200 dark:border-gray-800 rounded-xl hover:border-brand-500 hover:shadow-[0_0_15px_rgba(45,212,191,0.2)] transition-all">
                      <span className="block text-xs text-gray-500 uppercase tracking-widest mb-1">vs</span>
                      <span className="font-bold text-gray-900 dark:text-white">EasyRetro</span>
                   </a>
+                  <a href="/vs/miro" className="p-4 bg-white dark:bg-dark-900 border border-gray-200 dark:border-gray-800 rounded-xl hover:border-brand-500 hover:shadow-[0_0_15px_rgba(45,212,191,0.2)] transition-all">
+                     <span className="block text-xs text-gray-500 uppercase tracking-widest mb-1">vs</span>
+                     <span className="font-bold text-gray-900 dark:text-white">Miro</span>
+                  </a>
+                  <a href="/vs/parabol" className="p-4 bg-white dark:bg-dark-900 border border-gray-200 dark:border-gray-800 rounded-xl hover:border-brand-500 hover:shadow-[0_0_15px_rgba(45,212,191,0.2)] transition-all">
+                     <span className="block text-xs text-gray-500 uppercase tracking-widest mb-1">vs</span>
+                     <span className="font-bold text-gray-900 dark:text-white">Parabol</span>
+                  </a>
+                  <a href="/vs/teamretro" className="p-4 bg-white dark:bg-dark-900 border border-gray-200 dark:border-gray-800 rounded-xl hover:border-brand-500 hover:shadow-[0_0_15px_rgba(45,212,191,0.2)] transition-all">
+                     <span className="block text-xs text-gray-500 uppercase tracking-widest mb-1">vs</span>
+                     <span className="font-bold text-gray-900 dark:text-white">TeamRetro</span>
+                  </a>
                   <a href="/vs/metroretro" className="p-4 bg-white dark:bg-dark-900 border border-gray-200 dark:border-gray-800 rounded-xl hover:border-brand-500 hover:shadow-[0_0_15px_rgba(45,212,191,0.2)] transition-all">
                      <span className="block text-xs text-gray-500 uppercase tracking-widest mb-1">vs</span>
                      <span className="font-bold text-gray-900 dark:text-white">Metro Retro</span>
-                  </a>
-                  <a href="/vs/retrospected" className="p-4 bg-white dark:bg-dark-900 border border-gray-200 dark:border-gray-800 rounded-xl hover:border-brand-500 hover:shadow-[0_0_15px_rgba(45,212,191,0.2)] transition-all">
-                     <span className="block text-xs text-gray-500 uppercase tracking-widest mb-1">vs</span>
-                     <span className="font-bold text-gray-900 dark:text-white">Retrospected</span>
                   </a>
                </div>
             </div>
