@@ -9,6 +9,7 @@ export const post4: BlogPost = {
   date: 'Dec 07, 2024',
   readTime: '25 min read',
   imageAlt: 'Step-by-step guide to running a sprint retrospective',
+  image: '/images/blog/how-to-run-an-effective-sprint-retrospective.png',
   faqs: [
     { question: "What is the ideal agenda for a 1-hour retrospective?", answer: "5 min: Set the Stage. 15 min: Gather Data. 20 min: Generate Insights. 15 min: Decide What to Do. 5 min: Close." },
     { question: "How do I handle a team member who dominates the conversation?", answer: "Use techniques like 'Round Robin' where everyone gets equal time, or use a tool with a timer (like Clear Retro) to limit speaking slots." },

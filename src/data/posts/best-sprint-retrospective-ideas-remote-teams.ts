@@ -9,6 +9,7 @@ export const post2: BlogPost = {
   date: 'Dec 05, 2024',
   readTime: '20 min read',
   imageAlt: 'Remote team using various retrospective templates on a digital whiteboard',
+  image: '/images/blog/best-sprint-retrospective-ideas-remote-teams.png',
   faqs: [
     { question: "How often should we change the retrospective format?", answer: "It is recommended to switch formats every 2-3 sprints to prevent 'retro fatigue' and stimulate new ways of thinking. If the team is facing a specific crisis, choose a format tailored to that problem (e.g., 'The 4 Ls' for process issues)." },
     { question: "What is the best format for a new team?", answer: "Start/Stop/Continue or Mad/Sad/Glad are best for new teams as they are intuitive and require little explanation. As the team matures, you can introduce metaphorical formats like 'The Sailboat'." },

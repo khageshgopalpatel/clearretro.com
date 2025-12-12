@@ -9,6 +9,7 @@ export const post9: BlogPost = {
   date: 'Dec 12, 2024',
   readTime: '16 min read',
   imageAlt: '4Ls retrospective board with sticky notes',
+  image: '/images/blog/4ls-retrospective-template-liked-learned-lacked-longed-for.png',
   faqs: [
     { question: "What is the difference between 'Lacked' and 'Longed For'?", answer: "'Lacked' is looking backward at what was missing (e.g., 'We lacked clear specs'). 'Longed For' is looking forward at what you desire (e.g., 'I long for a dedicated QA engineer')." },
     { question: "Is this template good for every sprint?", answer: "It can be, but it shines best after longer periods (like a quarter or a big release) because 'Learning' and 'Longing' often take time to develop." },

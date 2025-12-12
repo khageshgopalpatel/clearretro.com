@@ -9,6 +9,7 @@ export const post1: BlogPost = {
   date: 'Dec 05, 2024',
   readTime: '15 min read',
   imageAlt: 'Agile team collaborating on a digital retrospective board with AI insights',
+  image: '/images/blog/what-is-a-sprint-retrospective.png',
   faqs: [
     { question: "What is the main goal of a sprint retrospective?", answer: "The primary goal is continuous improvement (Kaizen). The team inspects their people, processes, and tools to create an actionable plan for the next sprint. In 2025, this also includes reviewing 'Developer Experience' (DevEx) metrics." },
     { question: "How long should a retrospective last?", answer: "For a two-week sprint, a retrospective should typically last between 60 to 90 minutes. A good rule of thumb is 45 minutes per week of sprint duration." },

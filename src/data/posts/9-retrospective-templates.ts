@@ -9,6 +9,7 @@ export const post3: BlogPost = {
   date: 'Dec 06, 2024',
   readTime: '18 min read',
   imageAlt: 'Scrum Master facilitating a retrospective using various digital templates',
+  image: '/images/blog/9-retrospective-templates-every-scrum-master-should-use.png',
   faqs: [
     { question: "Which template is best for a team in crisis?", answer: "The 'Mad, Sad, Glad' template is best for teams in crisis as it focuses on emotional release and psychological safety, allowing the team to vent before moving to solutions." },
     { question: "How do I choose the right template?", answer: "Consider the team's current state. If they are bored, use a fun metaphor like 'Sailboat'. If they are process-heavy, use '4 Ls'. If they need quick actions, use 'Start, Stop, Continue'." },

@@ -9,6 +9,7 @@ export const post10: BlogPost = {
   date: 'Dec 13, 2024',
   readTime: '18 min read',
   imageAlt: 'Sailboat retrospective diagram with wind, anchors, rocks, and island',
+  image: '/images/blog/sailboat-retrospective-template-guide.png',
   faqs: [
     { question: "Do I need to be an artist to draw this?", answer: "No! A simple stick figure boat is fine. Or use a digital tool like Clear Retro that has the image pre-loaded." },
     { question: "What is the difference between 'Anchors' and 'Rocks'?", answer: "'Anchors' are things currently slowing you down (e.g., technical debt). 'Rocks' are future risks (e.g., a key team member going on leave)." },

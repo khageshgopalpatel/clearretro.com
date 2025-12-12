@@ -9,6 +9,7 @@ export const post8: BlogPost = {
   date: 'Dec 11, 2024',
   readTime: '14 min read',
   imageAlt: 'Mad Sad Glad retrospective board with emojis',
+  image: '/images/blog/mad-sad-glad-retrospective-template.png',
   faqs: [
     { question: "Is this template too 'soft' for engineering teams?", answer: "Not at all. Frustration (Mad) is often a sign of technical debt or broken processes. Addressing emotions leads to technical solutions." },
     { question: "What if everyone is just 'Glad'?", answer: "Dig deeper. Ask 'What almost made you Mad?' or 'What are you worried might make you Sad next sprint?' Toxic positivity can hide real issues." },

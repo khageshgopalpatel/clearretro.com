@@ -9,6 +9,7 @@ export const post11: BlogPost = {
   date: 'Dec 14, 2024',
   readTime: '13 min read',
   imageAlt: 'Team reviewing action items on a Kanban board',
+  image: '/images/blog/agile-action-items-guide.png',
   faqs: [
     { question: "Who should own an action item?", answer: "A single person. If 'The Team' owns it, no one owns it. Assign it to a specific individual who is responsible for driving it forward." },
     { question: "How many action items should we have?", answer: "Less is more. Aim for 1-2 high-impact items per sprint. If you have 10, you will do none of them." },

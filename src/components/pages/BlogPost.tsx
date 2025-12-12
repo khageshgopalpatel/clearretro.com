@@ -47,7 +47,7 @@ const BlogPost: React.FC<BlogPostProps> = ({ post, children }) => {
         {post.imageAlt && (
           <div className="mb-10 rounded-xl overflow-hidden shadow-xl border border-gray-200 dark:border-gray-800">
             <img
-              src="/blog-placeholder.svg"
+              src={post.image || "/blog-placeholder.svg"}
               alt={post.imageAlt}
               className="w-full h-auto object-cover"
               width="1200"

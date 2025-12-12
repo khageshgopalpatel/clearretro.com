@@ -9,6 +9,7 @@ export const post7: BlogPost = {
   date: 'Dec 10, 2024',
   readTime: '12 min read',
   imageAlt: 'Team brainstorming what went well and what didnt on a whiteboard',
+  image: '/images/blog/what-went-well-what-didnt-retrospective-examples.png',
   faqs: [
     { question: "What if people only write 'Good job'?", answer: "Challenge them to be specific. 'Good job on what?' 'The API refactor.' 'Why was it good?' 'It reduced latency by 50ms.'" },
     { question: "How do I stop the 'What Didn't Go Well' column from becoming toxic?", answer: "Enforce the 'No Blame' rule. Focus on systems, not people. Instead of 'John broke the build', write 'The build process is fragile'." },

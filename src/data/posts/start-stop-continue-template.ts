@@ -9,6 +9,7 @@ export const post6: BlogPost = {
   date: 'Dec 09, 2024',
   readTime: '15 min read',
   imageAlt: 'Start Stop Continue retrospective board with sticky notes',
+  image: '/images/blog/start-stop-continue-retrospective-template.png',
   faqs: [
     { question: "What is the difference between 'Stop' and 'Lacked'?", answer: "'Stop' is about active behaviors that are harmful (e.g., 'Stop interrupting'). 'Lacked' (from the 4Ls) is about missing resources (e.g., 'Lacked design specs')." },
     { question: "How many items should be in each column?", answer: "Quality over quantity. Aim for 3-5 high-impact items per column rather than a laundry list of 20 minor complaints." },

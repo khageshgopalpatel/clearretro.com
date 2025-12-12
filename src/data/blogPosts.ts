@@ -14,6 +14,7 @@ export interface BlogPost {
   date: string;
   readTime: string;
   imageAlt: string;
+  image?: string;
   faqs?: FAQ[];
   jsonLd?: object;
 }

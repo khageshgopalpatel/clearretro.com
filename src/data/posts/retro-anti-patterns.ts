@@ -9,6 +9,7 @@ export const post15: BlogPost = {
   date: 'Dec 18, 2024',
   readTime: '22 min read',
   imageAlt: 'Team looking frustrated during a retrospective',
+  image: '/images/blog/10-retrospective-anti-patterns.png',
   faqs: [
     { question: "What is the most common anti-pattern?", answer: "'No Action Items'. Teams talk for an hour but decide to do nothing. This kills morale faster than anything else." },
     { question: "How do I fix 'The Loudmouth'?", answer: "Use a talking stick (or a digital timer). Enforce a 'No Interruptions' rule. If they keep dominating, talk to them privately." },

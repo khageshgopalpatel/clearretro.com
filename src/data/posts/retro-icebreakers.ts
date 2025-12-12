@@ -9,6 +9,7 @@ export const post13: BlogPost = {
   date: 'Dec 16, 2024',
   readTime: '15 min read',
   imageAlt: 'Remote team laughing on a video call',
+  image: '/images/blog/20-best-retro-icebreakers-remote-teams.png',
   faqs: [
     { question: "Do we need an icebreaker every time?", answer: "Yes. It signals the transition from 'work mode' to 'collaborative mode'. It doesn't have to be long—2 minutes is enough." },
     { question: "What if my team hates 'forced fun'?", answer: "Stick to low-stakes questions like 'What did you eat for lunch?' rather than 'What is your deepest fear?'. Read the room." },

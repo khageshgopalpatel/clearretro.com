@@ -9,6 +9,7 @@ export const post5: BlogPost = {
   date: 'Dec 08, 2024',
   readTime: '22 min read',
   imageAlt: 'Team discussing retrospective questions on a digital board',
+  image: '/images/blog/sprint-retro-questions-40-examples.png',
   faqs: [
     { question: "How many questions should I ask in one retro?", answer: "Don't overwhelm the team. Pick 1-2 main questions for the 'Gather Data' phase. You can use more for icebreakers or closing." },
     { question: "What if the team answers with silence?", answer: "Silence is okay. Give them time to think. If it persists, try rephrasing the question or use an anonymous poll to lower the barrier to entry." },

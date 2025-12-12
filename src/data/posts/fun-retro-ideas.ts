@@ -9,6 +9,7 @@ export const post12: BlogPost = {
   date: 'Dec 15, 2024',
   readTime: '20 min read',
   imageAlt: 'Team laughing during a fun retrospective session',
+  image: '/images/blog/10-fun-retrospective-ideas-engagement.png',
   faqs: [
     { question: "Are fun retrospectives unprofessional?", answer: "No. Play is essential for creativity. A relaxed team shares more honest feedback than a stressed team." },
     { question: "How often should we switch themes?", answer: "Every 2-3 sprints. Keep it fresh, but don't make the team learn a complex new game every single time." },

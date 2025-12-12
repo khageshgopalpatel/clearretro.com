@@ -9,6 +9,7 @@ export const post14: BlogPost = {
   date: 'Dec 17, 2024',
   readTime: '25 min read',
   imageAlt: 'Scrum master facilitating a difficult conversation',
+  image: '/images/blog/scrum-master-guide-difficult-retrospectives.png',
   faqs: [
     { question: "What if two team members start shouting?", answer: "Intervene immediately. 'Let's pause. We are attacking the problem, not each other.' If needed, take a 5-minute break to let tempers cool." },
     { question: "How do I handle the 'Silent Retro'?", answer: "Silence usually means fear or boredom. Try an anonymous format (like writing cards before speaking) to lower the barrier to entry." },
