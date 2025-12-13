@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import confetti from 'canvas-confetti';
 import { useDraggable, useDroppable } from '@dnd-kit/core';
 import { voteCard, addReply, useReplies, toggleReaction, updateCard, deleteReply, deleteCard } from '../hooks/useBoard';
 import { useAuth } from '../hooks/useAuth';
@@ -20,9 +21,10 @@ interface CardProps {
         isDragging?: boolean;
     };
     isCompleted?: boolean;
+    onDelete?: (cardId: string) => Promise<void>;
 }
 
-const Card = ({ card, boardId, isPrivate, sortableProps, isCompleted }: CardProps) => {
+const Card = ({ card, boardId, isPrivate, sortableProps, isCompleted, onDelete }: CardProps) => {
     const { user } = useAuth();
     const [showReplyInput, setShowReplyInput] = useState(false);
     const [replyText, setReplyText] = useState('');
@@ -161,11 +163,30 @@ const Card = ({ card, boardId, isPrivate, sortableProps, isCompleted }: CardProp
     const activeUsers = usePresence(boardId, user);
 
     const handleToggleActionItem = async () => {
-        await updateCard(boardId, card.id, { isActionItem: !card.isActionItem } as Partial<RetroCard>);
+        const newState = !card.isActionItem;
+        if (newState) {
+            confetti({
+                particleCount: 100,
+                spread: 70,
+                origin: { y: 0.6 },
+                colors: ['#3b82f6', '#1d4ed8', '#60a5fa'] // Blue theme
+            });
+        }
+        await updateCard(boardId, card.id, { isActionItem: newState } as Partial<RetroCard>);
     };
 
     const handleToggleDone = async () => {
-        await updateCard(boardId, card.id, { isDone: !card.isDone } as Partial<RetroCard>);
+        const newState = !card.isDone;
+        if (newState) {
+             confetti({
+                particleCount: 150,
+                spread: 60,
+                origin: { y: 0.7 },
+                colors: ['#22c55e', '#16a34a', '#86efac'], // Green theme
+                shapes: ['circle', 'square', 'star']
+            });
+        }
+        await updateCard(boardId, card.id, { isDone: newState } as Partial<RetroCard>);
     };
 
     const handleAssign = async (userId: string) => {
@@ -454,12 +475,18 @@ const Card = ({ card, boardId, isPrivate, sortableProps, isCompleted }: CardProp
                 isOpen={showDeleteDialog}
                 onClose={() => setShowDeleteDialog(false)}
                 onConfirm={async () => {
-                    const { deleteCard } = await import('../hooks/useBoard');
-                    try {
-                        await deleteCard(boardId, card.id);
-                        showSnackbar('Card deleted successfully', 'success');
-                    } catch (error) {
-                        showSnackbar('Failed to delete card', 'error');
+                    if (onDelete) {
+                        await onDelete(card.id);
+                        showSnackbar('Card deleted', 'success');
+                    } else {
+                        // Fallback logic
+                        const { deleteCard } = await import('../hooks/useBoard');
+                        try {
+                            await deleteCard(boardId, card.id);
+                            showSnackbar('Card deleted successfully', 'success');
+                        } catch (error) {
+                            showSnackbar('Failed to delete card', 'error');
+                        }
                     }
                 }}
                 title="Delete Card"

@@ -141,12 +141,15 @@ export const updateBoardTimer = async (boardId: string, status: 'running' | 'pau
         updateData['timer.duration'] = durationInSeconds;
     } else if (status === 'stopped') {
         updateData['timer.endTime'] = null;
+        if (durationInSeconds > 0) {
+            updateData['timer.duration'] = durationInSeconds;
+        }
     }
 
     await updateDoc(doc(db, "boards", boardId), updateData);
 };
 
-export const addOneMinute = async (boardId: string) => {
+export const adjustTimer = async (boardId: string, seconds: number) => {
     const boardRef = doc(db, "boards", boardId);
     const boardSnap = await getDoc(boardRef);
 
@@ -155,17 +158,19 @@ export const addOneMinute = async (boardId: string) => {
         const timer = data.timer || {};
 
         if (timer.status === 'running' && timer.endTime) {
-            // If running, extend endTime by 60 seconds
+            // If running, extend endTime
             const currentEndTime = timer.endTime.toDate();
-            const newEndTime = new Date(currentEndTime.getTime() + 60000);
+            const newEndTime = new Date(currentEndTime.getTime() + (seconds * 1000));
             await updateDoc(boardRef, {
                 'timer.endTime': newEndTime,
-                'timer.duration': increment(60)
+                'timer.duration': increment(seconds)
             });
         } else {
-            // If stopped, just increase duration
+            // If stopped, just increase duration (prevent negative)
+            const currentDuration = timer.duration || 0;
+            const newDuration = Math.max(0, currentDuration + seconds);
             await updateDoc(boardRef, {
-                'timer.duration': increment(60)
+                'timer.duration': newDuration
             });
         }
     }

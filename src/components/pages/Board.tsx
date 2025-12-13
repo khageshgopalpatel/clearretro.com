@@ -5,7 +5,7 @@ import { DndContext, DragOverlay, closestCorners, KeyboardSensor, PointerSensor,
 import { SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { type RetroBoard, type RetroCard, type RetroColumn, type AISummaryResult, AISummaryStatus } from '../../types';
-import { useBoard, addCard, voteCard, deleteCard, moveCard, updateBoardTimer, updateCard, togglePrivateMode, completeRetro } from '../../hooks/useBoard';
+import { useBoard, addCard, voteCard, deleteCard, moveCard, updateBoardTimer, updateCard, togglePrivateMode, completeRetro, adjustTimer } from '../../hooks/useBoard';
 import { useAuth } from '../../hooks/useAuth';
 import { useSnackbar } from '../../context/SnackbarContext';
 import { generateBoardSummary } from '../../services/ai';
@@ -20,6 +20,7 @@ import FocusMode from '../FocusMode';
 import ConfirmDialog from '../ConfirmDialog';
 import { Providers } from '../Providers';
 import { Logo } from '../Logo';
+import { RetroPuzzle } from '../RetroPuzzle';
 
 // --- Sub Components ---
 
@@ -27,7 +28,9 @@ interface SortableCardWrapperProps {
   card: RetroCard;
   boardId: string;
   isPrivate: boolean;
+
   isCompleted?: boolean;
+  onDelete?: (cardId: string) => Promise<void>;
 }
 
 const COLUMN_COLORS: Record<string, string> = {
@@ -42,7 +45,7 @@ const COLUMN_COLORS: Record<string, string> = {
   default: 'bg-gray-500'
 };
 
-const SortableCardWrapper: React.FC<SortableCardWrapperProps> = ({ card, boardId, isPrivate, isCompleted }) => {
+const SortableCardWrapper: React.FC<SortableCardWrapperProps> = ({ card, boardId, isPrivate, isCompleted, onDelete }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: card.id });
 
   const style = {
@@ -56,6 +59,7 @@ const SortableCardWrapper: React.FC<SortableCardWrapperProps> = ({ card, boardId
       boardId={boardId}
       isPrivate={isPrivate}
       isCompleted={isCompleted}
+      onDelete={onDelete}
       sortableProps={{
         attributes,
         listeners,
@@ -183,11 +187,14 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
     if (!board || board.status === 'completed') return;
 
     if (board.timer?.status === 'running') {
-      // Pause
-      await updateBoardTimer(id, 'stopped');
+      // Pause: Save remaining time
+      const remaining = getTimeLeft();
+      await updateBoardTimer(id, 'stopped', remaining);
     } else {
-      // Start (default 5 mins if not set, or resume?)
-      await updateBoardTimer(id, 'running', 300);
+      // Start/Resume: Use existing duration if adjusted or paused, else default 5 mins
+      const currentDuration = board.timer?.duration || 0;
+      const durationToStart = currentDuration > 0 ? currentDuration : 300;
+      await updateBoardTimer(id, 'running', durationToStart);
     }
   };
 
@@ -342,9 +349,31 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
   };
 
   const handleAddCard = async (columnId: string) => {
-    if (!board || !newCardText[columnId]?.trim() || !user || board.status === 'completed') return;
-    await addCard(id, columnId, newCardText[columnId], user);
-    setNewCardText({ ...newCardText, [columnId]: '' });
+    const text = newCardText[columnId]?.trim();
+    if (!board || !text || !user || board.status === 'completed') return;
+    
+    // Optimistic Update: Clear input immediately
+    setNewCardText(prev => ({ ...prev, [columnId]: '' }));
+
+    try {
+      await addCard(id, columnId, text, user);
+    } catch (e) {
+       console.error("Failed to add card", e);
+       // Restore text on failure
+       setNewCardText(prev => ({ ...prev, [columnId]: text }));
+       showSnackbar("Failed to add card", "error");
+    }
+  };
+
+  const handleDeleteCardOptimistic = async (cardId: string) => {
+     // Optimistically remove from UI immediately
+     setItems(prev => prev.filter(c => c.id !== cardId));
+     try {
+       await deleteCard(id, cardId);
+     } catch (e) {
+       console.error("Failed to delete card", e);
+       showSnackbar("Failed to delete card", "error");
+     }
   };
 
   // --- AI Features ---
@@ -498,8 +527,19 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
 
   const isCompleted = board.status === 'completed';
 
+  // Gamification Stats
+  const cardsCount = cards.length;
+  const votesCount = cards.reduce((acc, card) => acc + (card.votes || 0), 0);
+  const actionItemsCount = cards.filter(c => c.isActionItem).length;
+
   return (
-    <div className="h-[calc(100vh-64px)] flex flex-col bg-[#f8fafc] dark:bg-[#050505] overflow-hidden bg-grid-pattern transition-colors duration-500">
+    <div className="h-[calc(100vh-64px)] flex flex-col bg-[#f8fafc] dark:bg-[#050505] overflow-hidden bg-grid-pattern transition-colors duration-500 relative">
+      <RetroPuzzle 
+        cardsCount={cardsCount} 
+        votesCount={votesCount} 
+        actionItemsCount={actionItemsCount} 
+        isCompleted={isCompleted} 
+      />
       {/* Board Header */}
       <div className="px-4 md:px-6 py-3 border-b border-gray-200 dark:border-gray-800 bg-white/70 dark:bg-dark-950/70 backdrop-blur-xl flex justify-between items-center shrink-0 z-20 sticky top-0">
         <div className="flex items-center gap-2 md:gap-6">
@@ -540,12 +580,28 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
               {formatTime(getTimeLeft())}
             </span>
             {!isCompleted && user?.uid === board.createdBy && (
-              <button
-                onClick={toggleTimer}
-                className="ml-2 w-8 h-8 flex items-center justify-center rounded hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors"
-              >
-                {board.timer?.status === 'running' ? '⏸' : '▶️'}
-              </button>
+              <div className="flex items-center gap-1">
+                 <button
+                  onClick={() => adjustTimer(id, -60)}
+                  className="w-6 h-6 flex items-center justify-center rounded text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors text-xs font-bold"
+                  title="-1 Minute"
+                >
+                  -
+                </button>
+                 <button
+                  onClick={toggleTimer}
+                  className="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors"
+                >
+                  {board.timer?.status === 'running' ? '⏸' : '▶️'}
+                </button>
+                <button
+                  onClick={() => adjustTimer(id, 60)}
+                  className="w-6 h-6 flex items-center justify-center rounded text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors text-xs font-bold"
+                  title="+1 Minute"
+                >
+                  +
+                </button>
+              </div>
             )}
           </div>
         </div>
@@ -612,9 +668,11 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
             title="Share Board Link"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
-              <polyline points="16 6 12 2 8 6"></polyline>
-              <line x1="12" y1="2" x2="12" y2="15"></line>
+              <circle cx="18" cy="5" r="3"></circle>
+              <circle cx="6" cy="12" r="3"></circle>
+              <circle cx="18" cy="19" r="3"></circle>
+              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+              <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
             </svg>
           </button>
 
@@ -746,6 +804,7 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
                           boardId={id}
                           isPrivate={isPrivateMode}
                           isCompleted={isCompleted}
+                          onDelete={handleDeleteCardOptimistic}
                         />
                       ))}
                   </SortableContext>
