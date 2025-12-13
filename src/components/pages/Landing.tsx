@@ -39,7 +39,7 @@ const Landing: React.FC = () => {
                </h1>
 
                <p className="mt-8 text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto leading-relaxed font-light">
-                  The <span className="text-gray-900 dark:text-white font-medium">fastest</span> way for engineering teams to improve. <span className="text-brand-600 dark:text-brand-400 font-bold">Free forever</span>, zero clutter, and supercharged with AI.
+                  The <span className="text-gray-900 dark:text-white font-medium">fastest</span> way for <span className="text-gray-900 dark:text-white font-medium">remote engineering teams</span> to run effective <span className="text-brand-600 dark:text-brand-400 font-bold">sprint retrospectives</span>. Free forever, zero clutter, and supercharged with AI.
                </p>
 
                <div className="mt-12 flex flex-col items-center gap-4">
@@ -112,7 +112,7 @@ const Landing: React.FC = () => {
                      <div className="absolute -top-4 -left-4 w-10 h-10 bg-gray-900 dark:bg-white text-white dark:text-black rounded-lg flex items-center justify-center font-bold font-mono shadow-lg group-hover:scale-110 transition-transform">1</div>
                      <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 font-mono mt-2">Choose Template</h3>
                      <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
-                        Start fast with pre-built templates like Start/Stop/Continue, 4Ls, or Mad/Sad/Glad. No setup required.
+                        Start fast with pre-built <span className="font-bold text-gray-900 dark:text-white">agile retrospective templates</span> like Start/Stop/Continue, 4Ls, or Mad/Sad/Glad. Perfect for Scrum Masters.
                      </p>
                   </div>
 
@@ -130,7 +130,7 @@ const Landing: React.FC = () => {
                      <div className="absolute -top-4 -left-4 w-10 h-10 bg-gray-900 dark:bg-white text-white dark:text-black rounded-lg flex items-center justify-center font-bold font-mono shadow-lg group-hover:scale-110 transition-transform">3</div>
                      <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 font-mono mt-2">Vote & Act</h3>
                      <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
-                        Upvote the most critical issues. Assign action items and export the results to PDF or CSV for your next sprint planning.
+                        Upvote the most critical issues. Assign clear <span className="font-bold text-gray-900 dark:text-white">agile action items</span> and export to PDF/CSV. Improve your <span className="font-bold text-gray-900 dark:text-white">team health</span> instantly.
                      </p>
                   </div>
                </div>

@@ -28,8 +28,10 @@ const Footer: React.FC = () => {
                     <div>
                         <h4 className="font-bold text-gray-900 dark:text-white mb-4 uppercase text-xs tracking-wider">Comparisons</h4>
                         <ul className="space-y-2 text-sm text-gray-500 dark:text-gray-400 font-mono">
-                            <li><a href="/vs/funretro" className="hover:text-brand-600 dark:hover:text-brand-400">vs FunRetro</a></li>
                             <li><a href="/vs/easyretro" className="hover:text-brand-600 dark:hover:text-brand-400">vs EasyRetro</a></li>
+                            <li><a href="/vs/miro" className="hover:text-brand-600 dark:hover:text-brand-400">vs Miro</a></li>
+                            <li><a href="/vs/parabol" className="hover:text-brand-600 dark:hover:text-brand-400">vs Parabol</a></li>
+                            <li><a href="/vs/teamretro" className="hover:text-brand-600 dark:hover:text-brand-400">vs TeamRetro</a></li>
                             <li><a href="/vs/metroretro" className="hover:text-brand-600 dark:hover:text-brand-400">vs Metro Retro</a></li>
                         </ul>
                     </div>

@@ -2,6 +2,7 @@
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import "../styles/global.css";
+import GoogleAnalytics from "../components/GoogleAnalytics.astro";
 
 import "@fontsource/jetbrains-mono";
 
@@ -21,6 +22,7 @@ const {
 
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 const currentPath = Astro.url.pathname;
+const gaMeasurementId = import.meta.env.PUBLIC_FIREBASE_MEASUREMENT_ID;
 ---
 
 <!doctype html>
@@ -28,6 +30,7 @@ const currentPath = Astro.url.pathname;
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    {gaMeasurementId && <GoogleAnalytics measurementId={gaMeasurementId} />}
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="icon" type="image/png" href="/favicon.png" />
     <link rel="apple-touch-icon" href="/favicon.png" />
@@ -37,8 +40,7 @@ const currentPath = Astro.url.pathname;
     <title>{title}</title>
     <meta name="description" content={description} />
     <meta
-      name="keywords"
-      content="agile retrospective, scrum retro, sprint retrospective tool, developer tools, remote team collaboration, AI retrospective, start stop continue"
+      content="agile retrospective, scrum retro, sprint retrospective tool, developer tools, remote team collaboration, AI retrospective, start stop continue, online retrospective tool, team health check, scrum master tools, free retrospective, fun retro ideas, remote retrospective, engineering leadership, sprint planning"
     />
 
     <!-- Open Graph / Facebook -->
