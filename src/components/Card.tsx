@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import confetti from 'canvas-confetti';
 import { useDraggable, useDroppable } from '@dnd-kit/core';
-import { addReply, useReplies, toggleReaction, updateCard, deleteReply, deleteCard } from '../hooks/useBoard';
+import { addReply, toggleReaction, updateCard, deleteReply, deleteCard } from '../hooks/useBoard';
 import { useAuth } from '../hooks/useAuth';
 // import { usePresence } from '../hooks/usePresence';
 import { useSnackbar } from '../context/SnackbarContext';
@@ -31,7 +31,7 @@ const Card = ({ card, boardId, isPrivate, sortableProps, isCompleted, onDelete }
     const [showReplyInput, setShowReplyInput] = useState(false);
     const [replyText, setReplyText] = useState('');
     const replyInputRef = useRef<HTMLTextAreaElement>(null);
-    // const replies = useReplies(boardId, card.id); // Removed optimization
+
     const replies = Object.values(card.replies || {}).sort((a: any, b: any) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
     const { showSnackbar } = useSnackbar();
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -135,7 +135,6 @@ const Card = ({ card, boardId, isPrivate, sortableProps, isCompleted, onDelete }
         }
     };
 
-    // const activeUsers = usePresence(boardId, user);
     // Simple fallback: Active users list is removed for performance.
     // We can only assign to self or maybe leave it unassigned.
     const activeUsers: any[] = []; 
@@ -190,7 +189,7 @@ const Card = ({ card, boardId, isPrivate, sortableProps, isCompleted, onDelete }
 
     return (
         <div ref={setNodeRef} style={style} className={`mb-2 animate-fade-in ${isDragging ? 'z-50' : ''}`} {...attributes}>
-            <div className={`group bg-white dark:bg-gray-800 dark:text-white border border-gray-200 dark:border-gray-700 p-2.5 shadow-sm rounded-xl relative transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 ${isOver ? 'ring-2 ring-blue-500 ring-offset-2 dark:ring-offset-gray-900 bg-blue-50 dark:bg-blue-900/20' : card.isActionItem ? 'border-l-4 border-l-blue-500 dark:border-l-blue-400' : ''}`}>
+            <div className={`group bg-white dark:bg-gray-800 dark:text-white border border-gray-200 dark:border-gray-700 p-2.5 shadow-sm rounded-xl relative transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 hover:scale-[1.01] ${isOver ? 'ring-2 ring-blue-500 ring-offset-2 dark:ring-offset-gray-900 bg-blue-50 dark:bg-blue-900/20' : card.isActionItem ? 'border-l-4 border-l-blue-500 dark:border-l-blue-400' : ''}`}>
                 {/* Drag Handle */}
                 <div
                     {...listeners}
@@ -226,7 +225,7 @@ const Card = ({ card, boardId, isPrivate, sortableProps, isCompleted, onDelete }
                         {!isCompleted && user?.uid === card.createdBy && !isPrivate && (
                             <button
                                 onClick={() => setIsEditingCard(true)}
-                                className="text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
+                                className="text-gray-400 hover:text-gray-900 dark:hover:text-white transition-all transform active:scale-90 p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
                                 title="Edit card"
                             >
                                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -292,7 +291,7 @@ const Card = ({ card, boardId, isPrivate, sortableProps, isCompleted, onDelete }
                             <div className="relative">
                                 <button
                                     onClick={() => setShowReactionPicker(!showReactionPicker)}
-                                    className="p-1 text-gray-400 hover:text-yellow-500 hover:bg-yellow-50 dark:hover:bg-yellow-900/20 rounded-md transition-colors"
+                                    className="p-1 text-gray-400 hover:text-yellow-500 hover:bg-yellow-50 dark:hover:bg-yellow-900/20 rounded-md transition-all active:scale-90"
                                     title="Add reaction"
                                 >
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -326,7 +325,7 @@ const Card = ({ card, boardId, isPrivate, sortableProps, isCompleted, onDelete }
                                     <button
                                         key={emoji}
                                         onClick={() => !isCompleted && toggleReaction(boardId, card.id, emoji, user?.uid || '')}
-                                        className={`text-[10px] px-1.5 py-0.5 rounded-full flex items-center gap-1 transition-all ${userIds.includes(user?.uid || '') ? 'bg-blue-50 border border-blue-200 text-blue-700 dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-300' : 'bg-gray-50 border border-gray-200 text-gray-600 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
+                                        className={`text-[10px] px-1.5 py-0.5 rounded-full flex items-center gap-1 transition-all active:scale-90 ${userIds.includes(user?.uid || '') ? 'bg-blue-50 border border-blue-200 text-blue-700 dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-300' : 'bg-gray-50 border border-gray-200 text-gray-600 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:scale-105'}`}
                                         title={`${userIds.length} people reacted`}
                                         disabled={isCompleted}
                                     >
@@ -342,7 +341,7 @@ const Card = ({ card, boardId, isPrivate, sortableProps, isCompleted, onDelete }
                         {!isCompleted && card.isActionItem && (
                              <button
                                 onClick={() => setShowLogsModal(true)}
-                                className="text-xs font-medium text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors flex items-center gap-1"
+                                className="text-xs font-medium text-gray-500 hover:text-gray-900 dark:hover:text-white transition-all active:scale-95 flex items-center gap-1"
                                 title="View Logs"
                             >
                                 <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -369,7 +368,7 @@ const Card = ({ card, boardId, isPrivate, sortableProps, isCompleted, onDelete }
                         {!isCompleted && (
                             <button
                                 onClick={() => setShowReplyInput(!showReplyInput)}
-                                className="text-xs font-medium text-gray-500 hover:text-gray-900 dark:hover:text-white hover:underline transition-colors"
+                                className="text-xs font-medium text-gray-500 hover:text-gray-900 dark:hover:text-white hover:underline transition-all active:scale-95"
                             >
                                 Reply
                             </button>
@@ -378,7 +377,7 @@ const Card = ({ card, boardId, isPrivate, sortableProps, isCompleted, onDelete }
                         {!isCompleted && card.isActionItem && (
                             <button
                                 onClick={handleToggleActionItem}
-                                className={`text-xs font-medium transition-colors ${card.isActionItem ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 px-2 py-0.5 rounded' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
+                                className={`text-xs font-medium transition-all active:scale-95 ${card.isActionItem ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 px-2 py-0.5 rounded' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
                                 title={card.isActionItem ? "Revert to Card" : "Convert to Action Item"}
                             >
                                 {card.isActionItem ? 'Edit Action' : 'Convert'}
@@ -388,7 +387,7 @@ const Card = ({ card, boardId, isPrivate, sortableProps, isCompleted, onDelete }
                         {!isCompleted && user?.uid === card.createdBy && (
                             <button
                                 onClick={() => setShowDeleteDialog(true)}
-                                className="text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors p-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20"
+                                className="text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-all active:scale-90 p-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20"
                                 title="Delete card"
                             >
                                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -423,7 +422,7 @@ const Card = ({ card, boardId, isPrivate, sortableProps, isCompleted, onDelete }
                                                 <>
                                                     <button
                                                         onClick={() => setEditingReplyId(reply.id)}
-                                                        className="text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors p-0.5"
+                                                        className="text-gray-400 hover:text-gray-900 dark:hover:text-white transition-all active:scale-90 p-0.5"
                                                         title="Edit reply"
                                                     >
                                                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -441,7 +440,7 @@ const Card = ({ card, boardId, isPrivate, sortableProps, isCompleted, onDelete }
                                                                 showSnackbar('Failed to delete reply', 'error');
                                                             }
                                                         }}
-                                                        className="text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors p-0.5"
+                                                        className="text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-all active:scale-90 p-0.5"
                                                         title="Delete reply"
                                                     >
                                                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

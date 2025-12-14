@@ -5,7 +5,7 @@ import { DndContext, DragOverlay, closestCorners, KeyboardSensor, PointerSensor,
 import { SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { type RetroBoard, type RetroCard, type RetroColumn, type AISummaryResult, AISummaryStatus } from '../../types';
-import { useBoard, addCard, voteCard, deleteCard, moveCard, updateBoardTimer, updateCard, togglePrivateMode, completeRetro, adjustTimer, getPreviousIncompleteActions } from '../../hooks/useBoard';
+import { useBoard, addCard, deleteCard, moveCard, updateBoardTimer, updateCard, togglePrivateMode, completeRetro, adjustTimer, getPreviousIncompleteActions } from '../../hooks/useBoard';
 import { useAuth } from '../../hooks/useAuth';
 import { useSnackbar } from '../../context/SnackbarContext';
 import { generateBoardSummary } from '../../services/ai';

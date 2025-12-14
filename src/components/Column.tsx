@@ -1,7 +1,7 @@
 import { useActionState, useRef, useState } from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import { addCard } from '../hooks/useBoard';
-import { useTyping, setTypingStatus } from '../hooks/usePresence';
+
 import { useAuth } from '../hooks/useAuth';
 import { useSnackbar } from '../context/SnackbarContext';
 import Card from './Card';
@@ -25,7 +25,8 @@ const Column = ({ title, color, cards, boardId, columnId, isTimerExpired, totalC
     const formRef = useRef<HTMLFormElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const [text, setText] = useState('');
-    const typingUsers = useTyping(boardId);
+    // const typingUsers = useTyping(boardId);
+    const typingUsers: Record<string, string[]> = {}; // Dummy fallback
 
     const { setNodeRef, isOver } = useDroppable({
         id: columnId,
@@ -43,7 +44,7 @@ const Column = ({ title, color, cards, boardId, columnId, isTimerExpired, totalC
             await addCard(boardId, columnId, text, user);
             formRef.current?.reset();
             setText('');
-            setTypingStatus(boardId, user, columnId, false);
+            // setTypingStatus(boardId, user, columnId, false);
             showSnackbar('Card added successfully', 'success');
             return { success: true };
         } catch (error) {
@@ -68,16 +69,16 @@ const Column = ({ title, color, cards, boardId, columnId, isTimerExpired, totalC
         }
 
         // Handle typing status
-        if (e.target.value.length > 0) {
-            setTypingStatus(boardId, user, columnId, true);
-        } else {
-            setTypingStatus(boardId, user, columnId, false);
-        }
+        // if (e.target.value.length > 0) {
+        //     setTypingStatus(boardId, user, columnId, true);
+        // } else {
+        //     setTypingStatus(boardId, user, columnId, false);
+        // }
     };
 
     // Clear typing status on unmount or blur
     const handleBlur = () => {
-        setTypingStatus(boardId, user, columnId, false);
+        // setTypingStatus(boardId, user, columnId, false);
     };
 
     const usersTypingInThisColumn = typingUsers[columnId] || [];
@@ -85,7 +86,7 @@ const Column = ({ title, color, cards, boardId, columnId, isTimerExpired, totalC
     return (
         <div
             ref={setNodeRef}
-            className={`flex-1 min-w-[300px] bg-gray-100 dark:bg-gray-800 p-4 rounded-lg border-2 border-black dark:border-gray-500 flex flex-col h-full transition-colors ${isOver ? 'bg-blue-100 dark:bg-blue-900/30 border-blue-500 border-dashed' : ''
+            className={`flex-1 min-w-[300px] bg-gray-100 dark:bg-gray-800 p-4 rounded-lg border-2 border-black dark:border-gray-500 flex flex-col h-full transition-all duration-300 hover:shadow-lg ${isOver ? 'bg-blue-100 dark:bg-blue-900/30 border-blue-500 border-dashed' : ''
                 }`}
         >
             <div className={`flex justify-between items-center mb-4 pb-2 border-b-4 ${color}`}>
@@ -131,7 +132,7 @@ const Column = ({ title, color, cards, boardId, columnId, isTimerExpired, totalC
                         <button
                             type="submit"
                             disabled={isPending || !text.trim()}
-                            className="absolute right-2 bottom-2 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 disabled:opacity-50 transition-colors"
+                            className="absolute right-2 bottom-2 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 disabled:opacity-50 transition-transform active:scale-95"
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <line x1="12" y1="5" x2="12" y2="19"></line>

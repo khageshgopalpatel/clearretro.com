@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../hooks/useAuth';
-import { voteCard, toggleReaction } from '../hooks/useBoard';
+import { toggleReaction } from '../hooks/useBoard';
 import type { RetroCard } from '../types';
 
 interface FocusModeProps {
@@ -96,17 +96,7 @@ const FocusMode = ({ cards, initialIndex = 0, onClose, boardId }: FocusModeProps
                         </button>
 
                         <div className="flex items-center gap-4">
-                            <button
-                                onClick={() => voteCard(boardId, currentCard.id, user?.uid || 'guest')}
-                                className={`flex items-center gap-2 px-6 py-3 rounded-full font-bold transition-all hover:scale-105 active:scale-95 ${hasVoted
-                                    ? 'bg-red-50 text-red-600 border border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-900'
-                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'}`}
-                            >
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill={hasVoted ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                                </svg>
-                                <span>{currentCard.votes}</span>
-                            </button>
+
 
                             <div className="relative">
                                 <button

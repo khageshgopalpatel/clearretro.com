@@ -132,7 +132,7 @@ const ActionItemConvertModal = ({
                                     <button
                                         key={p}
                                         onClick={() => setPriority(p)}
-                                        className={`flex-1 capitalize text-xs font-bold py-1.5 rounded-md transition-all ${
+                                        className={`flex-1 capitalize text-xs font-bold py-1.5 rounded-md transition-all active:scale-95 hover:scale-105 ${
                                             priority === p 
                                             ? p === 'high' ? 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300 shadow-sm' 
                                               : p === 'medium' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300 shadow-sm'
@@ -216,13 +216,13 @@ const ActionItemConvertModal = ({
                 <div className="flex justify-end gap-3 pt-6 mt-auto">
                     <button
                         onClick={onClose}
-                        className="px-5 py-2.5 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg font-medium transition-colors font-mono uppercase text-xs tracking-wider"
+                        className="px-5 py-2.5 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg font-medium transition-all active:scale-95 font-mono uppercase text-xs tracking-wider"
                     >
                         Cancel
                     </button>
                     <button
                         onClick={handleConfirm}
-                        className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-bold shadow-lg shadow-blue-500/30 transition-all font-mono text-sm"
+                        className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-bold shadow-lg shadow-blue-500/30 transition-all active:scale-95 font-mono text-sm"
                     >
                         Save Action Item
                     </button>

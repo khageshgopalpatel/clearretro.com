@@ -1,0 +1,74 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import TemplateLanding from "../../components/pages/TemplateLanding";
+import { BOARD_TEMPLATES } from "../../data/templates";
+
+export const prerender = true;
+
+export function getStaticPaths() {
+  return BOARD_TEMPLATES.map((template) => ({
+    params: { slug: template.id },
+  }));
+}
+
+const { slug } = Astro.params;
+const template = BOARD_TEMPLATES.find((t) => t.id === slug);
+
+if (!template) {
+  return Astro.redirect("/404");
+}
+
+const breadcrumbSchema = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  itemListElement: [
+    {
+      "@type": "ListItem",
+      position: 1,
+      name: "Home",
+      item: "https://clearretro.com/",
+    },
+    {
+      "@type": "ListItem",
+      position: 2,
+      name: "Templates",
+      item: "https://clearretro.com/templates/",
+    },
+    {
+      "@type": "ListItem",
+      position: 3,
+      name: template.name,
+      item: `https://clearretro.com/templates/${template.id}`,
+    },
+  ],
+};
+
+const productSchema = {
+  "@context": "https://schema.org",
+  "@type": "Product",
+  name: `${template.name} Retrospective Template`,
+  description: template.description,
+  brand: {
+    "@type": "Brand",
+    name: "Clear Retro",
+  },
+  offers: {
+    "@type": "Offer",
+    price: "0",
+    priceCurrency: "USD",
+    availability: "https://schema.org/InStock",
+  },
+};
+---
+
+<Layout
+  title={`${template.name} Retrospective Template | Clear Retro`}
+  description={`Run a free ${template.name} retrospective online. ${template.description || ""}`}
+>
+  <script
+    type="application/ld+json"
+    slot="head"
+    set:html={JSON.stringify([breadcrumbSchema, productSchema])}
+  />
+  <TemplateLanding client:load template={template} />
+</Layout>

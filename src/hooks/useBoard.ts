@@ -75,25 +75,7 @@ export const addCard = async (boardId: string, columnId: string, text: string, u
     }
 };
 
-export const voteCard = async (boardId: string, cardId: string, userId: string, currentVotedBy: string[] = []) => {
-    if (!userId) return;
 
-    const cardRef = doc(db, `boards/${boardId}/cards`, cardId);
-
-    if (currentVotedBy.includes(userId)) {
-        // Remove vote
-        await updateDoc(cardRef, {
-            votes: increment(-1),
-            votedBy: arrayRemove(userId)
-        });
-    } else {
-        // Add vote
-        await updateDoc(cardRef, {
-            votes: increment(1),
-            votedBy: arrayUnion(userId)
-        });
-    }
-};
 
 export const toggleReaction = async (boardId: string, cardId: string, emoji: string, userId: string) => {
     if (!userId) return;
@@ -446,26 +428,7 @@ export const useBoard = (boardId: string | undefined) => {
     return { board, cards, loading, error };
 };
 
-export const useReplies = (boardId: string, cardId: string) => {
-    const [replies, setReplies] = useState<any[]>([]);
 
-    useEffect(() => {
-        if (!boardId || !cardId) return;
-
-        const q = query(
-            collection(db, `boards/${boardId}/cards/${cardId}/replies`),
-            orderBy("createdAt", "asc")
-        );
-
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            setReplies(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-        });
-
-        return () => unsubscribe();
-    }, [boardId, cardId]);
-
-    return replies;
-};
 
 export const getPreviousIncompleteActions = async (userId: string, currentBoardId: string) => {
     try {

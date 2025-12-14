@@ -10,4 +10,4 @@ Disallow: /dashboard
 Disallow: /board/
 
 # Sitemap location (update with your actual domain)
-Sitemap: https://clear-retro.web.app/sitemap.xml
+Sitemap: https://clearretro.com/sitemap.xml

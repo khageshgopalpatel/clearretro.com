@@ -72,6 +72,7 @@ export interface BoardTemplate {
   id: string;
   name: string;
   columns: { title: string; color: string }[];
+  description?: string;
 }
 
 export enum AISummaryStatus {
