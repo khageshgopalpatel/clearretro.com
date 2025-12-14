@@ -23,6 +23,13 @@ export interface RetroCard {
   assigneeId?: string;
   assigneeName?: string;
   order?: number;
+  replies?: Record<string, {
+    id: string;
+    text: string;
+    createdBy: string;
+    creatorName: string;
+    createdAt: any;
+  }>;
 }
 
 export interface RetroColumn {

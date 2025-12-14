@@ -247,6 +247,7 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
 
     // Optimistic update for moving between columns
     setItems((prev) => {
+      const activeUsers: any[] = []; // Empty fallback or just show self
       const activeItems = prev.filter(c => c.columnId === activeColumnId);
       const overItems = prev.filter(c => c.columnId === overColumnId);
       const activeIndex = activeItems.findIndex(c => c.id === activeId);

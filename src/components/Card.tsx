@@ -3,7 +3,7 @@ import confetti from 'canvas-confetti';
 import { useDraggable, useDroppable } from '@dnd-kit/core';
 import { voteCard, addReply, useReplies, toggleReaction, updateCard, deleteReply, deleteCard } from '../hooks/useBoard';
 import { useAuth } from '../hooks/useAuth';
-import { usePresence } from '../hooks/usePresence';
+// import { usePresence } from '../hooks/usePresence';
 import { useSnackbar } from '../context/SnackbarContext';
 import ConfirmDialog from './ConfirmDialog';
 import EditableText from './EditableText';
@@ -29,7 +29,8 @@ const Card = ({ card, boardId, isPrivate, sortableProps, isCompleted, onDelete }
     const [showReplyInput, setShowReplyInput] = useState(false);
     const [replyText, setReplyText] = useState('');
     const replyInputRef = useRef<HTMLTextAreaElement>(null);
-    const replies = useReplies(boardId, card.id);
+    // const replies = useReplies(boardId, card.id); // Removed optimization
+    const replies = Object.values(card.replies || {}).sort((a: any, b: any) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
     const { showSnackbar } = useSnackbar();
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
     const [isEditingCard, setIsEditingCard] = useState(false);
@@ -160,7 +161,11 @@ const Card = ({ card, boardId, isPrivate, sortableProps, isCompleted, onDelete }
         }
     };
 
-    const activeUsers = usePresence(boardId, user);
+    // const activeUsers = usePresence(boardId, user);
+    // Simple fallback: Active users list is removed for performance.
+    // We can only assign to self or maybe leave it unassigned.
+    const activeUsers: any[] = []; 
+    if (user) activeUsers.push({ id: user.uid, displayName: user.displayName + ' (You)' });
 
     const handleToggleActionItem = async () => {
         const newState = !card.isActionItem;
@@ -230,9 +235,6 @@ const Card = ({ card, boardId, isPrivate, sortableProps, isCompleted, onDelete }
                                 {activeUsers.map(u => (
                                     <option key={u.id} value={u.id}>{u.displayName}</option>
                                 ))}
-                                {user && !activeUsers.find(u => u.id === user.uid) && (
-                                    <option value={user.uid}>{user.displayName} (You)</option>
-                                )}
                             </select>
                         </div>
                     </div>

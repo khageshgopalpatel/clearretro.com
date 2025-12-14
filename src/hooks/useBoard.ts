@@ -16,6 +16,7 @@ import {
     arrayRemove,
     deleteDoc,
     limit,
+    deleteField, // Added
     type DocumentData
 } from "firebase/firestore";
 import { db } from '../lib/firebase';
@@ -120,14 +121,7 @@ export const toggleReaction = async (boardId: string, cardId: string, emoji: str
     }
 };
 
-export const addReply = async (boardId: string, cardId: string, text: string, user: any) => {
-    await addDoc(collection(db, `boards/${boardId}/cards/${cardId}/replies`), {
-        text: text,
-        createdBy: user.uid,
-        creatorName: user.displayName,
-        createdAt: serverTimestamp()
-    });
-};
+
 
 export const updateBoardTimer = async (boardId: string, status: 'running' | 'paused' | 'stopped', durationInSeconds: number = 0) => {
     const updateData: any = {
@@ -298,9 +292,27 @@ export const deleteCard = async (boardId: string, cardId: string) => {
     }
 };
 
+export const addReply = async (boardId: string, cardId: string, text: string, user: any) => {
+    const replyId = crypto.randomUUID();
+    const cardRef = doc(db, `boards/${boardId}/cards`, cardId);
+    await updateDoc(cardRef, {
+        [`replies.${replyId}`]: {
+            id: replyId,
+            text: text,
+            createdBy: user.uid,
+            creatorName: user.displayName,
+            createdAt: new Date().toISOString() // Use ISO string for embedded objects
+        }
+    });
+};
+
 export const deleteReply = async (boardId: string, cardId: string, replyId: string) => {
     try {
-        await deleteDoc(doc(db, `boards/${boardId}/cards/${cardId}/replies`, replyId));
+        const cardRef = doc(db, `boards/${boardId}/cards`, cardId);
+        // Use field deletion
+        await updateDoc(cardRef, {
+            [`replies.${replyId}`]: deleteField()
+        });
     } catch (e) {
         console.error("Error deleting reply: ", e);
         throw e;
@@ -321,9 +333,9 @@ export const updateCard = async (boardId: string, cardId: string, updates: strin
 
 export const updateReply = async (boardId: string, cardId: string, replyId: string, newText: string) => {
     try {
-        const replyRef = doc(db, `boards/${boardId}/cards/${cardId}/replies`, replyId);
-        await updateDoc(replyRef, {
-            text: newText
+        const cardRef = doc(db, `boards/${boardId}/cards`, cardId);
+        await updateDoc(cardRef, {
+            [`replies.${replyId}.text`]: newText
         });
     } catch (e) {
         console.error("Error updating reply: ", e);
