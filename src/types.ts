@@ -30,6 +30,17 @@ export interface RetroCard {
     creatorName: string;
     createdAt: any;
   }>;
+  logs?: {
+    id: string;
+    text: string;
+    createdAt: any;
+    createdBy: string;
+    creatorName: string;
+  }[];
+  priority?: 'high' | 'medium' | 'low';
+  dueDate?: string;
+  status?: 'todo' | 'in_progress' | 'done';
+  description?: string;
 }
 
 export interface RetroColumn {

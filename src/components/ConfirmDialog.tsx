@@ -45,7 +45,7 @@ const ConfirmDialog = ({ isOpen, onClose, onCancel, onConfirm, title, message, c
                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-brand-500 to-purple-600"></div>
 
                 <h3 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white font-mono">{title}</h3>
-                <p className="text-gray-600 dark:text-gray-400 mb-8 font-sans leading-relaxed">{message}</p>
+                <p className="text-gray-600 dark:text-gray-400 mb-8 leading-relaxed">{message}</p>
 
                 <div className="flex justify-end gap-3">
                     <button

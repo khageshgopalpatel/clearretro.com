@@ -1,12 +1,14 @@
 import { useState, useRef, useEffect } from 'react';
 import confetti from 'canvas-confetti';
 import { useDraggable, useDroppable } from '@dnd-kit/core';
-import { voteCard, addReply, useReplies, toggleReaction, updateCard, deleteReply, deleteCard } from '../hooks/useBoard';
+import { addReply, useReplies, toggleReaction, updateCard, deleteReply, deleteCard } from '../hooks/useBoard';
 import { useAuth } from '../hooks/useAuth';
 // import { usePresence } from '../hooks/usePresence';
 import { useSnackbar } from '../context/SnackbarContext';
 import ConfirmDialog from './ConfirmDialog';
 import EditableText from './EditableText';
+import ActionItemConvertModal from './ActionItemConvertModal';
+import ActionItemLogsModal from './ActionItemLogsModal';
 import type { RetroCard } from '../types';
 
 interface CardProps {
@@ -36,7 +38,9 @@ const Card = ({ card, boardId, isPrivate, sortableProps, isCompleted, onDelete }
     const [isEditingCard, setIsEditingCard] = useState(false);
     const [editingReplyId, setEditingReplyId] = useState<string | null>(null);
     const [showReactionPicker, setShowReactionPicker] = useState(false);
-    const EMOJIS = ['👍', '❤️', '😂', '😮', '🚀', '🎉'];
+    const [showConvertModal, setShowConvertModal] = useState(false);
+    const [showLogsModal, setShowLogsModal] = useState(false);
+    const EMOJIS = ['👍', '+1', '❤️', '😂', '😮', '🚀', '🎉'];
 
     const handleReaction = async (emoji: string) => {
         setShowReactionPicker(false);
@@ -70,38 +74,8 @@ const Card = ({ card, boardId, isPrivate, sortableProps, isCompleted, onDelete }
 
     const isDragging = sortableProps?.isDragging;
 
-    const [optimisticVote, setOptimisticVote] = useState({
-        votes: card.votes || 0,
-        hasVoted: card.votedBy?.includes(user?.uid || '')
-    });
 
-    useEffect(() => {
-        setOptimisticVote({
-            votes: card.votes || 0,
-            hasVoted: card.votedBy?.includes(user?.uid || '')
-        });
-    }, [card.votes, card.votedBy, user?.uid]);
 
-    const handleVote = async () => {
-        if (user) {
-            const newHasVoted = !optimisticVote.hasVoted;
-            setOptimisticVote(prev => ({
-                votes: newHasVoted ? prev.votes + 1 : prev.votes - 1,
-                hasVoted: newHasVoted
-            }));
-
-            try {
-                await voteCard(boardId, card.id, user.uid, card.votedBy);
-            } catch (error) {
-                // Revert on error
-                setOptimisticVote(prev => ({
-                    votes: !newHasVoted ? prev.votes + 1 : prev.votes - 1,
-                    hasVoted: !newHasVoted
-                }));
-                showSnackbar('Failed to vote', 'error');
-            }
-        }
-    };
 
     const [isReplyPending, setIsReplyPending] = useState(false);
 
@@ -168,43 +142,55 @@ const Card = ({ card, boardId, isPrivate, sortableProps, isCompleted, onDelete }
     if (user) activeUsers.push({ id: user.uid, displayName: user.displayName + ' (You)' });
 
     const handleToggleActionItem = async () => {
-        const newState = !card.isActionItem;
-        if (newState) {
-            confetti({
-                particleCount: 100,
-                spread: 70,
-                origin: { y: 0.6 },
-                colors: ['#3b82f6', '#1d4ed8', '#60a5fa'] // Blue theme
-            });
-        }
-        await updateCard(boardId, card.id, { isActionItem: newState } as Partial<RetroCard>);
+        // Always open modal to edit details
+        setShowConvertModal(true);
     };
 
-    const handleToggleDone = async () => {
-        const newState = !card.isDone;
-        if (newState) {
-             confetti({
-                particleCount: 150,
-                spread: 60,
-                origin: { y: 0.7 },
-                colors: ['#22c55e', '#16a34a', '#86efac'], // Green theme
-                shapes: ['circle', 'square', 'star']
-            });
-        }
-        await updateCard(boardId, card.id, { isDone: newState } as Partial<RetroCard>);
+    const handleConfirmConvert = async (newText: string, assignee: { id?: string, name: string } | null, updates: any) => {
+        setShowConvertModal(false);
+        confetti({
+             particleCount: 100,
+             spread: 70,
+             origin: { y: 0.6 },
+             colors: ['#3b82f6', '#1d4ed8', '#60a5fa'] // Blue theme
+        });
+
+        const cardUpdates: Partial<RetroCard> = { 
+            isActionItem: true, 
+            text: newText, 
+            assigneeId: assignee?.id || (assignee ? 'manual-' + Date.now() : ''),
+            assigneeName: assignee?.name || '',
+            ...updates
+        };
+
+        await updateCard(boardId, card.id, cardUpdates);
     };
 
-    const handleAssign = async (userId: string) => {
-        const assignedUser = activeUsers.find(u => u.id === userId) || (userId === user?.uid ? user : null);
-        await updateCard(boardId, card.id, {
-            assigneeId: userId,
-            assigneeName: assignedUser ? assignedUser.displayName : 'Unknown'
-        } as Partial<RetroCard>);
+
+    
+    const handleAddLog = async (text: string) => {
+        if (!user) return;
+        const newLog = {
+            id: crypto.randomUUID(),
+            text,
+            createdBy: user.uid,
+            creatorName: user.displayName || 'Unknown',
+            createdAt: new Date().toISOString()
+        };
+        
+        // Use arrayUnion if possible, but logs is complex object array, so simpler to read-modify-write via generic updateCard
+        // Or better, let's assume 'logs' is an array in Firestore.
+        // Since updateCard takes Partial<RetroCard>, we can retrieve current logs and append.
+        // However, props 'card' has current logs.
+        const currentLogs = card.logs || [];
+        const updatedLogs = [...currentLogs, newLog];
+        
+        await updateCard(boardId, card.id, { logs: updatedLogs } as Partial<RetroCard>);
     };
 
     return (
         <div ref={setNodeRef} style={style} className={`mb-2 animate-fade-in ${isDragging ? 'z-50' : ''}`} {...attributes}>
-            <div className={`bg-white dark:bg-gray-800 dark:text-white border border-gray-200 dark:border-gray-700 p-2.5 shadow-sm rounded-xl relative transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 ${isOver ? 'ring-2 ring-blue-500 ring-offset-2 dark:ring-offset-gray-900 bg-blue-50 dark:bg-blue-900/20' : card.isActionItem ? 'border-l-4 border-l-blue-500 dark:border-l-blue-400' : ''}`}>
+            <div className={`group bg-white dark:bg-gray-800 dark:text-white border border-gray-200 dark:border-gray-700 p-2.5 shadow-sm rounded-xl relative transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 ${isOver ? 'ring-2 ring-blue-500 ring-offset-2 dark:ring-offset-gray-900 bg-blue-50 dark:bg-blue-900/20' : card.isActionItem ? 'border-l-4 border-l-blue-500 dark:border-l-blue-400' : ''}`}>
                 {/* Drag Handle */}
                 <div
                     {...listeners}
@@ -212,33 +198,7 @@ const Card = ({ card, boardId, isPrivate, sortableProps, isCompleted, onDelete }
                     title="Drag to move"
                 ></div>
 
-                {/* Action Item Header */}
-                {card.isActionItem && (
-                    <div className="flex items-center gap-2 mb-1.5 pb-1.5 border-b border-gray-100 dark:border-gray-700 relative z-10">
-                        <input
-                            type="checkbox"
-                            checked={card.isDone || false}
-                            onChange={handleToggleDone}
-                            className="w-4 h-4 cursor-pointer accent-blue-600 rounded border-gray-300"
-                        />
-                        <span className={`text-xs font-bold uppercase tracking-wider ${card.isDone ? 'text-green-600 dark:text-green-400' : 'text-blue-600 dark:text-blue-400'}`}>
-                            {card.isDone ? 'Done' : 'Action Item'}
-                        </span>
-                        <div className="ml-auto">
-                            <select
-                                value={card.assigneeId || ''}
-                                onChange={(e) => handleAssign(e.target.value)}
-                                className="text-xs py-1 px-2 border rounded-lg bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 focus:ring-1 focus:ring-blue-500 outline-none"
-                                onClick={(e) => e.stopPropagation()}
-                            >
-                                <option value="">Unassigned</option>
-                                {activeUsers.map(u => (
-                                    <option key={u.id} value={u.id}>{u.displayName}</option>
-                                ))}
-                            </select>
-                        </div>
-                    </div>
-                )}
+
 
                 {isEditingCard ? (
                     <EditableText
@@ -277,40 +237,55 @@ const Card = ({ card, boardId, isPrivate, sortableProps, isCompleted, onDelete }
                         )}
                     </div>
                 )}
+                
+                {card.isActionItem && (
+                    <div className="mt-2.5 mb-1 px-1">
+                        {/* Description */}
+                        {card.description && (
+                            <div className="text-xs text-gray-500 dark:text-gray-400 mb-2 line-clamp-3">
+                                {card.description}
+                            </div>
+                        )}
 
-                {/* Reactions Display */}
-                {card.reactions && Object.keys(card.reactions).length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 mt-1.5 mb-1 relative z-10">
-                        {Object.entries(card.reactions).map(([emoji, userIds]) => (
-                            <button
-                                key={emoji}
-                                onClick={() => !isCompleted && toggleReaction(boardId, card.id, emoji, user?.uid || '')}
-                                className={`text-[10px] px-1.5 py-0.5 rounded-full flex items-center gap-1 transition-all ${userIds.includes(user?.uid || '') ? 'bg-blue-50 border border-blue-200 text-blue-700 dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-300' : 'bg-gray-50 border border-gray-200 text-gray-600 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
-                                title={`${userIds.length} people reacted`}
-                                disabled={isCompleted}
-                            >
-                                <span>{emoji}</span>
-                                <span className="font-bold opacity-80">{userIds.length}</span>
-                            </button>
-                        ))}
+                        <div className="flex flex-wrap gap-2 items-center">
+                            {/* Priority Badge */}
+                            {card.priority && (
+                                <span className={`text-[10px] uppercase font-bold px-1.5 py-0.5 rounded border ${
+                                    card.priority === 'high' ? 'bg-red-50 text-red-600 border-red-200 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400' :
+                                    card.priority === 'medium' ? 'bg-yellow-50 text-yellow-600 border-yellow-200 dark:bg-yellow-900/20 dark:border-yellow-800 dark:text-yellow-400' :
+                                    'bg-blue-50 text-blue-600 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-400'
+                                }`}>
+                                    {card.priority}
+                                </span>
+                            )}
+                            
+                            {/* Due Date */}
+                            {card.dueDate && (
+                                 <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded border bg-gray-50 border-gray-200 text-gray-600 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 flex items-center gap-1`}>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                                    {new Date(card.dueDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                                 </span>
+                            )}
+
+                            {/* Status Badge */}
+                            {card.status && card.status !== 'todo' && (
+                                 <span className={`text-[10px] uppercase font-bold px-1.5 py-0.5 rounded border ${
+                                     card.status === 'done' ? 'bg-green-50 text-green-600 border-green-200 dark:bg-green-900/20 dark:border-green-800 dark:text-green-400' :
+                                     'bg-indigo-50 text-indigo-600 border-indigo-200 dark:bg-indigo-900/20 dark:border-indigo-800 dark:text-indigo-400'
+                                 }`}>
+                                    {card.status === 'in_progress' ? 'In Progress' : 'Done'}
+                                 </span>
+                            )}
+                        </div>
                     </div>
                 )}
 
+                {/* Reactions Display */}
+
+
                 <div className="mt-2 pt-2 border-t border-gray-100 dark:border-gray-800 flex justify-between items-center relative z-10">
                     <div className="flex items-center gap-2">
-                        <button
-                            onClick={handleVote}
-                            disabled={isCompleted}
-                            className={`flex items-center gap-1.5 px-2 py-1 rounded-md transition-all text-xs font-medium ${optimisticVote.hasVoted
-                                ? 'bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400 ring-1 ring-red-200 dark:ring-red-900'
-                                : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-200'}`}
-                            title={optimisticVote.hasVoted ? "Unlike" : "Like"}
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill={optimisticVote.hasVoted ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                            </svg>
-                            <span>{optimisticVote.votes}</span>
-                        </button>
+
 
                         {/* Reaction Button */}
                         {!isCompleted && (
@@ -343,9 +318,54 @@ const Card = ({ card, boardId, isPrivate, sortableProps, isCompleted, onDelete }
                                 )}
                             </div>
                         )}
+
+                        {/* Reactions Display */}
+                        {card.reactions && Object.keys(card.reactions).length > 0 && (
+                            <div className="flex gap-1.5 relative z-10">
+                                {Object.entries(card.reactions).map(([emoji, userIds]) => (
+                                    <button
+                                        key={emoji}
+                                        onClick={() => !isCompleted && toggleReaction(boardId, card.id, emoji, user?.uid || '')}
+                                        className={`text-[10px] px-1.5 py-0.5 rounded-full flex items-center gap-1 transition-all ${userIds.includes(user?.uid || '') ? 'bg-blue-50 border border-blue-200 text-blue-700 dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-300' : 'bg-gray-50 border border-gray-200 text-gray-600 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
+                                        title={`${userIds.length} people reacted`}
+                                        disabled={isCompleted}
+                                    >
+                                        <span>{emoji}</span>
+                                        <span className="font-bold opacity-80">{userIds.length}</span>
+                                    </button>
+                                ))}
+                            </div>
+                        )}
                     </div>
 
                     <div className="flex gap-3 items-center">
+                        {!isCompleted && card.isActionItem && (
+                             <button
+                                onClick={() => setShowLogsModal(true)}
+                                className="text-xs font-medium text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors flex items-center gap-1"
+                                title="View Logs"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                    <polyline points="14 2 14 8 20 8"></polyline>
+                                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                                    <polyline points="10 9 9 9 8 9"></polyline>
+                                </svg>
+                                Logs {card.logs && card.logs.length > 0 && `(${card.logs.length})`}
+                            </button>
+                        )}
+
+                        {!isCompleted && !card.isActionItem && (
+                             <button
+                                onClick={() => setShowConvertModal(true)}
+                                className="text-xs font-medium text-gray-500 hover:text-gray-900 dark:hover:text-white hover:underline transition-all opacity-0 group-hover:opacity-100"
+                                title="Convert to Action Item"
+                            >
+                                Create Action Item
+                            </button>
+                        )}
+
                         {!isCompleted && (
                             <button
                                 onClick={() => setShowReplyInput(!showReplyInput)}
@@ -355,13 +375,13 @@ const Card = ({ card, boardId, isPrivate, sortableProps, isCompleted, onDelete }
                             </button>
                         )}
 
-                        {!isCompleted && (
+                        {!isCompleted && card.isActionItem && (
                             <button
                                 onClick={handleToggleActionItem}
                                 className={`text-xs font-medium transition-colors ${card.isActionItem ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 px-2 py-0.5 rounded' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
                                 title={card.isActionItem ? "Revert to Card" : "Convert to Action Item"}
                             >
-                                {card.isActionItem ? 'Action' : 'Convert'}
+                                {card.isActionItem ? 'Edit Action' : 'Convert'}
                             </button>
                         )}
 
@@ -473,6 +493,29 @@ const Card = ({ card, boardId, isPrivate, sortableProps, isCompleted, onDelete }
                 )}
             </div>
 
+            <ActionItemConvertModal 
+                isOpen={showConvertModal} 
+                onClose={() => setShowConvertModal(false)}
+                onConfirm={handleConfirmConvert}
+                initialText={card.text}
+                initialAssigneeId={card.assigneeId}
+                initialAssigneeName={card.assigneeName}
+                initialIsDone={card.isDone}
+                initialPriority={card.priority}
+                initialDueDate={card.dueDate}
+                initialStatus={card.status}
+                initialDescription={card.description}
+                users={activeUsers}
+            />
+
+            <ActionItemLogsModal
+                isOpen={showLogsModal}
+                onClose={() => setShowLogsModal(false)}
+                logs={card.logs || []}
+                onAddLog={handleAddLog}
+                cardText={card.text}
+            />
+            
             <ConfirmDialog
                 isOpen={showDeleteDialog}
                 onClose={() => setShowDeleteDialog(false)}
