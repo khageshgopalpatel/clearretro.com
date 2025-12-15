@@ -63,6 +63,28 @@ const isProd = import.meta.env.PROD;
     <meta property="twitter:description" content={description} />
     <meta property="twitter:image" content={new URL(image, Astro.url)} />
 
+    <script
+      type="application/ld+json"
+      set:html={JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        name: "Clear Retro",
+        applicationCategory: "BusinessApplication",
+        operatingSystem: "Web",
+        offers: {
+          "@type": "Offer",
+          price: "0",
+          priceCurrency: "USD",
+        },
+        description: description,
+        author: {
+          "@type": "Organization",
+          name: "Clear Retro",
+          url: "https://clearretro.com",
+        },
+      })}
+    />
+
     <slot name="head" />
   </head>
   <body
