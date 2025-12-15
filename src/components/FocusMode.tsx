@@ -96,6 +96,27 @@ const FocusMode = ({ cards, initialIndex = 0, onClose, boardId }: FocusModeProps
                         </button>
 
                         <div className="flex items-center gap-4">
+                            {/* Existing Reactions */}
+                            {currentCard.reactions && (
+                                <div className="flex gap-1.5 flex-wrap justify-center">
+                                    {Object.entries(currentCard.reactions)
+                                        .filter(([_, userIds]) => userIds.length > 0)
+                                        .map(([emoji, userIds]) => (
+                                        <button
+                                            key={emoji}
+                                            onClick={() => toggleReaction(boardId, currentCard.id, emoji, user?.uid || '')}
+                                            className={`px-2 py-1 rounded-full flex items-center gap-1.5 text-xs font-bold border transition-all active:scale-95 hover:brightness-95 ${
+                                                userIds.includes(user?.uid || '')
+                                                ? 'bg-blue-50 border-blue-200 text-blue-700 dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-300'
+                                                : 'bg-white border-gray-200 text-gray-600 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400'
+                                            }`}
+                                        >
+                                            <span>{emoji}</span>
+                                            <span>{userIds.length}</span>
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
 
 
                             <div className="relative">

@@ -1,4 +1,4 @@
-import { useActionState, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import { addCard } from '../hooks/useBoard';
 
@@ -33,33 +33,38 @@ const Column = ({ title, color, cards, boardId, columnId, isTimerExpired, totalC
         data: { type: 'column', columnId }
     });
 
-    const [state, submitAction, isPending] = useActionState(async (prevState: any, formData: FormData) => {
-        const text = formData.get('text') as string;
-        if (!text || !text.trim()) {
+    const [isPending, setIsPending] = useState(false);
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!text.trim()) {
             showSnackbar('Text is required', 'error');
-            return { error: 'Text is required' };
+            return;
         }
 
+        setIsPending(true);
         try {
             await addCard(boardId, columnId, text, user);
-            formRef.current?.reset();
             setText('');
-            // setTypingStatus(boardId, user, columnId, false);
+            if (textareaRef.current) {
+                textareaRef.current.style.height = 'auto';
+            }
             showSnackbar('Card added successfully', 'success');
-            return { success: true };
         } catch (error) {
             console.error("Error adding card:", error);
             showSnackbar('Failed to add card', 'error');
-            return { error: 'Failed to add card' };
+        } finally {
+            setIsPending(false);
         }
-    }, null);
+    };
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
-            formRef.current?.requestSubmit();
+            handleSubmit(e);
         }
     };
+
 
     const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         setText(e.target.value);
@@ -67,18 +72,6 @@ const Column = ({ title, color, cards, boardId, columnId, isTimerExpired, totalC
             textareaRef.current.style.height = 'auto';
             textareaRef.current.style.height = textareaRef.current.scrollHeight + 'px';
         }
-
-        // Handle typing status
-        // if (e.target.value.length > 0) {
-        //     setTypingStatus(boardId, user, columnId, true);
-        // } else {
-        //     setTypingStatus(boardId, user, columnId, false);
-        // }
-    };
-
-    // Clear typing status on unmount or blur
-    const handleBlur = () => {
-        // setTypingStatus(boardId, user, columnId, false);
     };
 
     const usersTypingInThisColumn = typingUsers[columnId] || [];
@@ -86,7 +79,7 @@ const Column = ({ title, color, cards, boardId, columnId, isTimerExpired, totalC
     return (
         <div
             ref={setNodeRef}
-            className={`flex-1 min-w-[300px] bg-gray-100 dark:bg-gray-800 p-4 rounded-lg border-2 border-black dark:border-gray-500 flex flex-col h-full transition-all duration-300 hover:shadow-lg ${isOver ? 'bg-blue-100 dark:bg-blue-900/30 border-blue-500 border-dashed' : ''
+            className={`flex-1 w-full md:w-80 md:min-w-[20rem] bg-gray-100 dark:bg-gray-800 p-4 rounded-lg border-2 border-black dark:border-gray-500 flex flex-col h-full transition-all duration-300 hover:shadow-lg ${isOver ? 'bg-blue-100 dark:bg-blue-900/30 border-blue-500 border-dashed' : ''
                 }`}
         >
             <div className={`flex justify-between items-center mb-4 pb-2 border-b-4 ${color}`}>
@@ -115,14 +108,13 @@ const Column = ({ title, color, cards, boardId, columnId, isTimerExpired, totalC
             )}
 
             {!isTimerExpired && !isCompleted && (
-                <form ref={formRef} action={submitAction} className="mt-4 relative z-20">
+                <form onSubmit={handleSubmit} className="mt-4 relative z-20">
                     <div className="relative">
                         <textarea
                             ref={textareaRef}
                             name="text"
                             value={text}
                             onChange={handleChange}
-                            onBlur={handleBlur}
                             onKeyDown={handleKeyDown}
                             placeholder="Add a card..."
                             className="w-full p-3 pr-10 border-2 border-black dark:border-gray-500 rounded shadow-neo focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-black dark:text-white resize-none overflow-hidden min-h-[50px] text-sm"

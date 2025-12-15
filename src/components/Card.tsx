@@ -40,6 +40,7 @@ const Card = ({ card, boardId, isPrivate, sortableProps, isCompleted, onDelete }
     const [showReactionPicker, setShowReactionPicker] = useState(false);
     const [showConvertModal, setShowConvertModal] = useState(false);
     const [showLogsModal, setShowLogsModal] = useState(false);
+    const [showReplies, setShowReplies] = useState(false);
     const EMOJIS = ['👍', '+1', '❤️', '😂', '😮', '🚀', '🎉'];
 
     const handleReaction = async (emoji: string) => {
@@ -81,19 +82,22 @@ const Card = ({ card, boardId, isPrivate, sortableProps, isCompleted, onDelete }
 
     const handleReplySubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!replyText || !replyText.trim()) return;
+        const textToSubmit = replyText;
+        if (!textToSubmit || !textToSubmit.trim()) return;
         if (!user) {
             showSnackbar('You must be logged in to reply', 'error');
             return;
         }
 
         setIsReplyPending(true);
+        setReplyText(''); // Optimistic clear
+        
         try {
-            await addReply(boardId, card.id, replyText, user);
-            setReplyText('');
-            setShowReplyInput(false);
+            await addReply(boardId, card.id, textToSubmit, user);
+            // setShowReplyInput(false); // Removed as we want to keep input visible or uncontrolled by this
         } catch (error) {
             showSnackbar('Failed to add reply', 'error');
+            setReplyText(textToSubmit); // Restore on error
         } finally {
             setIsReplyPending(false);
         }
@@ -189,13 +193,23 @@ const Card = ({ card, boardId, isPrivate, sortableProps, isCompleted, onDelete }
 
     return (
         <div ref={setNodeRef} style={style} className={`mb-2 animate-fade-in ${isDragging ? 'z-50' : ''}`} {...attributes}>
-            <div className={`group bg-white dark:bg-gray-800 dark:text-white border border-gray-200 dark:border-gray-700 p-2.5 shadow-sm rounded-xl relative transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 hover:scale-[1.01] ${isOver ? 'ring-2 ring-blue-500 ring-offset-2 dark:ring-offset-gray-900 bg-blue-50 dark:bg-blue-900/20' : card.isActionItem ? 'border-l-4 border-l-blue-500 dark:border-l-blue-400' : ''}`}>
+            <div className={`group bg-white dark:bg-gray-800 dark:text-white border border-gray-200 dark:border-gray-700 p-2.5 shadow-sm rounded-xl relative transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 hover:scale-[1.01] ${isOver ? 'ring-2 ring-blue-500 ring-offset-2 dark:ring-offset-gray-900 bg-blue-50 dark:bg-blue-900/20' : card.isActionItem ? 'border-l-4 border-l-blue-500 dark:border-l-blue-400 bg-blue-50/10 dark:bg-blue-900/10' : ''}`}>
+                {/* Drag Handle */}
                 {/* Drag Handle */}
                 <div
                     {...listeners}
-                    className="absolute top-0 left-0 right-0 h-3 cursor-grab active:cursor-grabbing hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-t-xl transition-colors"
+                    className="absolute top-0 left-0 right-0 h-4 cursor-grab active:cursor-grabbing hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-t-xl transition-colors flex items-center justify-center group/handle"
                     title="Drag to move"
-                ></div>
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-300 dark:text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <circle cx="9" cy="12" r="1"></circle>
+                        <circle cx="9" cy="5" r="1"></circle>
+                        <circle cx="9" cy="19" r="1"></circle>
+                        <circle cx="15" cy="12" r="1"></circle>
+                        <circle cx="15" cy="5" r="1"></circle>
+                        <circle cx="15" cy="19" r="1"></circle>
+                    </svg>
+                </div>
 
 
 
@@ -282,7 +296,7 @@ const Card = ({ card, boardId, isPrivate, sortableProps, isCompleted, onDelete }
                 {/* Reactions Display */}
 
 
-                <div className="mt-2 pt-2 border-t border-gray-100 dark:border-gray-800 flex justify-between items-center relative z-10">
+                <div className="mt-2 pt-2 border-t border-gray-100 dark:border-gray-800 flex flex-wrap md:flex-nowrap justify-between items-center gap-y-2 relative z-10">
                     <div className="flex items-center gap-2">
 
 
@@ -321,7 +335,9 @@ const Card = ({ card, boardId, isPrivate, sortableProps, isCompleted, onDelete }
                         {/* Reactions Display */}
                         {card.reactions && Object.keys(card.reactions).length > 0 && (
                             <div className="flex gap-1.5 relative z-10">
-                                {Object.entries(card.reactions).map(([emoji, userIds]) => (
+                                {Object.entries(card.reactions)
+                                    .filter(([_, userIds]) => userIds.length > 0)
+                                    .map(([emoji, userIds]) => (
                                     <button
                                         key={emoji}
                                         onClick={() => !isCompleted && toggleReaction(boardId, card.id, emoji, user?.uid || '')}
@@ -365,14 +381,19 @@ const Card = ({ card, boardId, isPrivate, sortableProps, isCompleted, onDelete }
                             </button>
                         )}
 
-                        {!isCompleted && (
-                            <button
-                                onClick={() => setShowReplyInput(!showReplyInput)}
-                                className="text-xs font-medium text-gray-500 hover:text-gray-900 dark:hover:text-white hover:underline transition-all active:scale-95"
-                            >
-                                Reply
-                            </button>
-                        )}
+
+                        
+                        {/* Reply Toggle Button */}
+                        <button
+                            onClick={() => setShowReplies(!showReplies)}
+                            className={`text-xs font-medium transition-all active:scale-95 flex items-center gap-1 ${showReplies ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500 hover:text-blue-600 dark:hover:text-blue-400'}`}
+                            title={showReplies ? "Hide Replies" : "Show Replies"}
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                            </svg>
+                            {replies.length > 0 && replies.length}
+                        </button>
 
                         {!isCompleted && card.isActionItem && (
                             <button
@@ -398,10 +419,10 @@ const Card = ({ card, boardId, isPrivate, sortableProps, isCompleted, onDelete }
                     </div>
                 </div>
 
-                {/* Replies List */}
-                {replies.length > 0 && (
-                    <div className="mt-2 pt-2 border-t border-dashed border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/30 -mx-2.5 px-2.5 pb-1 rounded-b-xl">
-                        {replies.map(reply => (
+                {/* Replies container + Input Form */}
+                {showReplies && (
+                    <div className="mt-2 pt-2 border-t border-dashed border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/30 -mx-2.5 px-2.5 pb-1 rounded-b-xl animate-in slide-in-from-top-2 duration-200">
+                        {replies.length > 0 && replies.map(reply => (
                             <div key={reply.id} className="text-xs mb-2 pl-3 border-l-2 border-gray-300 dark:border-gray-600">
                                 {editingReplyId === reply.id ? (
                                     <EditableText
@@ -454,41 +475,41 @@ const Card = ({ card, boardId, isPrivate, sortableProps, isCompleted, onDelete }
                                 )}
                             </div>
                         ))}
-                    </div>
-                )}
 
-                {/* Reply Input */}
-                {showReplyInput && !isCompleted && (
-                    <form onSubmit={handleReplySubmit} className="mt-3 relative z-20 animate-in fade-in slide-in-from-top-2 duration-200">
-                        <textarea
-                            name="text"
-                            ref={replyInputRef}
-                            value={replyText}
-                            onChange={(e) => setReplyText(e.target.value)}
-                            onKeyDown={handleReplyKeyDown}
-                            placeholder="Write a reply..."
-                            className="w-full p-3 text-sm rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white mb-2 resize-none overflow-hidden min-h-[60px] focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
-                            autoFocus
-                            rows={1}
-                        />
-                        <div className="flex justify-end gap-2">
-                            <button
-                                type="button"
-                                onClick={() => setShowReplyInput(false)}
-                                className="text-xs px-3 py-1.5 rounded-md font-medium text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800 transition-colors"
-                                disabled={isReplyPending}
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                type="submit"
-                                className="text-xs px-3 py-1.5 rounded-md font-medium bg-gray-900 text-white hover:bg-black dark:bg-white dark:text-black dark:hover:bg-gray-200 transition-colors disabled:opacity-50"
-                                disabled={isReplyPending}
-                            >
-                                {isReplyPending ? 'Replying...' : 'Reply'}
-                            </button>
-                        </div>
-                    </form>
+                        {/* Reply Input */}
+                        {!isCompleted && (
+                            <form onSubmit={handleReplySubmit} className="mt-3 relative z-20">
+                                <textarea
+                                    name="text"
+                                    ref={replyInputRef}
+                                    value={replyText}
+                                    onChange={(e) => setReplyText(e.target.value)}
+                                    onKeyDown={handleReplyKeyDown}
+                                    placeholder="Write a reply..."
+                                    className="w-full p-3 text-sm rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white mb-2 resize-none overflow-hidden min-h-[60px] focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                                    autoFocus
+                                    rows={1}
+                                />
+                                <div className="flex justify-end gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowReplies(false)}
+                                        className="text-xs px-3 py-1.5 rounded-md font-medium text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800 transition-colors"
+                
+                                    >
+                                        Close
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        className="text-xs px-3 py-1.5 rounded-md font-medium bg-gray-900 text-white hover:bg-black dark:bg-white dark:text-black dark:hover:bg-gray-200 transition-colors disabled:opacity-50"
+                                        disabled={isReplyPending}
+                                    >
+                                        {isReplyPending ? 'Replying...' : 'Reply'}
+                                    </button>
+                                </div>
+                            </form>
+                        )}
+                    </div>
                 )}
             </div>
 

@@ -644,9 +644,11 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
       )}
 
       {/* Board Header */}
-      <div className="px-4 md:px-6 py-3 border-b border-gray-200 dark:border-gray-800 bg-white/70 dark:bg-dark-950/70 backdrop-blur-xl flex justify-between items-center shrink-0 z-20 sticky top-0">
-        <div className="flex items-center gap-2 md:gap-6">
-          <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-4">
+      <div className="px-4 md:px-6 py-3 border-b border-gray-200 dark:border-gray-800 bg-white/70 dark:bg-dark-950/70 backdrop-blur-xl flex flex-wrap md:flex-nowrap justify-between items-center shrink-0 z-20 sticky top-0 gap-y-3">
+        
+        {/* Left Section: Logo & Info */}
+        <div className="flex items-center gap-2 md:gap-6 order-1">
+          <div className="flex flex-row items-center gap-4">
             {/* Primary Branding */}
             <div className="flex items-center gap-3">
               <a href="/dashboard" className="flex items-center gap-3 group">
@@ -657,7 +659,7 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
             </div>
 
             {/* Divider */}
-            <div className="hidden md:block h-8 w-px bg-gray-200 dark:bg-gray-800"></div>
+            <div className="h-8 w-px bg-gray-200 dark:bg-gray-800"></div>
 
             {/* Board Info (Secondary) */}
             <div className="flex flex-col">
@@ -672,10 +674,206 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
               </span>
             </div>
           </div>
+        </div>
 
-          <div className="h-8 w-px bg-gray-200 dark:bg-gray-800 mx-2"></div>
+        {/* Right Section: Mobile Menu & User Profile */}
+        <div className="flex items-center gap-3 order-2 md:order-3">
+          {/* Private Mode Toggle */}
+          {user?.uid === board.createdBy && (
+            <button
+              onClick={() => togglePrivateMode(id, !isPrivateMode)}
+              className={`hidden md:flex items-center justify-center w-10 h-10 rounded-lg border transition-all ${isPrivateMode ? 'bg-purple-100 dark:bg-purple-900/20 border-purple-500 text-purple-600 shadow-[0_0_15px_rgba(216,180,254,0.3)]' : 'bg-white dark:bg-dark-900 border-gray-200 dark:border-gray-800 text-gray-500'}`}
+              title={isPrivateMode ? "Private Mode: ON (Text Blurred)" : "Private Mode: OFF"}
+            >
+              {isPrivateMode ? '🙈' : '👁️'}
+            </button>
+          )}
 
-          <div className={`flex items-center gap-2 md:gap-3 px-2 py-1 md:px-4 md:py-1.5 rounded-lg border transition-all ${board.timer?.status === 'running' ? 'border-brand-500 bg-brand-50/50 dark:bg-brand-900/10 shadow-[0_0_10px_rgba(45,212,191,0.2)]' : 'border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-dark-900'}`}>
+          {/* Focus Mode Button */}
+          <button
+            onClick={() => setFocusModeIndex(0)}
+            className="hidden md:flex items-center justify-center w-10 h-10 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-dark-900 text-gray-500 hover:bg-gray-50 dark:hover:bg-dark-800 transition-colors"
+            title="Enter Focus Mode"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M15 3h6v6"></path>
+              <path d="M9 21H3v-6"></path>
+              <path d="M21 3l-7 7"></path>
+              <path d="M3 21l7-7"></path>
+              <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
+            </svg>
+          </button>
+
+          <div className="h-8 w-px bg-gray-200 dark:bg-gray-800 mx-2 hidden md:block"></div>
+
+          {user?.uid === board.createdBy && (
+            <button
+              onClick={handleGenerateSummary}
+              disabled={summaryStatus === AISummaryStatus.LOADING}
+              className="hidden md:flex items-center gap-2 px-4 py-2 bg-white dark:bg-dark-900 border border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-dark-800 transition-all text-sm font-bold font-mono disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {summaryStatus === AISummaryStatus.LOADING ? (
+                <>
+                  <svg className="animate-spin h-4 w-4 text-brand-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Generating...
+                </>
+              ) : (
+                <>📝 Summary</>
+              )}
+            </button>
+          )}
+
+          <div className="hidden md:block h-8 w-px bg-gray-200 dark:bg-gray-800 mx-2"></div>
+
+          {/* Share Button */}
+          <button
+            onClick={handleShare}
+            className="hidden md:flex items-center justify-center w-10 h-10 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-dark-900 text-gray-500 hover:text-brand-500 hover:border-brand-500 transition-colors"
+            title="Share Board Link"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="18" cy="5" r="3"></circle>
+              <circle cx="6" cy="12" r="3"></circle>
+              <circle cx="18" cy="19" r="3"></circle>
+              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+              <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+            </svg>
+          </button>
+
+          {/* End Retro Button */}
+          {!isCompleted && user?.uid === board.createdBy && (
+            <button
+              onClick={() => setShowEndRetroDialog(true)}
+              className="hidden md:block px-4 py-2 bg-red-50 text-red-600 border border-red-200 rounded-lg hover:bg-red-100 transition-colors text-sm font-bold font-mono"
+            >
+              End Retro
+            </button>
+          )}
+
+          {/* Mobile Menu Button */}
+          <div className="md:hidden relative">
+            <button
+              onClick={() => setActiveId(activeId === 'mobile-menu' ? null : 'mobile-menu')}
+              className="p-2 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="1"></circle>
+                <circle cx="12" cy="5" r="1"></circle>
+                <circle cx="12" cy="19" r="1"></circle>
+              </svg>
+            </button>
+
+            {/* Mobile Menu Dropdown */}
+            {activeId === 'mobile-menu' && (
+              <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-dark-900 border border-gray-200 dark:border-gray-800 rounded-xl shadow-xl z-50 animate-in fade-in zoom-in-95 duration-200 overflow-hidden">
+                <ul className="py-1">
+                   {/* Share */}
+                   <li>
+                    <button
+                        onClick={() => { handleShare(); setActiveId(null); }}
+                        className="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 dark:hover:bg-dark-800 flex items-center gap-3 text-gray-700 dark:text-gray-300 transition-colors"
+                    >
+                        <div className="p-1.5 rounded-md bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400">
+                           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <circle cx="18" cy="5" r="3"></circle>
+                              <circle cx="6" cy="12" r="3"></circle>
+                              <circle cx="18" cy="19" r="3"></circle>
+                              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                              <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                            </svg>
+                        </div>
+                        <span>Share Board</span>
+                    </button>
+                  </li>
+
+                  {/* Focus Mode */}
+                  <li>
+                    <button
+                        onClick={() => { setFocusModeIndex(0); setActiveId(null); }}
+                        className="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 dark:hover:bg-dark-800 flex items-center gap-3 text-gray-700 dark:text-gray-300 transition-colors"
+                    >
+                        <div className="p-1.5 rounded-md bg-purple-50 text-purple-600 dark:bg-purple-900/20 dark:text-purple-400">
+                           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M15 3h6v6"></path>
+                              <path d="M9 21H3v-6"></path>
+                              <path d="M21 3l-7 7"></path>
+                              <path d="M3 21l7-7"></path>
+                           </svg>
+                        </div>
+                        <span>Focus Mode</span>
+                    </button>
+                  </li>
+
+                  {/* Private Mode (Owner) */}
+                  {user?.uid === board.createdBy && (
+                    <li>
+                        <button
+                            onClick={() => { togglePrivateMode(id, !isPrivateMode); setActiveId(null); }}
+                            className="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 dark:hover:bg-dark-800 flex items-center gap-3 text-gray-700 dark:text-gray-300 transition-colors"
+                        >
+                            <div className="p-1.5 rounded-md bg-indigo-50 text-indigo-600 dark:bg-indigo-900/20 dark:text-indigo-400">
+                               {isPrivateMode ? '🙈' : '👁️'}
+                            </div>
+                            <span>{isPrivateMode ? 'Disable Private Mode' : 'Enable Private Mode'}</span>
+                        </button>
+                    </li>
+                  )}
+
+                  {/* AI Summary (Owner) */}
+                  {user?.uid === board.createdBy && (
+                    <li>
+                        <button
+                            onClick={() => { handleGenerateSummary(); setActiveId(null); }}
+                            className="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 dark:hover:bg-dark-800 flex items-center gap-3 text-gray-700 dark:text-gray-300 transition-colors"
+                        >
+                            <div className="p-1.5 rounded-md bg-brand-50 text-brand-600 dark:bg-brand-900/20 dark:text-brand-400">
+                               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                 <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>
+                               </svg>
+                            </div>
+                            <span>Generate AI Summary</span>
+                        </button>
+                    </li>
+                  )}
+
+                  {/* End Retro (Owner) */}
+                  {!isCompleted && user?.uid === board.createdBy && (
+                    <li className="border-t border-gray-100 dark:border-gray-800 mt-1 pt-1">
+                        <button
+                            onClick={() => { setShowEndRetroDialog(true); setActiveId(null); }}
+                            className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-3 transition-colors"
+                        >
+                            <div className="p-1.5 rounded-md bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400">
+                               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <circle cx="12" cy="12" r="10"></circle>
+                                  <rect x="9" y="9" width="6" height="6"></rect>
+                               </svg>
+                            </div>
+                            <span>End Retro</span>
+                        </button>
+                    </li>
+                  )}
+
+                </ul>
+              </div>
+            )}
+          </div>
+
+          {/* User Dropdown */}
+          <HeaderDropdown 
+            user={user} 
+            onLogout={handleLogout} 
+            onExportPDF={user?.uid === board.createdBy ? exportPDF : undefined}
+            onExportExcel={user?.uid === board.createdBy ? exportExcel : undefined}
+          />
+        </div>
+
+        {/* Center Section: Timer */}
+        <div className="order-3 md:order-2 w-full md:w-auto flex justify-center md:block">
+           <div className={`flex items-center gap-2 md:gap-3 px-2 py-1 md:px-4 md:py-1.5 rounded-lg border transition-all ${board.timer?.status === 'running' ? 'border-brand-500 bg-brand-50/50 dark:bg-brand-900/10 shadow-[0_0_10px_rgba(45,212,191,0.2)]' : 'border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-dark-900'}`}>
             <span className={`font-mono text-lg md:text-2xl font-bold ${getTimeLeft() < 60 && board.timer?.status === 'running' ? 'text-red-500 animate-pulse' : 'text-gray-800 dark:text-gray-200'}`}>
               {formatTime(getTimeLeft())}
             </span>
@@ -704,95 +902,6 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
               </div>
             )}
           </div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          {/* Private Mode Toggle */}
-          {user?.uid === board.createdBy && (
-            <button
-              onClick={() => togglePrivateMode(id, !isPrivateMode)}
-              className={`hidden md:flex items-center justify-center w-10 h-10 rounded-lg border transition-all ${isPrivateMode ? 'bg-purple-100 dark:bg-purple-900/20 border-purple-500 text-purple-600 shadow-[0_0_15px_rgba(216,180,254,0.3)]' : 'bg-white dark:bg-dark-900 border-gray-200 dark:border-gray-800 text-gray-500'}`}
-              title={isPrivateMode ? "Private Mode: ON (Text Blurred)" : "Private Mode: OFF"}
-            >
-              {isPrivateMode ? '🙈' : '👁️'}
-            </button>
-          )}
-
-          {/* Focus Mode Button */}
-          <button
-            onClick={() => setFocusModeIndex(0)}
-            className="hidden md:flex items-center justify-center w-10 h-10 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-dark-900 text-gray-500 hover:bg-gray-50 dark:hover:bg-dark-800 transition-colors"
-            title="Enter Focus Mode"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M15 3h6v6"></path>
-              <path d="M9 21H3v-6"></path>
-              <path d="M21 3l-7 7"></path>
-              <path d="M3 21l7-7"></path>
-              <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
-            </svg>
-          </button>
-
-          <div className="h-8 w-px bg-gray-200 dark:bg-gray-800 mx-2"></div>
-
-
-
-          {user?.uid === board.createdBy && (
-            <button
-              onClick={handleGenerateSummary}
-              disabled={summaryStatus === AISummaryStatus.LOADING}
-              className="hidden md:flex items-center gap-2 px-4 py-2 bg-white dark:bg-dark-900 border border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-dark-800 transition-all text-sm font-bold font-mono disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {summaryStatus === AISummaryStatus.LOADING ? (
-                <>
-                  <svg className="animate-spin h-4 w-4 text-brand-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Generating...
-                </>
-              ) : (
-                <>📝 Summary</>
-              )}
-            </button>
-          )}
-
-
-
-          <div className="h-8 w-px bg-gray-200 dark:bg-gray-800 mx-2"></div>
-
-          {/* Share Button */}
-          <button
-            onClick={handleShare}
-            className="hidden md:flex items-center justify-center w-10 h-10 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-dark-900 text-gray-500 hover:text-brand-500 hover:border-brand-500 transition-colors"
-            title="Share Board Link"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="18" cy="5" r="3"></circle>
-              <circle cx="6" cy="12" r="3"></circle>
-              <circle cx="18" cy="19" r="3"></circle>
-              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
-              <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
-            </svg>
-          </button>
-
-          {/* End Retro Button */}
-          {!isCompleted && user?.uid === board.createdBy && (
-            <button
-              onClick={() => setShowEndRetroDialog(true)}
-              className="hidden md:block px-4 py-2 bg-red-50 text-red-600 border border-red-200 rounded-lg hover:bg-red-100 transition-colors text-sm font-bold font-mono"
-            >
-              End Retro
-            </button>
-          )}
-
-          {/* User Dropdown */}
-          <HeaderDropdown 
-            user={user} 
-            onLogout={handleLogout} 
-            onExportPDF={user?.uid === board.createdBy ? exportPDF : undefined}
-            onExportExcel={user?.uid === board.createdBy ? exportExcel : undefined}
-          />
         </div>
       </div>
 
@@ -867,7 +976,7 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
       />
 
       {/* Columns Area */}
-      <div className="flex-grow overflow-x-auto overflow-y-hidden custom-scrollbar">
+      <div className="flex-1 overflow-x-hidden md:overflow-x-auto overflow-y-auto md:overflow-y-hidden">
         <DndContext
           sensors={sensors}
           collisionDetection={closestCorners}
@@ -875,80 +984,84 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
           onDragOver={handleDragOver}
           onDragEnd={handleDragEnd}
         >
-          <div className="flex h-full p-2 md:p-8 gap-3 md:gap-6 min-w-full snap-x snap-mandatory">
-            {board.columns.map((column) => (
-              <DroppableColumn key={column.id} column={column}>
-                {/* Column Header */}
-                <div className={`p-4 border-b border-gray-100 dark:border-gray-800 bg-white/40 dark:bg-dark-900/60 rounded-t-lg backdrop-blur-sm relative overflow-hidden`}>
-                  <div className={`absolute top-0 left-0 w-full h-1 ${COLUMN_COLORS[column.color] || COLUMN_COLORS.default}`}></div>
-                  <h3 className="font-bold text-gray-900 dark:text-white flex justify-between items-center text-md font-mono relative z-10">
-                    {column.title}
-                    <span className="bg-white/50 dark:bg-white/10 px-2 py-0.5 rounded text-xs text-gray-600 dark:text-gray-300 font-mono">
-                      {items.filter(c => c.columnId === column.id).length}
-                    </span>
-                  </h3>
-                </div>
-
-                {/* Cards Container */}
-                <div className="flex-grow overflow-y-auto p-3 custom-scrollbar space-y-3">
-                  <SortableContext
-                    items={items.filter(c => c.columnId === column.id).map(c => c.id)}
-                    strategy={verticalListSortingStrategy}
-                  >
-                    {items
-                      .filter(c => c.columnId === column.id)
-                      .map(card => (
-                        <SortableCardWrapper
-                          key={card.id}
-                          card={card}
-                          boardId={id}
-                          isPrivate={isPrivateMode}
-                          isCompleted={isCompleted}
-                          onDelete={handleDeleteCardOptimistic}
-                        />
-                      ))}
-                  </SortableContext>
-                </div>
-
-                {/* Add Card Input */}
-                {!isCompleted && (
-                  <div className="p-3 bg-white/40 dark:bg-dark-900/40 rounded-b-lg border-t border-gray-100 dark:border-gray-800/50 backdrop-blur-sm">
-                    <div className="relative group/input">
-                      <textarea
-                        placeholder="> Type input..."
-                        className="w-full text-sm p-3 pr-10 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#18181b] dark:text-white focus:ring-1 focus:ring-brand-500 focus:border-brand-500 focus:shadow-[0_0_10px_rgba(45,212,191,0.2)] outline-none resize-none shadow-inner transition-all font-mono"
-                        rows={2}
-                        value={newCardText[column.id] || ''}
-                        onChange={(e) => setNewCardText({ ...newCardText, [column.id]: e.target.value })}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' && !e.shiftKey) {
-                            e.preventDefault();
-                            handleAddCard(column.id);
-                          }
-                        }}
-                      />
-                      <button
-                        onClick={() => handleAddCard(column.id)}
-                        className="absolute bottom-2 right-2 p-2 text-gray-400 hover:text-brand-500 transition-colors opacity-50 group-hover/input:opacity-100"
-                        title="Add Card"
-                      >
-                        ↵
-                      </button>
+          <div className="h-full flex flex-col md:flex-row p-4 md:p-6 gap-6 min-w-full md:w-max mx-auto">
+            <SortableContext items={board.columns.map(c => c.id)} strategy={verticalListSortingStrategy}>
+              {board.columns.map(column => (
+                <DroppableColumn key={column.id} column={column}>
+                  {/* Column Header */}
+                    <div className={`p-4 border-b border-gray-100 dark:border-gray-800 bg-white/40 dark:bg-dark-900/60 rounded-t-lg backdrop-blur-sm relative overflow-hidden`}>
+                      <div className={`absolute top-0 left-0 w-full h-1 ${COLUMN_COLORS[column.color] || COLUMN_COLORS.default}`}></div>
+                      <h3 className="font-bold text-gray-900 dark:text-white flex justify-between items-center text-md font-mono relative z-10">
+                        {column.title}
+                        <span className="bg-white/50 dark:bg-white/10 px-2 py-0.5 rounded text-xs text-gray-600 dark:text-gray-300 font-mono">
+                          {items.filter(c => c.columnId === column.id).length}
+                        </span>
+                      </h3>
                     </div>
-                  </div>
-                )}
-              </DroppableColumn>
-            ))}
+
+                    {/* Cards Container */}
+                    <div className="flex-grow overflow-y-auto p-3 custom-scrollbar space-y-3">
+                      <SortableContext
+                        items={items.filter(c => c.columnId === column.id).map(c => c.id)}
+                        strategy={verticalListSortingStrategy}
+                      >
+                        {items
+                          .filter(c => c.columnId === column.id)
+                          .map(card => (
+                            <SortableCardWrapper
+                              key={card.id}
+                              card={card}
+                              boardId={id}
+                              isPrivate={isPrivateMode && user?.uid !== board.createdBy}
+                              isCompleted={isCompleted}
+                              onDelete={handleDeleteCardOptimistic}
+                            />
+                          ))}
+                      </SortableContext>
+                    </div>
+
+                  {/* Add Card Input */}
+                    {!isCompleted && (
+                      <div className="p-3 bg-white/40 dark:bg-dark-900/40 rounded-b-lg border-t border-gray-100 dark:border-gray-800/50 backdrop-blur-sm">
+                        <div className="relative group/input">
+                          <textarea
+                            placeholder="> Type input..."
+                            className="w-full text-sm p-3 pr-10 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#18181b] dark:text-white focus:ring-1 focus:ring-brand-500 focus:border-brand-500 focus:shadow-[0_0_10px_rgba(45,212,191,0.2)] outline-none resize-none shadow-inner transition-all font-mono"
+                            rows={2}
+                            value={newCardText[column.id] || ''}
+                            onChange={(e) => setNewCardText({ ...newCardText, [column.id]: e.target.value })}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' && !e.shiftKey) {
+                                e.preventDefault();
+                                handleAddCard(column.id);
+                              }
+                            }}
+                          />
+                          <button
+                            onClick={() => handleAddCard(column.id)}
+                            className="absolute bottom-2 right-2 p-2 text-gray-400 hover:text-brand-500 transition-colors opacity-50 group-hover/input:opacity-100"
+                            title="Add Card"
+                          >
+                            ↵
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                </DroppableColumn>
+              ))}
+            </SortableContext>
+            
+            <DragOverlay>
+              {activeId ? (
+                <div className="bg-white dark:bg-dark-800 p-4 rounded-lg shadow-2xl border border-brand-500 w-80 rotate-2 cursor-grabbing opacity-90 backdrop-blur-sm">
+                   <p className="text-sm text-gray-800 dark:text-gray-200 font-medium font-mono">
+                     {cards.find(c => c.id === activeId)?.text}
+                   </p>
+                </div>
+              ) : null}
+            </DragOverlay>
+
           </div>
-          <DragOverlay>
-            {activeId ? (
-              <div className="bg-white dark:bg-dark-800 p-4 rounded-lg shadow-2xl border border-brand-500 w-80 rotate-2 cursor-grabbing opacity-90 backdrop-blur-sm">
-                <p className="text-sm text-gray-800 dark:text-gray-200 font-medium font-mono">
-                  {cards.find(c => c.id === activeId)?.text}
-                </p>
-              </div>
-            ) : null}
-          </DragOverlay>
         </DndContext>
       </div>
     </div>
