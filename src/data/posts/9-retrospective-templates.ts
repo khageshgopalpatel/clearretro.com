@@ -21,7 +21,7 @@ export const post3: BlogPost = {
     "headline": "9 Retrospective Templates Every Scrum Master Should Use",
     "image": ["https://placehold.co/1200x630/2dd4bf/ffffff?text=9+Essential+Templates"],
     "author": { "@type": "Organization", "name": "Clear Retro" },
-    "publisher": { "@type": "Organization", "name": "Clear Retro", "logo": { "@type": "ImageObject", "url": "https://clear-retro.com/logo.png" } }
+    "publisher": { "@type": "Organization", "name": "Clear Retro", "logo": { "@type": "ImageObject", "url": "https://clearretro.com/logo.png" } }
   },
   content: `
     <h1 class="text-3xl md:text-5xl font-extrabold text-gray-900 dark:text-white mb-8 font-mono">9 Retrospective Templates Every Scrum Master Should Use</h1>

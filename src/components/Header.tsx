@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { analytics } from '../lib/firebase';
+import { logEvent } from 'firebase/analytics';
 
 interface HeaderProps {
     currentPath: string;
@@ -19,14 +21,21 @@ const Header: React.FC<HeaderProps> = ({ currentPath }) => {
     }, []);
 
     const toggleTheme = () => {
+        let newTheme = '';
         if (isDark) {
             document.documentElement.classList.remove('dark');
             localStorage.theme = 'light';
             setIsDark(false);
+            newTheme = 'light';
         } else {
             document.documentElement.classList.add('dark');
             localStorage.theme = 'dark';
             setIsDark(true);
+            newTheme = 'dark';
+        }
+
+        if (analytics) {
+            logEvent(analytics, 'toggle_theme', { theme: newTheme });
         }
     };
 

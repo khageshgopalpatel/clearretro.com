@@ -69,7 +69,7 @@ const Landing: React.FC = () => {
                      <div className="w-3 h-3 rounded-full bg-red-500/80"></div>
                      <div className="w-3 h-3 rounded-full bg-yellow-500/80"></div>
                      <div className="w-3 h-3 rounded-full bg-green-500/80"></div>
-                     <div className="ml-4 px-3 py-1 bg-white/10 rounded-md text-[10px] text-gray-400 font-mono w-64">clear-retro.com/board/demo</div>
+                     <div className="ml-4 px-3 py-1 bg-white/10 rounded-md text-[10px] text-gray-400 font-mono w-64">clearretro.com/board/demo</div>
                   </div>
 
                   {!isPlaying && (

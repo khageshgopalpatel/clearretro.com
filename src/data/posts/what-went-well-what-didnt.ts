@@ -21,7 +21,7 @@ export const post7: BlogPost = {
     "headline": "What Went Well, What Didn’t: Explained With Examples",
     "image": ["https://placehold.co/1200x630/2dd4bf/ffffff?text=What+Went+Well"],
     "author": { "@type": "Organization", "name": "Clear Retro" },
-    "publisher": { "@type": "Organization", "name": "Clear Retro", "logo": { "@type": "ImageObject", "url": "https://clear-retro.com/logo.png" } }
+    "publisher": { "@type": "Organization", "name": "Clear Retro", "logo": { "@type": "ImageObject", "url": "https://clearretro.com/logo.png" } }
   },
   content: `
     <h1 class="text-3xl md:text-5xl font-extrabold text-gray-900 dark:text-white mb-8 font-mono">What Went Well, What Didn’t: Explained With Examples</h1>

@@ -21,7 +21,7 @@ export const post9: BlogPost = {
     "headline": "4Ls Retrospective Template: Liked, Learned, Lacked, Longed For",
     "image": ["https://placehold.co/1200x630/2dd4bf/ffffff?text=4Ls+Retrospective"],
     "author": { "@type": "Organization", "name": "Clear Retro" },
-    "publisher": { "@type": "Organization", "name": "Clear Retro", "logo": { "@type": "ImageObject", "url": "https://clear-retro.com/logo.png" } }
+    "publisher": { "@type": "Organization", "name": "Clear Retro", "logo": { "@type": "ImageObject", "url": "https://clearretro.com/logo.png" } }
   },
   content: `
     <h1 class="text-3xl md:text-5xl font-extrabold text-gray-900 dark:text-white mb-8 font-mono">4Ls Retrospective Template: Liked, Learned, Lacked, Longed For</h1>

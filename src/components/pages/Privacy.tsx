@@ -83,7 +83,7 @@ const Privacy: React.FC = () => {
 
                     <h3>7. Contact Us</h3>
                     <p>
-                        If you have any questions or suggestions about our Privacy Policy, do not hesitate to contact us at <a href="mailto:privacy@clear-retro.com">privacy@clear-retro.com</a>.
+                        If you have any questions or suggestions about our Privacy Policy, do not hesitate to contact us at <a href="mailto:privacy@clearretro.com">privacy@clearretro.com</a>.
                     </p>
                 </div>
             </div>

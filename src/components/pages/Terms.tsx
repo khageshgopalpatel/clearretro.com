@@ -81,7 +81,7 @@ const Terms: React.FC = () => {
 
                     <h3>10. Contact Us</h3>
                     <p>
-                        If you have any questions about these Terms, please contact us at <a href="mailto:legal@clear-retro.com">legal@clear-retro.com</a>.
+                        If you have any questions about these Terms, please contact us at <a href="mailto:legal@clearretro.com">legal@clearretro.com</a>.
                     </p>
                 </div>
             </div>

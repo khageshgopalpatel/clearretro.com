@@ -2,6 +2,7 @@ import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
 import { getFirestore, enableIndexedDbPersistence } from "firebase/firestore";
 import { getPerformance } from "firebase/performance";
+import { getAnalytics, type Analytics } from "firebase/analytics";
 
 const firebaseConfig = {
     apiKey: import.meta.env.PUBLIC_FIREBASE_API_KEY,
@@ -27,8 +28,11 @@ enableIndexedDbPersistence(db).catch((err: any) => {
     }
 });
 export const provider = new GoogleAuthProvider();
+export let analytics: Analytics;
 
 if (typeof window !== "undefined") {
     // Initialize Performance Monitoring
     getPerformance(app);
+    // Initialize Analytics
+    analytics = getAnalytics(app);
 }

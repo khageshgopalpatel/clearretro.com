@@ -21,7 +21,7 @@ export const post10: BlogPost = {
     "headline": "The Sailboat Retrospective Template: How to Use It",
     "image": ["https://placehold.co/1200x630/2dd4bf/ffffff?text=Sailboat+Retro"],
     "author": { "@type": "Organization", "name": "Clear Retro" },
-    "publisher": { "@type": "Organization", "name": "Clear Retro", "logo": { "@type": "ImageObject", "url": "https://clear-retro.com/logo.png" } }
+    "publisher": { "@type": "Organization", "name": "Clear Retro", "logo": { "@type": "ImageObject", "url": "https://clearretro.com/logo.png" } }
   },
   content: `
     <h1 class="text-3xl md:text-5xl font-extrabold text-gray-900 dark:text-white mb-8 font-mono">The Sailboat Retrospective Template: How to Use It</h1>

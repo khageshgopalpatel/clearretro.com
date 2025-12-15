@@ -1,7 +1,7 @@
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 
-const Pricing: React.FC = () => {
+const Pricing = () => {
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
 
   const faqs = [

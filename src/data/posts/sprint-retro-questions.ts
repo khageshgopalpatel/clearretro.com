@@ -21,7 +21,7 @@ export const post5: BlogPost = {
     "headline": "Sprint Retro Questions: 40 Examples That Improve Team Culture",
     "image": ["https://placehold.co/1200x630/2dd4bf/ffffff?text=40+Retro+Questions"],
     "author": { "@type": "Organization", "name": "Clear Retro" },
-    "publisher": { "@type": "Organization", "name": "Clear Retro", "logo": { "@type": "ImageObject", "url": "https://clear-retro.com/logo.png" } }
+    "publisher": { "@type": "Organization", "name": "Clear Retro", "logo": { "@type": "ImageObject", "url": "https://clearretro.com/logo.png" } }
   },
   content: `
     <h1 class="text-3xl md:text-5xl font-extrabold text-gray-900 dark:text-white mb-8 font-mono">Sprint Retro Questions: 40 Examples That Improve Team Culture</h1>
