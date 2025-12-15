@@ -1,18 +1,48 @@
 ---
-import Layout from '../../layouts/Layout.astro';
-import CompetitorComparison from '../../components/pages/CompetitorComparison';
-import { COMPETITORS } from '../../data/competitors';
+import Layout from "../../layouts/Layout.astro";
+import CompetitorComparison from "../../components/pages/CompetitorComparison";
+import { COMPETITORS } from "../../data/competitors";
 
 export const prerender = true;
 
 export function getStaticPaths() {
-  return Object.keys(COMPETITORS).map(slug => ({
+  return Object.keys(COMPETITORS).map((slug) => ({
     params: { competitorSlug: slug },
   }));
 }
 
 const { competitorSlug } = Astro.params;
+const breadcrumbSchema = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  itemListElement: [
+    {
+      "@type": "ListItem",
+      position: 1,
+      name: "Home",
+      item: "https://clearretro.com/",
+    },
+    {
+      "@type": "ListItem",
+      position: 2,
+      name: "Comparisons",
+      item: "https://clearretro.com/vs/", // Note: We might not have a /vs index, but breadcrumbs often point to implied parents
+    },
+    {
+      "@type": "ListItem",
+      position: 3,
+      name: `vs ${COMPETITORS[competitorSlug].name}`,
+      item: `https://clearretro.com/vs/${competitorSlug}`,
+    },
+  ],
+};
 ---
+
 <Layout title="Comparison | Clear Retro">
+  <script
+    type="application/ld+json"
+    slot="head"
+    set:html={JSON.stringify(breadcrumbSchema)}
+  />
   <CompetitorComparison client:load competitorSlug={competitorSlug} />
 </Layout>

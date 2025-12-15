@@ -18,6 +18,34 @@ const post = BLOG_POSTS.find((p) => p.slug === slug);
 if (!post) {
   return Astro.redirect("/404");
 }
+const breadcrumbSchema = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  itemListElement: [
+    {
+      "@type": "ListItem",
+      position: 1,
+      name: "Home",
+      item: "https://clearretro.com/",
+    },
+    {
+      "@type": "ListItem",
+      position: 2,
+      name: "Blog",
+      item: "https://clearretro.com/blog/",
+    },
+    {
+      "@type": "ListItem",
+      position: 3,
+      name: post.title,
+      item: `https://clearretro.com/blog/${post.slug}`,
+    },
+  ],
+};
+
+const schema = post.jsonLd
+  ? [breadcrumbSchema, post.jsonLd]
+  : [breadcrumbSchema];
 ---
 
 <Layout
@@ -25,15 +53,11 @@ if (!post) {
   description={post.excerpt}
   image="/blog-placeholder.svg"
 >
-  {
-    post.jsonLd && (
-      <script
-        type="application/ld+json"
-        slot="head"
-        set:html={JSON.stringify(post.jsonLd)}
-      />
-    )
-  }
+  <script
+    type="application/ld+json"
+    slot="head"
+    set:html={JSON.stringify(schema)}
+  />
 
   <BlogPost post={post}>
     {post.faqs && <FAQSection client:visible faqs={post.faqs} />}
