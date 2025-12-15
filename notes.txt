@@ -1,0 +1,18 @@
+Option 1: The One-Liner (Twitter/X Bio)
+"The only 100% free, AI-powered retrospective tool for engineering teams. Unlimited boards, unlimited members, and zero paywalls."
+
+Option 2: The Elevator Pitch (Directory / LinkedIn)
+Clear Retro is the modern, open alternative to expensive retrospective tools. We give engineering teams unlimited boards, real-time collaboration, and powerful Gemini 2.0 AI to automatically group cards and generate summaries—all for $0. Stop paying per seat just to improve your team process.
+
+Option 3: The "Launch" Description (Product Hunt / Reddit)
+Use this when you want to impress developers with what it can actually do:
+
+Meet Clear Retro: The Retrospective Tool That Doesn't Tax Your Team's Growth.
+
+Most retro tools force you into a "3 board limit" or charge $25/mo per team. We believe team improvement should be free.
+
+Why Clear Retro? ✨ 100% Free & Unlimited: Create as many boards and invite as many members as you need. No credit card required. 🤖 Gemini 2.0 AI: Instantly group similar feedback and generate executive summaries with one click. 🔒 Private & Focus Modes: Prevent groupthink by hiding cards until everyone has voted. ⚡ Real-Time Sync: built on Firebase for instant updates across distributed teams. 📊 Data Portability: Export to PDF, CSV, or Excel anytime.
+
+Built for Agile teams who want a premium experience without the premium price tag.
+
+👉 Start your first retro instantly (No Login Required): clearretro.com
