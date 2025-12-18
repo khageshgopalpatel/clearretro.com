@@ -73,5 +73,10 @@ service cloud.firestore {
         allow delete: if isAuthenticated();
       }
     }
+
+    // Slack Installations: Users can read their own installations
+    match /slack_installations/{teamId} {
+      allow read: if isAuthenticated() && resource.data.installedBy == request.auth.uid;
+    }
   }
 }

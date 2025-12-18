@@ -83,7 +83,8 @@ export enum AISummaryStatus {
 }
 
 export interface AISummaryResult {
-  executiveSummary: string;
+  summary: string;
+  executiveSummary?: string; // For backward compatibility with cached results
   sentimentScore: number;
   actionItems: string[];
 }

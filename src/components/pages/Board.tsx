@@ -131,6 +131,76 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
   const [pendingActions, setPendingActions] = useState<any[]>([]);
   const [showPendingAlert, setShowPendingAlert] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
+  
+  // Slack Integration State
+  const [slackConnection, setSlackConnection] = useState<{ teamId: string, teamName: string, channel?: string } | null>(null);
+  const [sharingToSlack, setSharingToSlack] = useState(false);
+
+  // Fetch Slack Connection
+  useEffect(() => {
+    if (user?.uid) {
+        console.log("Checking Slack connection for user:", user.uid);
+        import('../../lib/firebase').then(({ db }) => {
+            import('firebase/firestore').then(({ collection, query, where, getDocs, limit }) => {
+                const q = query(collection(db, 'slack_installations'), where('installedBy', '==', user.uid), limit(1));
+                getDocs(q).then(snapshot => {
+                    console.log("Slack Query Result:", snapshot.size, "docs");
+                    if (!snapshot.empty) {
+                        const data = snapshot.docs[0].data();
+                        console.log("Slack Connection Found:", data);
+                        setSlackConnection({ 
+                            teamId: snapshot.docs[0].id, 
+                            teamName: data.teamName,
+                            channel: data.incomingWebhook?.channel 
+                        });
+                    } else {
+                        console.log("No Slack connection found for this user.");
+                    }
+                }).catch(err => console.error("Slack Query Error:", err));
+            });
+        });
+    }
+  }, [user?.uid]);
+
+  const handleShareToSlack = async () => {
+    if (!summaryResult || !slackConnection) return;
+    setSharingToSlack(true);
+    
+    // Construct message
+    const lines = [
+        `*Retro Summary: ${board?.name}*`,
+        `Score: ${summaryResult.sentimentScore}/10`,
+        `> ${(summaryResult.summary || summaryResult.executiveSummary || '').replace(/\n/g, '\n> ')}`,
+        ``,
+        `*Action Items:*`,
+        ...summaryResult.actionItems.map(item => `• ${item}`),
+        ``,
+        `<${window.location.href}|View Board>`
+    ];
+
+    try {
+        const res = await fetch('https://us-central1-clear-retro-app.cloudfunctions.net/postSummaryToSlack', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                teamId: slackConnection.teamId,
+                message: lines.join('\n')
+            })
+        });
+        
+        const data = await res.json();
+        if (data.success) {
+            showSnackbar(`Posted to Slack (${slackConnection.teamName})`, 'success');
+        } else {
+            throw new Error(data.error);
+        }
+    } catch (e: any) {
+        console.error(e);
+        showSnackbar(`Slack Share Failed: ${e.message}`, 'error');
+    } finally {
+        setSharingToSlack(false);
+    }
+  };
 
   useEffect(() => {
     if (board && user && !loading) {
@@ -931,7 +1001,7 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
               </div>
               <div className="col-span-2 p-5 rounded-lg bg-blue-50/50 dark:bg-dark-950 border border-blue-100 dark:border-blue-900/30">
                 <p className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase mb-2 font-mono">Executive Summary</p>
-                <p className="text-gray-800 dark:text-gray-300 leading-relaxed text-sm md:text-base font-medium">{summaryResult.executiveSummary}</p>
+                <p className="text-gray-800 dark:text-gray-300 leading-relaxed text-sm md:text-base font-medium">{summaryResult.summary || summaryResult.executiveSummary}</p>
               </div>
             </div>
 
@@ -947,7 +1017,16 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
               </ul>
             </div>
 
-            <div className="mt-8 flex justify-end">
+            <div className="mt-8 flex justify-end gap-3">
+              {slackConnection && (
+                  <button 
+                    onClick={handleShareToSlack} 
+                    disabled={sharingToSlack}
+                    className="px-6 py-2 bg-[#4A154B] text-white font-bold rounded-lg hover:bg-[#611f69] transition-colors flex items-center gap-2 disabled:opacity-50"
+                  >
+                     {sharingToSlack ? 'Sending...' : `Share to Slack #${slackConnection.channel || ''}`}
+                  </button>
+              )}
               <button onClick={() => setSummaryResult(null)} className="px-6 py-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 font-bold rounded-lg hover:opacity-90">Close</button>
             </div>
           </div>

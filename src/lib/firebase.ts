@@ -14,18 +14,16 @@ const firebaseConfig = {
     measurementId: import.meta.env.PUBLIC_FIREBASE_MEASUREMENT_ID
 };
 
+import { initializeFirestore, persistentLocalCache } from "firebase/firestore";
+
+// ... existing imports ...
+
 export const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
-export const db = getFirestore(app);
 
-enableIndexedDbPersistence(db).catch((err: any) => {
-    if (err.code == 'failed-precondition') {
-        // Multiple tabs open, persistence can only be enabled in one tab at a a time.
-        // console.log('Persistence failed: Multiple tabs open');
-    } else if (err.code == 'unimplemented') {
-        // The current browser does not support all of the features required to enable persistence
-        // console.log('Persistence failed: Browser not supported');
-    }
+// Initialize Firestore with persistent cache settings to avoid "already started" errors
+export const db = initializeFirestore(app, {
+  localCache: persistentLocalCache()
 });
 export const provider = new GoogleAuthProvider();
 export let analytics: Analytics;

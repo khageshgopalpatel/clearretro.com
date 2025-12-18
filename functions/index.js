@@ -136,15 +136,12 @@ exports.generateBoardSummary = onRequest({
         }
     });
 });
-exports.ssr = onRequest({
-    region: "us-central1",
-    minInstances: 0,
-}, async (req, res) => {
-    try {
-        const { handler } = await import("./server/entry.mjs");
-        return handler(req, res);
-    } catch (e) {
-        console.error("SSR Error:", e);
-        res.status(500).send("Internal Server Error");
-    }
-});
+
+const { slackAuth, postSummaryToSlack } = require("./slack");
+const { slackCommands, slackInteractions } = require("./slack_commands");
+
+exports.slackAuth = slackAuth;
+exports.postSummaryToSlack = postSummaryToSlack;
+exports.slackCommands = slackCommands;
+exports.slackInteractions = slackInteractions;
+
