@@ -1,13 +1,8 @@
-# Clear Retro - Robots.txt
-# Allow search engines to index the landing page
-# but disallow app pages that require authentication
-
 User-agent: *
 Allow: /
-Allow: /index.html
-Disallow: /app.html
 Disallow: /dashboard
-Disallow: /board/
+Disallow: /board
+Disallow: /app.html
 
-# Sitemap location (update with your actual domain)
+# Sitemap location
 Sitemap: https://clearretro.com/sitemap.xml
