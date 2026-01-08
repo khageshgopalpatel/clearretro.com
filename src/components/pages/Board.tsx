@@ -234,6 +234,14 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
     if (!summaryResult || !slackConnection) return;
     setSharingToSlack(true);
 
+    if (analytics) {
+      logEvent(analytics, 'share_to_slack', {
+        board_id: board?.id,
+        board_name: board?.name,
+        team_id: slackConnection.teamId
+      });
+    }
+
     // Construct message
     const lines = [
       `*Retro Summary: ${board?.name}*`,
@@ -337,6 +345,15 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
 
   const toggleTimer = async () => {
     if (!board || board.status === "completed") return;
+
+    const newStatus = board.timer?.status === "running" ? "stopped" : "running";
+    if (analytics) {
+      logEvent(analytics, 'toggle_timer', {
+        board_id: board.id,
+        board_name: board.name,
+        status: newStatus
+      });
+    }
 
     if (board.timer?.status === "running") {
       // Pause: Save remaining time
@@ -528,6 +545,14 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
     const text = newCardText[columnId]?.trim();
     if (!board || !text || !user || board.status === "completed") return;
 
+    if (analytics) {
+      logEvent(analytics, 'add_card', {
+        board_id: board.id,
+        board_name: board.name,
+        column_id: columnId
+      });
+    }
+
     // Optimistic Update: Clear input immediately
     setNewCardText((prev) => ({ ...prev, [columnId]: "" }));
 
@@ -543,6 +568,12 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
 
   const handleDeleteCardOptimistic = async (cardId: string) => {
     // Optimistically remove from UI immediately
+    if (analytics) {
+      logEvent(analytics, 'delete_card', {
+        board_id: id,
+        card_id: cardId
+      });
+    }
     setItems((prev) => prev.filter((c) => c.id !== cardId));
     try {
       await deleteCard(id, cardId);
@@ -557,6 +588,14 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
   const handleGenerateSummary = async () => {
     if (!board || cards.length === 0) return;
     setSummaryStatus(AISummaryStatus.LOADING);
+    
+    if (analytics) {
+      logEvent(analytics, 'generate_ai_summary', {
+        board_id: board.id,
+        board_name: board.name
+      });
+    }
+
     try {
       const result = await generateBoardSummary(cards, board.columns);
       if (result) {
@@ -576,6 +615,13 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
 
   const exportPDF = () => {
     if (!board) return;
+    if (analytics) {
+      logEvent(analytics, 'export_board', {
+        board_id: board.id,
+        board_name: board.name,
+        format: 'pdf'
+      });
+    }
     const doc = new jsPDF();
     doc.setFont("monospace");
     doc.text(`Retro: ${board.name}`, 10, 10);
@@ -600,6 +646,13 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
 
   const exportExcel = () => {
     if (!board) return;
+    if (analytics) {
+      logEvent(analytics, 'export_board', {
+        board_id: board.id,
+        board_name: board.name,
+        format: 'excel'
+      });
+    }
     const data = cards.map((c) => ({
       Column: board.columns.find((col) => col.id === c.columnId)?.title,
       Text: c.text,
@@ -628,6 +681,14 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
 
   const handleEndRetro = async () => {
     if (!board) return;
+    
+    if (analytics) {
+      logEvent(analytics, 'end_retro', {
+        board_id: board.id,
+        board_name: board.name
+      });
+    }
+
     await completeRetro(id);
     await updateBoardTimer(id, "stopped");
     setShowEndRetroDialog(false);
@@ -635,6 +696,11 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
   };
 
   const handleLogout = async () => {
+    if (analytics) {
+      logEvent(analytics, 'logout', {
+        user_id: user?.uid
+      });
+    }
     await logout();
     window.location.href = "/signin";
   };
@@ -667,7 +733,10 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
 
           <div className="space-y-3">
             <button
-              onClick={() => loginWithGoogle()}
+              onClick={() => {
+                if (analytics) logEvent(analytics, 'click_login_google');
+                loginWithGoogle();
+              }}
               className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-white dark:bg-dark-800 text-gray-700 dark:text-white border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-dark-700 transition-all font-medium shadow-sm hover:shadow-md group"
             >
               <svg
@@ -704,6 +773,7 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
 
             <button
               onClick={async () => {
+                if (analytics) logEvent(analytics, 'click_login_guest');
                 try {
                   await loginAsGuest();
                 } catch (e: any) {
@@ -802,7 +872,17 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
           {/* Private Mode Toggle */}
           {user?.uid === board.createdBy && (
             <button
-              onClick={() => togglePrivateMode(id, !isPrivateMode)}
+              onClick={() => {
+                const newMode = !isPrivateMode;
+                togglePrivateMode(id, newMode);
+                if (analytics) {
+                  logEvent(analytics, 'toggle_private_mode', {
+                    board_id: board.id,
+                    board_name: board.name,
+                    enabled: newMode
+                  });
+                }
+              }}
               className={`hidden md:flex items-center justify-center w-10 h-10 rounded-lg border transition-all ${isPrivateMode ? "bg-purple-100 dark:bg-purple-900/20 border-purple-500 text-purple-600 shadow-[0_0_15px_rgba(216,180,254,0.3)]" : "bg-white dark:bg-dark-900 border-gray-200 dark:border-gray-800 text-gray-500"}`}
               title={
                 isPrivateMode
@@ -816,7 +896,15 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
 
           {/* Focus Mode Button */}
           <button
-            onClick={() => setFocusModeIndex(0)}
+            onClick={() => {
+              setFocusModeIndex(0);
+              if (analytics) {
+                logEvent(analytics, 'enter_focus_mode', {
+                  board_id: board.id,
+                  board_name: board.name
+                });
+              }
+            }}
             className="hidden md:flex items-center justify-center w-10 h-10 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-dark-900 text-gray-500 hover:bg-gray-50 dark:hover:bg-dark-800 transition-colors"
             title="Enter Focus Mode"
           >
@@ -990,6 +1078,12 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
                     <button
                       onClick={() => {
                         setFocusModeIndex(0);
+                        if (analytics) {
+                          logEvent(analytics, 'enter_focus_mode', {
+                            board_id: board.id,
+                            board_name: board.name
+                          });
+                        }
                         setActiveId(null);
                       }}
                       className="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 dark:hover:bg-dark-800 flex items-center gap-3 text-gray-700 dark:text-gray-300 transition-colors"
@@ -1021,7 +1115,15 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
                     <li>
                       <button
                         onClick={() => {
-                          togglePrivateMode(id, !isPrivateMode);
+                          const newMode = !isPrivateMode;
+                          togglePrivateMode(id, newMode);
+                          if (analytics) {
+                            logEvent(analytics, 'toggle_private_mode', {
+                              board_id: board.id,
+                              board_name: board.name,
+                              enabled: newMode
+                            });
+                          }
                           setActiveId(null);
                         }}
                         className="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 dark:hover:bg-dark-800 flex items-center gap-3 text-gray-700 dark:text-gray-300 transition-colors"
@@ -1127,7 +1229,10 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
             {!isCompleted && user?.uid === board.createdBy && (
               <div className="flex items-center gap-1">
                 <button
-                  onClick={() => adjustTimer(id, -60)}
+                  onClick={() => {
+                    adjustTimer(id, -60);
+                    if (analytics) logEvent(analytics, 'adjust_timer', { board_id: id, amount: -60 });
+                  }}
                   className="w-6 h-6 flex items-center justify-center rounded text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors text-xs font-bold"
                   title="-1 Minute"
                 >
@@ -1140,7 +1245,10 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
                   {board.timer?.status === "running" ? "⏸" : "▶️"}
                 </button>
                 <button
-                  onClick={() => adjustTimer(id, 60)}
+                  onClick={() => {
+                    adjustTimer(id, 60);
+                    if (analytics) logEvent(analytics, 'adjust_timer', { board_id: id, amount: 60 });
+                  }}
                   className="w-6 h-6 flex items-center justify-center rounded text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors text-xs font-bold"
                   title="+1 Minute"
                 >

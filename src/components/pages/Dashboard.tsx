@@ -3,13 +3,13 @@ import React, { useState } from 'react';
 
 
 import { useAuth } from '../../hooks/useAuth';
-import { useUserBoards, createBoard, updateBoardName, deleteBoard } from '../../hooks/useBoard';
+import { useUserBoards, createBoard, updateBoardName, deleteBoard, updateBoardColumns, getBoardCards } from '../../hooks/useBoard';
 
 import { useSnackbar } from '../../context/SnackbarContext.jsx';
 import { BOARD_TEMPLATES } from '../../data/templates';
 import ConfirmDialog from '../ConfirmDialog.jsx';
 import HeaderDropdown from '../HeaderDropdown';
-import type { RetroBoard } from '../../types';
+import type { RetroBoard, RetroColumn, RetroCard } from '../../types';
 
 import { Providers } from '../Providers';
 import { Logo } from '../Logo';
@@ -41,13 +41,19 @@ const DashboardContent: React.FC = () => {
 
   const [newBoardName, setNewBoardName] = useState('');
   const [selectedTemplate, setSelectedTemplate] = useState(BOARD_TEMPLATES[0]);
+  const [customColumns, setCustomColumns] = useState(BOARD_TEMPLATES[0].columns);
+
+  // Sync custom columns when template changes
+  React.useEffect(() => {
+    setCustomColumns(selectedTemplate.columns);
+  }, [selectedTemplate]);
 
   const [creating, setCreating] = useState(false);
   const { showSnackbar } = useSnackbar();
 
   // Dialog states
   const [deleteDialog, setDeleteDialog] = useState<{ isOpen: boolean; boardId: string | null; boardName: string }>({ isOpen: false, boardId: null, boardName: '' });
-  const [editDialog, setEditDialog] = useState<{ isOpen: boolean; boardId: string | null; boardName: string }>({ isOpen: false, boardId: null, boardName: '' });
+  const [editDialog, setEditDialog] = useState<{ isOpen: boolean; boardId: string | null; boardName: string; columns: RetroColumn[]; lockedColumns: string[] }>({ isOpen: false, boardId: null, boardName: '', columns: [], lockedColumns: [] });
   const [renaming, setRenaming] = useState(false);
   const [logoutDialog, setLogoutDialog] = useState(false);
   const [guestSignInDialog, setGuestSignInDialog] = useState(false);
@@ -69,7 +75,7 @@ const DashboardContent: React.FC = () => {
 
     setCreating(true);
     try {
-      const columnsWithIds = selectedTemplate.columns.map(col => ({
+      const columnsWithIds = customColumns.map(col => ({
         ...col,
         id: col.title.toLowerCase().replace(/\s+/g, '-'),
         cards: []
@@ -104,16 +110,23 @@ const DashboardContent: React.FC = () => {
     }
   };
 
-  const handleRenameBoard = async () => {
+  const handleEditBoard = async () => {
     if (!editDialog.boardId || !editDialog.boardName.trim()) return;
     setRenaming(true);
     try {
       await updateBoardName(editDialog.boardId, editDialog.boardName);
-      showSnackbar("Board renamed successfully", "success");
-      setEditDialog({ isOpen: false, boardId: null, boardName: '' });
+      
+      const columnsWithIds = editDialog.columns.map(col => ({
+        ...col,
+        id: col.id || col.title.toLowerCase().replace(/\s+/g, '-')
+      }));
+      await updateBoardColumns(editDialog.boardId, columnsWithIds);
+
+      showSnackbar("Board updated successfully", "success");
+      setEditDialog({ isOpen: false, boardId: null, boardName: '', columns: [], lockedColumns: [] });
     } catch (error) {
-      console.error("Error renaming board:", error);
-      showSnackbar("Failed to rename board", "error");
+      console.error("Error updating board:", error);
+      showSnackbar("Failed to update board", "error");
     } finally {
       setRenaming(false);
     }
@@ -219,9 +232,36 @@ const calculateStreak = (boards: RetroBoard[]) => {
                 </h3>
                 <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
                   <button
-                    onClick={() => setEditDialog({ isOpen: true, boardId: board.id, boardName: board.name })}
+                    onClick={async () => {
+                        // Optimistically open the dialog with existing data
+                        setEditDialog({ 
+                            isOpen: true, 
+                            boardId: board.id, 
+                            boardName: board.name, 
+                            columns: board.columns || [],
+                            lockedColumns: [] 
+                        });
+
+                        // Fetch cards to determine locked columns
+                        try {
+                            const cards = await getBoardCards(board.id);
+                            const lockedCounts: Record<string, number> = {};
+                            cards.forEach((card: RetroCard) => {
+                                if (card.columnId) {
+                                    lockedCounts[card.columnId] = (lockedCounts[card.columnId] || 0) + 1;
+                                }
+                            });
+                            // Use functional update to ensure we don't overwrite if user closed dialog quickly
+                            setEditDialog(prev => prev.isOpen && prev.boardId === board.id ? { 
+                                ...prev, 
+                                lockedColumns: Object.keys(lockedCounts) 
+                            } : prev);
+                        } catch (err) {
+                            console.error("Failed to check locked columns", err);
+                        }
+                    }}
                     className="p-1.5 text-gray-400 hover:text-brand-600 dark:hover:text-brand-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-                    title="Rename Board"
+                    title="Edit Board"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
@@ -245,7 +285,7 @@ const calculateStreak = (boards: RetroBoard[]) => {
               <div className="space-y-4">
                 <div className="flex items-center gap-2">
                   {board.columns.slice(0, 3).map((col, idx) => (
-                    <div key={idx} className="flex-1 h-1.5 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden">
+                    <div key={idx} title={col.title} className="flex-1 h-1.5 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden">
                       <div className={`h-full ${COLUMN_COLORS[col.color] || COLUMN_COLORS.default} w-full opacity-70`}></div>
                     </div>
                   ))}
@@ -317,6 +357,44 @@ const calculateStreak = (boards: RetroBoard[]) => {
               </div>
             </div>
 
+            <div className="mb-8">
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 font-mono">Customize Columns (Max 5)</label>
+              <div className="space-y-3">
+                {customColumns.map((col, idx) => (
+                  <div key={idx} className="flex gap-2">
+                    <input
+                      type="text"
+                      value={col.title}
+                      onChange={(e) => {
+                         const newCols = [...customColumns];
+                         newCols[idx] = { ...newCols[idx], title: e.target.value };
+                         setCustomColumns(newCols);
+                      }}
+                      className="flex-1 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-dark-800 dark:text-white focus:ring-2 focus:ring-brand-500 outline-none transition-all font-mono text-sm"
+                      placeholder="Column Title"
+                    />
+                     <div className={`w-8 h-full rounded bg-${col.color}-500/20 border border-${col.color}-500`}></div>
+                     {customColumns.length > 1 && (
+                      <button
+                        onClick={() => setCustomColumns(customColumns.filter((_, i) => i !== idx))}
+                        className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                      >
+                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                      </button>
+                     )}
+                  </div>
+                ))}
+                {customColumns.length < 5 && (
+                  <button
+                    onClick={() => setCustomColumns([...customColumns, { title: 'New Column', color: 'gray' }])}
+                    className="w-full py-2 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg text-gray-500 hover:border-brand-500 hover:text-brand-500 transition-colors font-mono text-sm font-bold flex items-center justify-center gap-2"
+                  >
+                    + Add Column
+                  </button>
+                )}
+              </div>
+            </div>
+
             <div className="flex justify-end gap-3 pt-4 border-t border-gray-100 dark:border-gray-800">
               <button
                 onClick={() => setShowCreateModal(false)}
@@ -341,7 +419,7 @@ const calculateStreak = (boards: RetroBoard[]) => {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4 animate-in fade-in duration-200">
           <div className="bg-white dark:bg-dark-900 p-8 rounded-3xl shadow-2xl w-full max-w-lg border border-gray-200 dark:border-gray-700 transform transition-all scale-100 relative overflow-hidden">
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-brand-500 to-purple-600"></div>
-            <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white font-mono">Rename Board</h2>
+            <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white font-mono">Edit Board</h2>
 
             <div className="mb-6">
               <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 font-mono">Board Name</label>
@@ -354,21 +432,75 @@ const calculateStreak = (boards: RetroBoard[]) => {
                 onChange={(e) => setEditDialog({ ...editDialog, boardName: e.target.value })}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && editDialog.boardName.trim()) {
-                    handleRenameBoard();
+                    handleEditBoard();
                   }
                 }}
               />
             </div>
 
+            <div className="mb-8">
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 font-mono">Customize Columns (Max 5)</label>
+              <div className="space-y-3">
+                {editDialog.columns.map((col, idx) => {
+                  const isLocked = editDialog.lockedColumns.includes(col.id);
+                  return (
+                  <div key={idx} className="flex gap-2 relative group">
+                    <input
+                      type="text"
+                      value={col.title}
+                      disabled={isLocked}
+                      onChange={(e) => {
+                         const newCols = [...editDialog.columns];
+                         newCols[idx] = { ...newCols[idx], title: e.target.value };
+                         setEditDialog({ ...editDialog, columns: newCols });
+                      }}
+                      className={`flex-1 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-dark-800 dark:text-white focus:ring-2 focus:ring-brand-500 outline-none transition-all font-mono text-sm ${isLocked ? 'opacity-60 cursor-not-allowed bg-gray-100 dark:bg-dark-900' : ''}`}
+                      placeholder="Column Title"
+                      title={isLocked ? "Cannot rename column with existing cards" : ""}
+                    />
+                     <div className={`w-8 h-full rounded bg-${col.color}-500/20 border border-${col.color}-500`}></div>
+                     {editDialog.columns.length > 1 && (
+                      <button
+                        onClick={() => setEditDialog({ ...editDialog, columns: editDialog.columns.filter((_, i) => i !== idx) })}
+                        disabled={isLocked}
+                        className={`p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors ${isLocked ? 'opacity-30 cursor-not-allowed hover:bg-transparent' : ''}`}
+                        title={isLocked ? "Cannot delete column with existing cards" : "Delete Column"}
+                      >
+                         {isLocked ? (
+                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                         ) : (
+                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                         )}
+                      </button>
+                     )}
+                     {isLocked && (
+                        <div className="absolute right-12 top-10 z-10 hidden group-hover:block bg-black text-white text-xs px-2 py-1 rounded shadow-lg whitespace-nowrap">
+                            Contains cards - cannot modify
+                        </div>
+                     )}
+                  </div>
+                );
+                })}
+                {editDialog.columns.length < 5 && (
+                  <button
+                    onClick={() => setEditDialog({ ...editDialog, columns: [...editDialog.columns, { id: '', title: 'New Column', color: 'gray' }] })}
+                    className="w-full py-2 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg text-gray-500 hover:border-brand-500 hover:text-brand-500 transition-colors font-mono text-sm font-bold flex items-center justify-center gap-2"
+                  >
+                    + Add Column
+                  </button>
+                )}
+              </div>
+            </div>
+
             <div className="flex justify-end gap-3 pt-4 border-t border-gray-100 dark:border-gray-800">
               <button
-                onClick={() => setEditDialog({ isOpen: false, boardId: null, boardName: '' })}
+                onClick={() => setEditDialog({ isOpen: false, boardId: null, boardName: '', columns: [], lockedColumns: [] })}
                 className="px-5 py-2.5 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg font-medium transition-colors font-mono"
               >
                 Cancel
               </button>
               <button
-                onClick={handleRenameBoard}
+                onClick={handleEditBoard}
                 className="px-6 py-2.5 bg-brand-600 text-white rounded-lg hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed font-bold shadow-lg shadow-brand-500/30 transition-all font-mono"
                 disabled={!editDialog.boardName.trim() || renaming}
               >

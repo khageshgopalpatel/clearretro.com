@@ -337,6 +337,18 @@ export const updateBoardName = async (boardId: string, newName: string) => {
     }
 };
 
+export const updateBoardColumns = async (boardId: string, columns: RetroColumn[]) => {
+    try {
+        const boardRef = doc(db, "boards", boardId);
+        await updateDoc(boardRef, {
+            columns: columns
+        });
+    } catch (e) {
+        console.error("Error updating board columns: ", e);
+        throw e;
+    }
+};
+
 export const updateBoardVisibility = async (boardId: string, isPublic: boolean) => {
     try {
         const boardRef = doc(db, "boards", boardId);
@@ -346,6 +358,17 @@ export const updateBoardVisibility = async (boardId: string, isPublic: boolean) 
     } catch (e) {
         console.error("Error updating board visibility: ", e);
         throw e;
+    }
+};
+
+export const getBoardCards = async (boardId: string) => {
+    try {
+        const q = query(collection(db, `boards/${boardId}/cards`));
+        const snapshot = await getDocs(q);
+        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as RetroCard));
+    } catch (e) {
+        console.error("Error fetching board cards: ", e);
+        return [];
     }
 };
 
