@@ -3,6 +3,8 @@ import confetti from 'canvas-confetti';
 import { useDraggable, useDroppable } from '@dnd-kit/core';
 import { addReply, toggleReaction, updateCard, deleteReply, deleteCard } from '../hooks/useBoard';
 import { useAuth } from '../hooks/useAuth';
+import { logEvent } from "firebase/analytics";
+import { analytics } from '../lib/firebase';
 // import { usePresence } from '../hooks/usePresence';
 import { useSnackbar } from '../context/SnackbarContext';
 import ConfirmDialog from './ConfirmDialog';
@@ -92,6 +94,13 @@ const Card = ({ card, boardId, isPrivate, sortableProps, isCompleted, onDelete }
         setIsReplyPending(true);
         setReplyText(''); // Optimistic clear
         
+        if (analytics) {
+            logEvent(analytics, 'add_reply', {
+                board_id: boardId,
+                card_id: card.id
+            });
+        }
+
         try {
             await addReply(boardId, card.id, textToSubmit, user);
             // setShowReplyInput(false); // Removed as we want to keep input visible or uncontrolled by this

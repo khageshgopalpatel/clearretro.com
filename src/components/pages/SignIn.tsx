@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '../../hooks/useAuth';
+import { logEvent } from "firebase/analytics";
+import { analytics } from '../../lib/firebase';
 
 const SignIn = () => {
     const { loginWithGoogle, loginAsGuest } = useAuth();
@@ -11,6 +13,7 @@ const SignIn = () => {
         setError(null);
         try {
             await loginWithGoogle();
+            if (analytics) logEvent(analytics, 'login', { method: 'google' });
             // Redirect to dashboard after successful login
             window.location.href = '/dashboard';
         } catch (err: any) {
@@ -85,6 +88,7 @@ const SignIn = () => {
                         <button
                             onClick={async () => {
                                 await loginAsGuest();
+                                if (analytics) logEvent(analytics, 'login', { method: 'guest' });
                                 window.location.href = '/dashboard';
                             }}
                             className="font-medium text-brand-600 hover:text-brand-500 dark:text-brand-400 text-sm bg-transparent border-none cursor-pointer"

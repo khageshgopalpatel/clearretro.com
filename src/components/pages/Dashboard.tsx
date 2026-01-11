@@ -4,6 +4,8 @@ import React, { useState } from 'react';
 
 import { useAuth } from '../../hooks/useAuth';
 import { useUserBoards, createBoard, updateBoardName, deleteBoard, updateBoardColumns, getBoardCards } from '../../hooks/useBoard';
+import { logEvent } from "firebase/analytics";
+import { analytics } from '../../lib/firebase';
 
 import { useSnackbar } from '../../context/SnackbarContext.jsx';
 import { BOARD_TEMPLATES } from '../../data/templates';
@@ -88,6 +90,13 @@ const DashboardContent: React.FC = () => {
         null, // selectedTeam removed
         selectedTemplate.name
       );
+      if (analytics) {
+          logEvent(analytics, 'create_board', {
+              board_id: boardId,
+              template: selectedTemplate.name,
+              columns_count: columnsWithIds.length
+          });
+      }
       setShowCreateModal(false);
       window.location.href = `/board/${boardId}`;
     } catch (error) {
