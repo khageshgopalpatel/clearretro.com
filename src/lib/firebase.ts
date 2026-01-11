@@ -21,10 +21,16 @@ import { initializeFirestore, persistentLocalCache } from "firebase/firestore";
 export const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 
-// Initialize Firestore with persistent cache settings to avoid "already started" errors
-export const db = initializeFirestore(app, {
-  localCache: persistentLocalCache()
-});
+// Initialize Firestore with persistent cache, or get existing instance if already initialized (HMR)
+let firestoreDb;
+try {
+  firestoreDb = initializeFirestore(app, {
+    localCache: persistentLocalCache()
+  });
+} catch (e) {
+  firestoreDb = getFirestore(app);
+}
+export const db = firestoreDb;
 export const provider = new GoogleAuthProvider();
 export let analytics: Analytics;
 
