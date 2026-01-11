@@ -12,6 +12,8 @@ export function getStaticPaths() {
 }
 
 const { competitorSlug } = Astro.params;
+const competitor = COMPETITORS[competitorSlug];
+
 const breadcrumbSchema = {
   "@context": "https://schema.org",
   "@type": "BreadcrumbList",
@@ -31,18 +33,21 @@ const breadcrumbSchema = {
     {
       "@type": "ListItem",
       position: 3,
-      name: `vs ${COMPETITORS[competitorSlug].name}`,
+      name: `vs ${competitor.name}`,
       item: `https://clearretro.com/vs/${competitorSlug}`,
     },
   ],
 };
 ---
 
-<Layout title="Comparison | Clear Retro">
+<Layout
+  title={`${competitor.heroTitle} | Clear Retro`}
+  description={competitor.metaDescription}
+>
   <script
     type="application/ld+json"
     slot="head"
     set:html={JSON.stringify(breadcrumbSchema)}
   />
-  <CompetitorComparison client:load competitorSlug={competitorSlug} />
+  <CompetitorComparison competitorSlug={competitorSlug} />
 </Layout>

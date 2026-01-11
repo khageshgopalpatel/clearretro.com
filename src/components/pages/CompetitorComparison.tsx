@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { COMPETITORS } from '../../data/competitors';
 
 interface CompetitorComparisonProps {
@@ -9,12 +9,7 @@ interface CompetitorComparisonProps {
 const CompetitorComparison: React.FC<CompetitorComparisonProps> = ({ competitorSlug }) => {
    const data = competitorSlug ? COMPETITORS[competitorSlug] : null;
 
-   useEffect(() => {
-      if (data) {
-         document.title = `${data.heroTitle} | Clear Retro`;
-         // In a real app with SSR, we would set meta description here
-      }
-   }, [data]);
+   // Title and meta description are now handled by the parent Astro page for better SEO
 
    if (!data) {
       return (

@@ -1,5 +1,7 @@
 
 import React, { useState, useRef } from 'react';
+import { logEvent } from "firebase/analytics";
+import { analytics } from '../../lib/firebase';
 import { faqs } from '../../data/faqs';
 
 const Landing: React.FC = () => {
@@ -13,6 +15,12 @@ const Landing: React.FC = () => {
             videoRef.current.pause();
          } else {
             videoRef.current.play();
+             if (analytics) {
+                 logEvent(analytics, 'video_play', {
+                     component: 'landing_hero',
+                     video_name: 'demo_video'
+                 });
+             }
          }
          setIsPlaying(!isPlaying);
       }
@@ -38,9 +46,19 @@ const Landing: React.FC = () => {
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-500 via-brand-400 to-purple-500 animate-gradient">Reimagined</span>
                </h1>
 
-               <p className="mt-8 text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto leading-relaxed font-light">
+                <p className="mt-8 text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto leading-relaxed font-light">
                   The <span className="text-gray-900 dark:text-white font-medium">fastest</span> way for <span className="text-gray-900 dark:text-white font-medium">remote engineering teams</span> to run effective <span className="text-brand-600 dark:text-brand-400 font-bold">sprint retrospectives</span>. Free forever, zero clutter, and supercharged with AI.
                </p>
+
+               {/* Definition Block for LLM Optimization */}
+               <div className="mt-8 mb-4 max-w-3xl mx-auto hidden md:block">
+                  <div className="bg-brand-50/50 dark:bg-brand-900/10 border border-brand-100 dark:border-brand-900 rounded-lg p-4 text-sm text-gray-600 dark:text-gray-400 text-left">
+                     <p>
+                        <strong className="text-gray-900 dark:text-white">What is Clear Retro?</strong><br />
+                        Clear Retro is a free, real-time agile retrospective tool designed for developers. It features unlimited boards, AI-powered grouping, and private voting modes to help Scrum teams improve their processes without account limits.
+                     </p>
+                  </div>
+               </div>
 
                <div className="mt-12 flex flex-col items-center gap-4">
                   <a
@@ -180,7 +198,7 @@ const Landing: React.FC = () => {
                   {/* Small Item: Focus Mode */}
                   <div className="relative overflow-hidden rounded-3xl bg-gray-50 dark:bg-dark-900 border border-gray-200 dark:border-gray-800 p-8 group">
                      <div className="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 mb-4">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" /></svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" /></svg>
                      </div>
                      <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2 font-mono">Focus Mode</h3>
                      <p className="text-sm text-gray-500 dark:text-gray-400">Hide cards while writing to prevent groupthink and bias.</p>
