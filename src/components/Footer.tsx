@@ -13,7 +13,17 @@ const Footer: React.FC = () => {
                         <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 leading-relaxed">
                             The developer-first retrospective tool. Minimalist, fast, and keyboard-driven.
                         </p>
-                        <p className="text-xs text-gray-400 font-mono">© 2024 Clear Retro Inc.</p>
+                        <p className="text-xs text-gray-400 font-mono mb-4">© 2024 Clear Retro Inc.</p>
+                        
+                        <a 
+                            href="https://buymeacoffee.com/clearretro" 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-yellow-400 text-yellow-900 hover:bg-yellow-300 transition-colors text-xs font-bold font-mono group"
+                        >
+                            <span className="text-base group-hover:animate-bounce">☕</span>
+                            <span>Buy us a coffee</span>
+                        </a>
                     </div>
 
                     <div>

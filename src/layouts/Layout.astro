@@ -4,6 +4,7 @@ import Footer from "../components/Footer";
 import "../styles/global.css";
 import GoogleAnalytics from "../components/GoogleAnalytics.astro";
 import FeedbackWidget from "../components/FeedbackWidget";
+import BuyMeCoffeeWidget from "../components/BuyMeCoffeeWidget";
 
 import "@fontsource/jetbrains-mono";
 
@@ -109,6 +110,7 @@ const isProd = import.meta.env.PROD;
       </main>
       {!appLayout && <Footer />}
       <FeedbackWidget client:idle />
+      <BuyMeCoffeeWidget client:idle />
     </div>
   </body>
 </html>
