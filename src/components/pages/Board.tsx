@@ -35,6 +35,7 @@ import {
   updateBoardTimer,
   updateCard,
   togglePrivateMode,
+  toggleReaction,
   completeRetro,
   adjustTimer,
 } from "../../hooks/useBoard";
@@ -64,6 +65,8 @@ interface SortableCardWrapperProps {
 
   isCompleted?: boolean;
   onDelete?: (cardId: string) => Promise<void>;
+  onUpdate?: (cardId: string, newText: string) => Promise<void>;
+  onReaction?: (cardId: string, emoji: string) => Promise<void>;
 }
 
 const COLUMN_COLORS: Record<string, string> = {
@@ -84,6 +87,8 @@ const SortableCardWrapper: React.FC<SortableCardWrapperProps> = ({
   isPrivate,
   isCompleted,
   onDelete,
+  onUpdate,
+  onReaction,
 }) => {
   const {
     attributes,
@@ -106,6 +111,8 @@ const SortableCardWrapper: React.FC<SortableCardWrapperProps> = ({
       isPrivate={isPrivate}
       isCompleted={isCompleted}
       onDelete={onDelete}
+      onUpdate={onUpdate}
+      onReaction={onReaction}
       sortableProps={{
         attributes,
         listeners,
@@ -556,13 +563,69 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
     // Optimistic Update: Clear input immediately
     setNewCardText((prev) => ({ ...prev, [columnId]: "" }));
 
+    // Optimistic Update: Add card to UI immediately
+    const tempId = `temp-${Date.now()}`;
+    const newCard: RetroCard = {
+      id: tempId,
+      text: text,
+      columnId: columnId,
+      votes: 0,
+      createdBy: user.uid,
+      creatorName: user.displayName || 'Anonymous',
+      createdAt: { toDate: () => new Date() } as any, // Mock Timestamp
+      votedBy: [],
+      // Default other fields
+    };
+
+    setItems((prev) => [...prev, newCard]);
+
     try {
       await addCard(id, columnId, text, user);
     } catch (e) {
       console.error("Failed to add card", e);
       // Restore text on failure
       setNewCardText((prev) => ({ ...prev, [columnId]: text }));
+      // Remove optimistic card
+      setItems((prev) => prev.filter(c => c.id !== tempId));
       showSnackbar("Failed to add card", "error");
+    }
+  };
+
+  const handleUpdateCardOptimistic = async (cardId: string, newText: string) => {
+    // Optimistic update
+    setItems((prev) => prev.map(c => c.id === cardId ? { ...c, text: newText } : c));
+    
+    try {
+      await updateCard(id, cardId, { text: newText });
+    } catch (e) {
+      console.error("Failed to update card", e);
+      showSnackbar("Failed to update card", "error");
+    }
+  };
+
+  const handleReactionOptimistic = async (cardId: string, emoji: string) => {
+    if (!user) return;
+    
+    // Optimistic update
+    setItems((prev) => prev.map(c => {
+      if (c.id === cardId) {
+        const reactions = { ...(c.reactions || {}) };
+        const userIds = reactions[emoji] || [];
+        if (userIds.includes(user.uid)) {
+          reactions[emoji] = userIds.filter(uid => uid !== user.uid);
+        } else {
+          reactions[emoji] = [...userIds, user.uid];
+        }
+        return { ...c, reactions };
+      }
+      return c;
+    }));
+
+    try {
+      await toggleReaction(id, cardId, emoji, user.uid);
+    } catch (e) {
+      console.error("Failed to toggle reaction", e);
+      showSnackbar("Failed to toggle reaction", "error");
     }
   };
 
@@ -1419,6 +1482,8 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
                             }
                             isCompleted={isCompleted}
                             onDelete={handleDeleteCardOptimistic}
+                            onUpdate={handleUpdateCardOptimistic}
+                            onReaction={handleReactionOptimistic}
                           />
                         ))}
                     </SortableContext>

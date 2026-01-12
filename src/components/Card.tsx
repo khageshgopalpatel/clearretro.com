@@ -26,9 +26,11 @@ interface CardProps {
     };
     isCompleted?: boolean;
     onDelete?: (cardId: string) => Promise<void>;
+    onUpdate?: (cardId: string, newText: string) => Promise<void>;
+    onReaction?: (cardId: string, emoji: string) => Promise<void>;
 }
 
-const Card = ({ card, boardId, isPrivate, sortableProps, isCompleted, onDelete }: CardProps) => {
+const Card = ({ card, boardId, isPrivate, sortableProps, isCompleted, onDelete, onUpdate, onReaction }: CardProps) => {
     const { user } = useAuth();
     const [showReplyInput, setShowReplyInput] = useState(false);
     const [replyText, setReplyText] = useState('');
@@ -47,7 +49,11 @@ const Card = ({ card, boardId, isPrivate, sortableProps, isCompleted, onDelete }
 
     const handleReaction = async (emoji: string) => {
         setShowReactionPicker(false);
-        await toggleReaction(boardId, card.id, emoji, user?.uid || '');
+        if (onReaction) {
+            await onReaction(card.id, emoji);
+        } else {
+            await toggleReaction(boardId, card.id, emoji, user?.uid || '');
+        }
     };
 
     // Internal DnD logic (fallback if sortableProps not provided)
@@ -127,11 +133,17 @@ const Card = ({ card, boardId, isPrivate, sortableProps, isCompleted, onDelete }
     };
 
     const handleSaveCard = async (newText: string) => {
+        setIsEditingCard(false); // Optimistic close
+        
+        if (onUpdate) {
+            await onUpdate(card.id, newText);
+            return;
+        }
+
         const { updateCard } = await import('../hooks/useBoard');
         try {
             await updateCard(boardId, card.id, { text: newText });
             showSnackbar('Card updated', 'success');
-            setIsEditingCard(false);
         } catch (error) {
             showSnackbar('Failed to update card', 'error');
         }
