@@ -3,6 +3,7 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import "../styles/global.css";
 import GoogleAnalytics from "../components/GoogleAnalytics.astro";
+import FeedbackWidget from "../components/FeedbackWidget";
 
 import "@fontsource/jetbrains-mono";
 
@@ -107,6 +108,7 @@ const isProd = import.meta.env.PROD;
         <slot />
       </main>
       {!appLayout && <Footer />}
+      <FeedbackWidget client:idle />
     </div>
   </body>
 </html>

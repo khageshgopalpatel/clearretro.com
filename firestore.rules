@@ -78,5 +78,10 @@ service cloud.firestore {
     match /slack_installations/{teamId} {
       allow read: if isAuthenticated() && resource.data.installedBy == request.auth.uid;
     }
+
+    // Feedback: Allow anyone to submit feedback
+    match /feedback/{feedbackId} {
+      allow create: if true;
+    }
   }
 }

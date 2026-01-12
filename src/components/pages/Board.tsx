@@ -1179,7 +1179,11 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
                       <button
                         onClick={() => {
                           const newMode = !isPrivateMode;
-                          togglePrivateMode(id, newMode);
+                          setIsPrivateMode(newMode); // Optimistic
+                          togglePrivateMode(id, newMode).catch(() => {
+                              setIsPrivateMode(!newMode); // Revert on error
+                              showSnackbar("Failed to toggle private mode", "error");
+                          });
                           if (analytics) {
                             logEvent(analytics, 'toggle_private_mode', {
                               board_id: board.id,
@@ -1431,6 +1435,14 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
         cancelText="Cancel"
       />
 
+      {/* Private Mode Banner */}
+      {isPrivateMode && (
+         <div className="bg-indigo-600 dark:bg-indigo-900 text-white px-4 py-2 text-center text-sm font-medium animate-in slide-in-from-top-0 flex items-center justify-center gap-2 shadow-md relative z-30">
+            <span className="text-lg">🙈</span>
+            <span>Private Mode is Active. You cannot see other users' cards until it is disabled.</span>
+         </div>
+      )}
+
       {/* Columns Area */}
       <div className="flex-1 overflow-x-hidden md:overflow-x-auto overflow-y-auto">
         <DndContext
@@ -1478,7 +1490,7 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
                             card={card}
                             boardId={id}
                             isPrivate={
-                              isPrivateMode && user?.uid !== board.createdBy
+                              isPrivateMode && user?.uid !== card.createdBy
                             }
                             isCompleted={isCompleted}
                             onDelete={handleDeleteCardOptimistic}
