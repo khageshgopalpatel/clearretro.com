@@ -1,6 +1,6 @@
 import { initializeApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider } from "firebase/auth";
-import { getFirestore, enableIndexedDbPersistence } from "firebase/firestore";
+import { getAuth, GoogleAuthProvider, connectAuthEmulator } from "firebase/auth";
+import { getFirestore, enableIndexedDbPersistence, connectFirestoreEmulator } from "firebase/firestore";
 import { getPerformance } from "firebase/performance";
 import { getAnalytics, type Analytics } from "firebase/analytics";
 
@@ -31,12 +31,25 @@ try {
   firestoreDb = getFirestore(app);
 }
 export const db = firestoreDb;
+
+// Connect to emulators if in test mode
+if (import.meta.env.PUBLIC_USE_EMULATORS) {
+  console.log("Using Firebase Emulators");
+  connectAuthEmulator(auth, "http://localhost:9099");
+  connectFirestoreEmulator(db, "localhost", 8080);
+}
+
 export const provider = new GoogleAuthProvider();
 export let analytics: Analytics;
 
 if (typeof window !== "undefined") {
-    // Initialize Performance Monitoring
-    getPerformance(app);
-    // Initialize Analytics
-    analytics = getAnalytics(app);
+    // Only initialize analytics/performance if NOT using emulators
+    if (!import.meta.env.PUBLIC_USE_EMULATORS) {
+        // Initialize Performance Monitoring
+        getPerformance(app);
+        // Initialize Analytics
+        analytics = getAnalytics(app);
+    } else {
+        console.log("Analytics and Performance disabled in Emulator mode");
+    }
 }

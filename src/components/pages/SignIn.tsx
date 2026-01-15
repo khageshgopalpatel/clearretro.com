@@ -98,6 +98,28 @@ const SignIn = () => {
                     </div>
                 </div>
             </div>
+            {/* Emulator Login for E2E Testing */}
+            {import.meta.env.PUBLIC_USE_EMULATORS && (
+                <div className="text-center mt-4">
+                    <button
+                        onClick={async () => {
+                            try {
+                                const { getAuth, signInWithEmailAndPassword } = await import('firebase/auth');
+                                const auth = getAuth();
+                                await signInWithEmailAndPassword(auth, 'test@example.com', 'password123');
+                                if (analytics) logEvent(analytics, 'login', { method: 'emulator' });
+                                window.location.href = '/dashboard';
+                            } catch (e) {
+                                console.error(e);
+                                setError("Emulator login failed");
+                            }
+                        }}
+                        className="text-xs text-gray-400 hover:text-gray-600 underline"
+                    >
+                        [TEST] Login as User
+                    </button>
+                </div>
+            )}
         </div>
     );
 };

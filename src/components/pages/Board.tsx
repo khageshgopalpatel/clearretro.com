@@ -124,7 +124,7 @@ const SortableCardWrapper: React.FC<SortableCardWrapperProps> = ({
   );
 };
 
-interface DroppableColumnProps {
+interface DroppableColumnProps extends React.HTMLAttributes<HTMLDivElement> {
   column: RetroColumn;
   children: React.ReactNode;
 }
@@ -132,6 +132,7 @@ interface DroppableColumnProps {
 const DroppableColumn: React.FC<DroppableColumnProps> = ({
   column,
   children,
+  ...props
 }) => {
   const { setNodeRef } = useDroppable({
     id: column.id,
@@ -142,6 +143,7 @@ const DroppableColumn: React.FC<DroppableColumnProps> = ({
     <div
       ref={setNodeRef}
       className="flex-1 min-w-[85vw] md:min-w-0 snap-center flex flex-col min-h-full bg-white/30 dark:bg-dark-900/40 backdrop-blur-md rounded-lg border border-gray-200/60 dark:border-gray-700/60 shadow-sm transition-all duration-300 group hover:border-gray-300 dark:hover:border-gray-600 hover:shadow-lg"
+      {...props}
     >
       {children}
     </div>
@@ -1413,7 +1415,7 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
               strategy={verticalListSortingStrategy}
             >
               {board.columns.map((column) => (
-                <DroppableColumn key={column.id} column={column}>
+                <DroppableColumn key={column.id} column={column} data-testid={`column-${column.id}`}>
                   {/* Column Header */}
                   <div
                     className={`p-4 border-b border-gray-100 dark:border-gray-800 bg-white/40 dark:bg-dark-900/60 rounded-t-lg backdrop-blur-sm relative overflow-hidden`}

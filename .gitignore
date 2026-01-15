@@ -26,3 +26,11 @@ vite-project
 .env
 .firebase
 service-account.json
+
+# Playwright
+test-results/
+playwright-report/
+test_output*.txt
+
+# Astro
+.astro/

@@ -90,6 +90,7 @@ const DashboardContent: React.FC = () => {
         null, // selectedTeam removed
         selectedTemplate.name
       );
+
       if (analytics) {
           logEvent(analytics, 'create_board', {
               board_id: boardId,
