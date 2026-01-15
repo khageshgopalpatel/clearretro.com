@@ -54,6 +54,7 @@ import FocusMode from "../FocusMode";
 import ConfirmDialog from "../ConfirmDialog";
 import { Providers } from "../Providers";
 import { Logo } from "../Logo";
+import BoardNotFound from "./BoardNotFound";
 
 // --- Sub Components ---
 
@@ -717,12 +718,17 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
     window.location.href = "/signin";
   };
 
-  if (loading || !board)
+
+
+  if (loading)
     return (
       <div className="min-h-screen flex items-center justify-center dark:bg-[#050505] dark:text-brand-400 font-mono text-xl animate-pulse">
         System Initializing...
       </div>
     );
+
+  if (!board) return <BoardNotFound />;
+
 
   if (!user) {
     return (

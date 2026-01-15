@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { BOARD_TEMPLATES } from '../../constants';
+import { BOARD_TEMPLATES } from '../../data/templates';
 
 const Templates: React.FC = () => {
   return (
@@ -22,7 +22,7 @@ const Templates: React.FC = () => {
               {/* Mock Columns */}
               {template.columns.map((col, i) => (
                 <div key={i} className="flex-1 bg-white dark:bg-dark-800 border border-gray-200 dark:border-gray-700 rounded-t-lg shadow-sm flex flex-col opacity-80 group-hover:opacity-100 transition-opacity">
-                  <div className={`h-1.5 w-full bg-${col.color} rounded-t-lg`}></div>
+                  <div className={`h-1.5 w-full bg-${col.color}-500 rounded-t-lg`}></div>
                   <div className="p-2">
                     <div className="h-2 w-16 bg-gray-200 dark:bg-gray-700 rounded mb-2"></div>
                     <div className="h-10 bg-gray-100 dark:bg-gray-700/50 rounded-md border border-dashed border-gray-200 dark:border-gray-700"></div>
@@ -41,7 +41,7 @@ const Templates: React.FC = () => {
               <div className="space-y-2 mb-6">
                 {template.columns.map((col, idx) => (
                   <div key={idx} className="flex items-center text-xs">
-                    <div className={`w-2.5 h-2.5 rounded-full bg-${col.color} mr-2 shadow-sm`}></div>
+                    <div className={`w-2.5 h-2.5 rounded-full bg-${col.color}-500 mr-2 shadow-sm`}></div>
                     <span className="text-gray-600 dark:text-gray-300 font-mono">{col.title}</span>
                   </div>
                 ))}

@@ -96,6 +96,18 @@ const isProd = import.meta.env.PROD;
       })}
     />
 
+    <script is:inline>
+      // Initialize theme early to prevent FOUC
+      if (
+        localStorage.theme === "dark" ||
+        (!("theme" in localStorage) &&
+          window.matchMedia("(prefers-color-scheme: dark)").matches)
+      ) {
+        document.documentElement.classList.add("dark");
+      } else {
+        document.documentElement.classList.remove("dark");
+      }
+    </script>
     <slot name="head" />
   </head>
   <body
