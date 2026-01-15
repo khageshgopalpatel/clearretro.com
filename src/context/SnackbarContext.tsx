@@ -39,25 +39,32 @@ export const SnackbarProvider = ({ children }: { children: ReactNode }) => {
     return (
         <SnackbarContext.Provider value={{ showSnackbar }}>
             {children}
-            <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2">
+            <div className="fixed top-24 right-4 z-[110] flex flex-col gap-2">
                 {snackbars.map(snackbar => (
                     <div
                         key={snackbar.id}
-                        className={`px-4 py-3 border-2 border-black shadow-neo font-mono text-sm animate-slide-in ${snackbar.type === 'success' ? 'bg-green-300' :
-                            snackbar.type === 'error' ? 'bg-red-300' :
-                                snackbar.type === 'warning' ? 'bg-yellow-300' :
-                                    'bg-blue-300'
-                            }`}
+                        className={`px-4 py-3 rounded shadow-lg font-medium text-sm animate-slide-in flex items-center justify-between gap-4 min-w-[300px] border-l-4 ${
+                            snackbar.type === 'success' ? 'bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 border-green-500' :
+                            snackbar.type === 'error' ? 'bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 border-red-500' :
+                            snackbar.type === 'warning' ? 'bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 border-yellow-500' :
+                            'bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 border-blue-500'
+                        }`}
                     >
-                        <div className="flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-3">
+                            <span className="text-xl">
+                                {snackbar.type === 'success' && '✅'}
+                                {snackbar.type === 'error' && '🚨'}
+                                {snackbar.type === 'warning' && '⚠️'}
+                                {snackbar.type === 'info' && 'ℹ️'}
+                            </span>
                             <span>{snackbar.message}</span>
-                            <button
-                                onClick={() => removeSnackbar(snackbar.id)}
-                                className="text-black hover:text-gray-700 font-bold"
-                            >
-                                ×
-                            </button>
                         </div>
+                        <button
+                            onClick={() => removeSnackbar(snackbar.id)}
+                            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 font-bold px-2"
+                        >
+                            ×
+                        </button>
                     </div>
                 ))}
             </div>

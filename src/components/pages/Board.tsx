@@ -45,8 +45,7 @@ import { generateBoardSummary } from "../../services/ai";
 import { logEvent } from "firebase/analytics";
 import { analytics } from "../../lib/firebase";
 
-import jsPDF from "jspdf";
-import * as XLSX from "xlsx";
+import { exportToPDF, exportToExcel } from "../../utils/export";
 
 // Components
 import Card from "../Card";
@@ -676,57 +675,7 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
 
   // --- Exports ---
 
-  const exportPDF = () => {
-    if (!board) return;
-    if (analytics) {
-      logEvent(analytics, 'export_board', {
-        board_id: board.id,
-        board_name: board.name,
-        format: 'pdf'
-      });
-    }
-    const doc = new jsPDF();
-    doc.setFont("monospace");
-    doc.text(`Retro: ${board.name}`, 10, 10);
-    let y = 20;
-    board.columns.forEach((col) => {
-      doc.text(`Column: ${col.title}`, 10, y);
-      y += 10;
-      cards
-        .filter((c) => c.columnId === col.id)
-        .forEach((c) => {
-          const splitText = doc.splitTextToSize(
-            `- ${c.text} (${c.votes})`,
-            180
-          );
-          doc.text(splitText, 15, y);
-          y += splitText.length * 7;
-        });
-      y += 10;
-    });
-    doc.save(`${board.name}.pdf`);
-  };
 
-  const exportExcel = () => {
-    if (!board) return;
-    if (analytics) {
-      logEvent(analytics, 'export_board', {
-        board_id: board.id,
-        board_name: board.name,
-        format: 'excel'
-      });
-    }
-    const data = cards.map((c) => ({
-      Column: board.columns.find((col) => col.id === c.columnId)?.title,
-      Text: c.text,
-      Votes: c.votes,
-      User: c.createdBy,
-    }));
-    const ws = XLSX.utils.json_to_sheet(data);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Retro Data");
-    XLSX.writeFile(wb, `${board.name}.xlsx`);
-  };
 
   // --- New Features ---
 
@@ -1023,7 +972,7 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
                   Generating...
                 </>
               ) : (
-                <>📝 Summary</>
+                <>📝 AI Summary</>
               )}
             </button>
           )}
@@ -1276,9 +1225,9 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
           <HeaderDropdown
             user={user}
             onLogout={handleLogout}
-            onExportPDF={user?.uid === board.createdBy ? exportPDF : undefined}
+            onExportPDF={user?.uid === board.createdBy ? () => exportToPDF(board.name, board.columns, cards) : undefined}
             onExportExcel={
-              user?.uid === board.createdBy ? exportExcel : undefined
+              user?.uid === board.createdBy ? () => exportToExcel(board.name, board.columns, cards) : undefined
             }
           />
         </div>
