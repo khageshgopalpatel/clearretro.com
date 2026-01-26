@@ -7,6 +7,7 @@ export const post12: BlogPost = {
   excerpt: 'Bored of "Start/Stop/Continue"? Try these 10 creative themes, from "Mario Kart" to "The Zombie Apocalypse", to get your team laughing and talking again.',
   keywords: 'fun retrospective ideas, creative retro themes, team engagement, agile games, remote team building',
   date: 'Dec 15, 2024',
+  lastUpdated: 'Jan 21, 2026',
   readTime: '20 min read',
   imageAlt: 'Team laughing during a fun retrospective session',
   image: '/images/blog/10-fun-retrospective-ideas-engagement.png',
@@ -41,6 +42,13 @@ export const post12: BlogPost = {
     <p class="mb-8 text-lg leading-relaxed">
       Here are 10 creative themes to inject some energy back into your meetings.
     </p>
+
+    <div class="bg-brand-50 dark:bg-brand-900/10 p-6 rounded-xl border-l-4 border-brand-500 mb-8">
+      <p class="font-bold text-brand-900 dark:text-brand-100 mb-2">Pro Tip:</p>
+      <p class="text-brand-800 dark:text-brand-200">
+        Before diving into the main activity, warm up the team with one of these <a href="/blog/20-best-retro-icebreakers-remote-teams" class="underline hover:text-brand-600">20 Best Retro Icebreakers</a> to get everyone talking.
+      </p>
+    </div>
 
     <hr class="my-12 border-gray-200 dark:border-gray-800" />
 

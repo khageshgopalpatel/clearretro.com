@@ -17,6 +17,7 @@ export interface BlogPost {
   image?: string;
   faqs?: FAQ[];
   jsonLd?: object;
+  lastUpdated?: string;
 }
 
 import { post1 } from './posts/what-is-a-sprint-retrospective';

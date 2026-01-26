@@ -43,9 +43,23 @@ const breadcrumbSchema = {
   ],
 };
 
-const schema = post.jsonLd
-  ? [breadcrumbSchema, post.jsonLd]
-  : [breadcrumbSchema];
+const articleSchema = {
+  "@context": "https://schema.org",
+  "@type": "Article",
+  headline: post.title,
+  description: post.excerpt,
+  datePublished: new Date(post.date).toISOString(),
+  dateModified: new Date(post.lastUpdated || post.date).toISOString(),
+  image: post.image ? new URL(post.image, Astro.url).toString() : undefined,
+  author: {
+    "@type": "Organization",
+    name: "Clear Retro",
+    url: "https://clearretro.com",
+  },
+  ...(post.jsonLd || {}),
+};
+
+const schema = [breadcrumbSchema, articleSchema];
 ---
 
 <Layout

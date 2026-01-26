@@ -1,0 +1,19 @@
+# Clear Retro
+
+> Real-time Agile Retrospective Tool for Developers
+
+Clear Retro is a free, real-time collaboration tool designed for agile engineering teams to conduct sprint retrospectives. It offers a minimalist, distraction-free interface with features like anonymous feedback, voting, sorting, grouping, and action item tracking.
+
+## Core Features
+- **Real-time Collaboration**: Instantly see cards, votes, and timer updates.
+- **Anonymous Feedback**: Encourage honest and open communication.
+- **Customizable Boards**: Create boards with columns like Start/Stop/Continue, Mad/Sad/Glad, or custom themes.
+- **Action Items**: Track follow-up tasks directly from the board.
+- **Export**: detailed PDF and CSV reports.
+- **AI-Powered**: Smart grouping and summaries to save time.
+
+## Resources
+- [Home Page](https://clearretro.com)
+- [Pricing](https://clearretro.com/pricing)
+- [Blog](https://clearretro.com/blog)
+- [Login](https://clearretro.com/signin)

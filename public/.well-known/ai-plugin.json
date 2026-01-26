@@ -1,0 +1,17 @@
+{
+  "schema_version": "v1",
+  "name_for_human": "Clear Retro",
+  "name_for_model": "clearretro",
+  "description_for_human": "Real-time Agile Retrospective tool for high-performing remote teams.",
+  "description_for_model": "Clear Retro is a tool for agile teams to run retrospective meetings. It features real-time boards, voting, sorting, groupings, fun themes, and action item tracking.",
+  "auth": {
+    "type": "none"
+  },
+  "api": {
+    "type": "openapi",
+    "url": "https://clearretro.com/openapi.yaml"
+  },
+  "logo_url": "https://clearretro.com/logo.png",
+  "contact_email": "support@clearretro.com",
+  "legal_info_url": "https://clearretro.com/terms"
+}
