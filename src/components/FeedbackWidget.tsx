@@ -119,18 +119,18 @@ const FeedbackWidget: React.FC = () => {
             ) : (
                 <button
                     onClick={toggleOpen}
-                    className="group flex items-center space-x-2 bg-white dark:bg-dark-800 text-gray-700 dark:text-gray-200 hover:text-brand-600 dark:hover:text-brand-400 px-4 py-3 rounded-full shadow-lg hover:shadow-xl ring-1 ring-gray-200 dark:ring-gray-700 transition-all duration-300 relative"
+                    className="group flex items-center space-x-1.5 bg-white dark:bg-dark-800 text-gray-700 dark:text-gray-200 hover:text-brand-600 dark:hover:text-brand-400 p-1.5 pr-3 rounded-full shadow-lg hover:shadow-xl ring-1 ring-gray-200 dark:ring-gray-700 transition-all duration-300 relative"
                 >
-                     <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                     <span className="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5">
                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-3 w-3 bg-brand-500"></span>
+                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-brand-500"></span>
                     </span>
-                    <span className="bg-brand-100 dark:bg-brand-900/30 text-brand-600 dark:text-brand-400 p-1.5 rounded-full group-hover:scale-110 transition-transform duration-300 group-hover:rotate-12">
-                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <span className="bg-brand-50 dark:bg-brand-900/20 text-brand-600 dark:text-brand-400 p-1 rounded-full group-hover:scale-110 transition-transform duration-300 group-hover:rotate-12">
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
                         </svg>
                     </span>
-                    <span className="font-semibold text-sm pr-1">Feedback</span>
+                    <span className="font-bold text-[10px] uppercase tracking-wider">Feedback</span>
                 </button>
             )}
         </div>

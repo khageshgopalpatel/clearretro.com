@@ -43,7 +43,7 @@ import { useAuth } from "../../hooks/useAuth";
 import { useSnackbar } from "../../context/SnackbarContext";
 import { generateBoardSummary } from "../../services/ai";
 import { analytics, logEvent } from "../../lib/firebase";
-import { checkChromiumAIAvailability, type AIAvailability } from "../../utils/ai";
+import { checkChromiumAIAvailability } from "../../utils/ai";
 
 import { exportToPDF, exportToExcel } from "../../utils/export";
 
@@ -1609,7 +1609,7 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
                 AI Smart Add
               </h3>
               <p className="text-sm text-gray-500 dark:text-gray-400 max-w-md mx-auto">
-                Type your thoughts, and our on-device AI will automatically figure out which column they belong to.
+                Type your thoughts and let our on-device AI sort them for you. If it's not quite right, you can always drag and drop cards to adjust them!
               </p>
             </div>
             

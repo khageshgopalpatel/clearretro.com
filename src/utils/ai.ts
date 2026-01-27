@@ -1,4 +1,3 @@
-console.log("🚀 AI Utility Module Loaded - v4 (Stable Spec)");
 
 import type { RetroColumn } from "../types";
 
@@ -27,11 +26,6 @@ export const checkChromiumAIAvailability = async (): Promise<AIAvailability> => 
   else if (anyWindow.assistant) { namespaceName = "window.assistant"; assistantNamespace = anyWindow.assistant; }
   else if (anyWindow.LanguageModel) { namespaceName = "window.LanguageModel"; assistantNamespace = anyWindow.LanguageModel; }
 
-  console.log(`📊 AI Namespace detected in: ${namespaceName}`, {
-    hasAI: !!ai,
-    secureContext: window.isSecureContext,
-  });
-
   if (!assistantNamespace) return 'no';
 
   try {
@@ -42,7 +36,6 @@ export const checkChromiumAIAvailability = async (): Promise<AIAvailability> => 
     
     if (assistantNamespace.availability) {
       const availability = await assistantNamespace.availability();
-      console.log(`🔍 [AI STATUS] "${availability}" (Found in: ${namespaceName})`);
       
       if (availability === 'available' || availability === 'readily') return 'readily';
       if (availability === 'downloading') return 'downloading';
@@ -50,7 +43,6 @@ export const checkChromiumAIAvailability = async (): Promise<AIAvailability> => 
       if (availability === 'after-download' || availability === 'downloadable') {
         // FORCE TRIGGER: Attempting to create a session often kicks off the download
         try {
-          console.log("🚀 Attempting to force-trigger Gemini Nano download...");
           assistantNamespace.create({
             systemPrompt: "Trigger download"
           }).catch(() => {}); // We expect this to fail initially
@@ -64,7 +56,6 @@ export const checkChromiumAIAvailability = async (): Promise<AIAvailability> => 
     
     return 'unknown';
   } catch (error) {
-    console.warn("⚠️ AI Capability Probe Failed:", error);
     return 'no';
   }
 };
@@ -107,7 +98,6 @@ Thought: "${text}"
 ID:`;
 
     const rawResponse = await session.prompt(prompt);
-    console.log("🤖 AI Raw Response:", rawResponse);
     session.destroy();
 
     const responseText = rawResponse.toLowerCase();
