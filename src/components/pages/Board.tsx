@@ -1627,7 +1627,7 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
                 <DroppableColumn key={column.id} column={column} data-testid={`column-${column.id}`}>
                   {/* Column Header */}
                   <div
-                    className={`p-4 border-b border-gray-100 dark:border-gray-800 bg-white/40 dark:bg-dark-900/60 rounded-t-lg backdrop-blur-sm relative overflow-hidden`}
+                    className={`sticky top-0 z-20 p-4 border-b border-gray-100 dark:border-gray-800 bg-white/90 dark:bg-dark-900/95 rounded-t-lg backdrop-blur-xl relative overflow-hidden`}
                   >
                     <div
                       className={`absolute top-0 left-0 w-full h-1 ${COLUMN_COLORS[column.color] || COLUMN_COLORS.default}`}
