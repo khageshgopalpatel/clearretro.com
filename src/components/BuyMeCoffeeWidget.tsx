@@ -1,6 +1,5 @@
 import React from 'react';
-import { logEvent } from "firebase/analytics";
-import { analytics } from '../lib/firebase';
+import { analytics, logEvent } from '../lib/firebase';
 
 const BuyMeCoffeeWidget: React.FC = () => {
     const handleClick = () => {

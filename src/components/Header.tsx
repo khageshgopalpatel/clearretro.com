@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { analytics } from '../lib/firebase';
-import { logEvent } from 'firebase/analytics';
+import { analytics, logEvent } from '../lib/firebase';
 
 interface HeaderProps {
     currentPath: string;

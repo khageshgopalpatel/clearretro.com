@@ -2,7 +2,7 @@ import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider, connectAuthEmulator } from "firebase/auth";
 import { getFirestore, enableIndexedDbPersistence, connectFirestoreEmulator } from "firebase/firestore";
 import { getPerformance } from "firebase/performance";
-import { getAnalytics, type Analytics } from "firebase/analytics";
+import { getAnalytics, type Analytics, logEvent as firebaseLogEvent } from "firebase/analytics";
 
 const firebaseConfig = {
     apiKey: import.meta.env.PUBLIC_FIREBASE_API_KEY,
@@ -53,3 +53,17 @@ if (typeof window !== "undefined") {
         console.log("Analytics and Performance disabled in Emulator mode");
     }
 }
+
+/**
+ * Custom logEvent wrapper that respects the 'exclude_analytics' flag in localStorage.
+ * This allows us to exclude specific users (like developers) from tracking.
+ */
+export const logEvent = (analyticsInstance: Analytics, eventName: string, eventParams?: { [key: string]: any }) => {
+  if (typeof window !== "undefined" && localStorage.getItem("exclude_analytics") === "true") {
+    console.log(`[Analytics] Event suppressed: ${eventName}`, eventParams);
+    return;
+  }
+  if (analyticsInstance) {
+    firebaseLogEvent(analyticsInstance, eventName, eventParams);
+  }
+};

@@ -4,8 +4,7 @@ import React, { useState } from 'react';
 
 import { useAuth } from '../../hooks/useAuth';
 import { useUserBoards, createBoard, updateBoardName, deleteBoard, updateBoardColumns, getBoardCards } from '../../hooks/useBoard';
-import { logEvent } from "firebase/analytics";
-import { analytics } from '../../lib/firebase';
+import { analytics, logEvent } from '../../lib/firebase';
 
 import { useSnackbar } from '../../context/SnackbarContext.jsx';
 import { BOARD_TEMPLATES } from '../../data/templates';

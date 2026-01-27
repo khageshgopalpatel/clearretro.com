@@ -1,7 +1,6 @@
 
 import React, { useState, useRef } from 'react';
-import { logEvent } from "firebase/analytics";
-import { analytics } from '../../lib/firebase';
+import { analytics, logEvent } from '../../lib/firebase';
 import { faqs } from '../../data/faqs';
 
 const Landing: React.FC = () => {

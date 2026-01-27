@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../../hooks/useAuth';
-import { logEvent } from "firebase/analytics";
-import { analytics } from '../../lib/firebase';
+import { analytics, logEvent } from '../../lib/firebase';
 
 const SignIn = () => {
     const { loginWithGoogle, loginAsGuest } = useAuth();

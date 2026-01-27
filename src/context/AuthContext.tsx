@@ -10,6 +10,8 @@ interface User {
     photoURL?: string | null;
 }
 
+const EXCLUDED_EMAILS = ['clearretroo@gmail.com'];
+
 interface AuthContextType {
     user: User | null;
     loading: boolean;
@@ -42,15 +44,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             console.log("Auth state changed:", currentUser ? "User logged in" : "No user");
             setAuthError(null); // Clear any previous error on successful state change
             if (currentUser) {
-                setUser({
+                const userObj = {
                     uid: currentUser.uid,
                     displayName: currentUser.displayName,
                     email: currentUser.email,
                     isAnonymous: currentUser.isAnonymous,
                     photoURL: currentUser.photoURL
-                });
+                };
+                setUser(userObj);
+
+                // Handle analytics exclusion
+                if (userObj.email && EXCLUDED_EMAILS.includes(userObj.email)) {
+                    localStorage.setItem('exclude_analytics', 'true');
+                } else {
+                    localStorage.removeItem('exclude_analytics');
+                }
             } else {
                 setUser(null);
+                localStorage.removeItem('exclude_analytics');
             }
             setLoading(false);
         }, (error) => {

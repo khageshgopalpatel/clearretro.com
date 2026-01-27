@@ -42,8 +42,7 @@ import {
 import { useAuth } from "../../hooks/useAuth";
 import { useSnackbar } from "../../context/SnackbarContext";
 import { generateBoardSummary } from "../../services/ai";
-import { logEvent } from "firebase/analytics";
-import { analytics } from "../../lib/firebase";
+import { analytics, logEvent } from "../../lib/firebase";
 
 import { exportToPDF, exportToExcel } from "../../utils/export";
 
