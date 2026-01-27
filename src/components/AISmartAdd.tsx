@@ -5,15 +5,29 @@ import { Sparkles, Send, Loader2, Download } from 'lucide-react';
 
 interface AISmartAddProps {
   columns: RetroColumn[];
-  onAddCard: (columnId: string, text: string) => Promise<void>;
+  onAddCard: (columnId: string, text: string, isActionItem?: boolean) => Promise<void>;
   disabled?: boolean;
 }
 
 const AISmartAdd: React.FC<AISmartAddProps> = ({ columns, onAddCard, disabled }) => {
   const [availability, setAvailability] = useState<AIAvailability>('unknown');
   const [text, setText] = useState('');
+  const [isActionItem, setIsActionItem] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Simple keyword detection to suggest action item
+  useEffect(() => {
+    if (!text.trim() || isActionItem) return;
+    const taskKeywords = ['fix', 'do', 'improve', 'must', 'should', 'action', 'task', 'implement', 'update', 'investigate'];
+    const words = text.toLowerCase().split(/\s+/);
+    const hasKeyword = words.some(word => taskKeywords.includes(word));
+    
+    if (hasKeyword) {
+        // We could auto-toggle, but that might be annoying. 
+        // Let's just keep it manual for now but maybe we can add a pulse to the icon later.
+    }
+  }, [text, isActionItem]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -54,8 +68,9 @@ const AISmartAdd: React.FC<AISmartAddProps> = ({ columns, onAddCard, disabled })
     try {
       const columnId = await classifyThought(trimmedText, columns);
       if (columnId) {
-        await onAddCard(columnId, trimmedText);
+        await onAddCard(columnId, trimmedText, isActionItem);
         setText('');
+        setIsActionItem(false); // Reset after add
         inputRef.current?.focus();
       }
     } catch (error) {
@@ -93,6 +108,22 @@ const AISmartAdd: React.FC<AISmartAddProps> = ({ columns, onAddCard, disabled })
             placeholder={isDownloading ? "Downloading AI Model... Please wait" : "Share your thoughts... AI will find the right column"}
             className="flex-1 bg-transparent border-none focus:ring-0 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 py-3 px-2 text-base outline-none disabled:opacity-50"
           />
+
+          <button
+            type="button"
+            onClick={() => setIsActionItem(!isActionItem)}
+            className={`p-2 mr-1 rounded-lg transition-all duration-300 flex items-center gap-1.5 ${isActionItem 
+                ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800' 
+                : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 border border-transparent'}`}
+            title={isActionItem ? "Action Item enabled" : "Mark as Action Item"}
+          >
+            <div className={`transition-transform duration-300 ${isActionItem ? 'scale-110' : 'scale-100'}`}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill={isActionItem ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
+                </svg>
+            </div>
+            {isActionItem && <span className="text-[10px] font-bold uppercase tracking-tighter">Action</span>}
+          </button>
           
           <button
             type="submit"

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../hooks/useAuth';
-import { toggleReaction } from '../hooks/useBoard';
+import { toggleReaction, toggleVote } from '../hooks/useBoard';
 import type { RetroCard } from '../types';
 
 interface FocusModeProps {
@@ -119,36 +119,22 @@ const FocusMode = ({ cards, initialIndex = 0, onClose, boardId }: FocusModeProps
                             )}
 
 
-                            <div className="relative">
-                                <button
-                                    onClick={() => setShowReactions(!showReactions)}
-                                    className="p-3 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 transition-all hover:scale-105 active:scale-95"
-                                >
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                        <circle cx="12" cy="12" r="10"></circle>
-                                        <path d="M8 14s1.5 2 4 2 4-2 4-2"></path>
-                                        <line x1="9" y1="9" x2="9.01" y2="9"></line>
-                                        <line x1="15" y1="9" x2="15.01" y2="9"></line>
-                                    </svg>
-                                </button>
 
-                                {showReactions && (
-                                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-2 rounded-2xl shadow-xl flex gap-1 animate-in fade-in zoom-in duration-200">
-                                        {['👍', '👎', '🎉', '❤️', '🚀', '👀'].map(emoji => (
-                                            <button
-                                                key={emoji}
-                                                onClick={() => {
-                                                    toggleReaction(boardId, currentCard.id, emoji, user?.uid || '');
-                                                    setShowReactions(false);
-                                                }}
-                                                className="text-2xl hover:scale-125 transition-transform p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl"
-                                            >
-                                                {emoji}
-                                            </button>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
+                            {/* Vote Button */}
+                            <button
+                                onClick={() => toggleVote(boardId, currentCard.id, user?.uid || '')}
+                                className={`flex items-center gap-2 px-4 py-2 rounded-full font-bold transition-all active:scale-95 border ${
+                                    currentCard.votedBy?.includes(user?.uid || '')
+                                    ? 'bg-amber-50 border-amber-200 text-amber-600 dark:bg-amber-900/30 dark:border-amber-800 dark:text-amber-400'
+                                    : 'bg-white border-gray-200 text-gray-400 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-500 hover:bg-amber-50 hover:border-amber-200 hover:text-amber-600'
+                                }`}
+                                title={currentCard.votedBy?.includes(user?.uid || '') ? "Remove vote" : "Vote for this card"}
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill={currentCard.votedBy?.includes(user?.uid || '') ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                                </svg>
+                                <span className="text-sm">{currentCard.votes || 0}</span>
+                            </button>
                         </div>
 
                         <button

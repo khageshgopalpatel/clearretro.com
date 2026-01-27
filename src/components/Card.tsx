@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import confetti from 'canvas-confetti';
 import { useDraggable, useDroppable } from '@dnd-kit/core';
-import { addReply, toggleReaction, updateCard, deleteReply, deleteCard } from '../hooks/useBoard';
+import { addReply, toggleReaction, toggleVote, updateCard, deleteReply, deleteCard } from '../hooks/useBoard';
 import { useAuth } from '../hooks/useAuth';
 import { analytics, logEvent } from "../lib/firebase";
 // import { usePresence } from '../hooks/usePresence';
@@ -27,9 +27,10 @@ interface CardProps {
     onDelete?: (cardId: string) => Promise<void>;
     onUpdate?: (cardId: string, newText: string) => Promise<void>;
     onReaction?: (cardId: string, emoji: string) => Promise<void>;
+    onVote?: (cardId: string) => Promise<void>;
 }
 
-const Card = ({ card, boardId, isPrivate, sortableProps, isCompleted, onDelete, onUpdate, onReaction }: CardProps) => {
+const Card = ({ card, boardId, isPrivate, sortableProps, isCompleted, onDelete, onUpdate, onReaction, onVote }: CardProps) => {
     const { user } = useAuth();
     const [showReplyInput, setShowReplyInput] = useState(false);
     const [replyText, setReplyText] = useState('');
@@ -52,6 +53,15 @@ const Card = ({ card, boardId, isPrivate, sortableProps, isCompleted, onDelete, 
             await onReaction(card.id, emoji);
         } else {
             await toggleReaction(boardId, card.id, emoji, user?.uid || '');
+        }
+    };
+
+    const handleVote = async () => {
+        if (!user) return;
+        if (onVote) {
+            await onVote(card.id);
+        } else {
+            await toggleVote(boardId, card.id, user.uid);
         }
     };
 
@@ -371,6 +381,23 @@ const Card = ({ card, boardId, isPrivate, sortableProps, isCompleted, onDelete, 
                                 ))}
                             </div>
                         )}
+
+                        {/* Vote Button */}
+                        <button
+                            onClick={handleVote}
+                            className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold transition-all active:scale-95 border ${
+                                card.votedBy?.includes(user?.uid || '')
+                                ? 'bg-amber-50 border-amber-200 text-amber-600 dark:bg-amber-900/30 dark:border-amber-800 dark:text-amber-400'
+                                : 'bg-gray-50 border-gray-200 text-gray-400 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-500 hover:bg-amber-50 hover:border-amber-200 hover:text-amber-600'
+                            }`}
+                            title={card.votedBy?.includes(user?.uid || '') ? "Remove vote" : "Vote for this card"}
+                            disabled={isCompleted}
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill={card.votedBy?.includes(user?.uid || '') ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                            </svg>
+                            <span>{card.votes || 0}</span>
+                        </button>
                     </div>
 
                     <div className="flex gap-3 items-center">
@@ -391,18 +418,25 @@ const Card = ({ card, boardId, isPrivate, sortableProps, isCompleted, onDelete, 
                             </button>
                         )}
 
-                        {!isCompleted && !card.isActionItem && (
+                        {!isCompleted && (
                              <button
                                 onClick={() => setShowConvertModal(true)}
-                                className="text-xs font-medium text-gray-500 hover:text-gray-900 dark:hover:text-white hover:underline transition-all opacity-0 group-hover:opacity-100"
-                                title="Convert to Action Item"
+                                className={`text-xs font-bold transition-all active:scale-95 flex items-center gap-1 group/ai ${card.isActionItem 
+                                    ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded-lg border border-blue-200 dark:border-blue-800' 
+                                    : 'text-gray-400 hover:text-blue-600 dark:text-gray-500 opacity-0 group-hover:opacity-100'}`}
+                                title={card.isActionItem ? "Edit Action Item" : "Convert to Action Item ✨"}
                             >
-                                Create Action Item
+                                <div className={`transition-transform duration-300 ${card.isActionItem ? 'scale-110' : 'group-hover/ai:rotate-12 group-hover/ai:scale-110'}`}>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill={card.isActionItem ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
+                                    </svg>
+                                </div>
+                                <span className={card.isActionItem ? 'block' : 'hidden group-hover/ai:block'}>
+                                    {card.isActionItem ? 'Task' : 'Task It'}
+                                </span>
                             </button>
                         )}
 
-
-                        
                         {/* Reply Toggle Button */}
                         <button
                             onClick={() => setShowReplies(!showReplies)}
@@ -414,16 +448,6 @@ const Card = ({ card, boardId, isPrivate, sortableProps, isCompleted, onDelete, 
                             </svg>
                             {replies.length > 0 && replies.length}
                         </button>
-
-                        {!isCompleted && card.isActionItem && (
-                            <button
-                                onClick={handleToggleActionItem}
-                                className={`text-xs font-medium transition-all active:scale-95 ${card.isActionItem ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 px-2 py-0.5 rounded' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
-                                title={card.isActionItem ? "Revert to Card" : "Convert to Action Item"}
-                            >
-                                {card.isActionItem ? 'Edit Action' : 'Convert'}
-                            </button>
-                        )}
 
                         {!isCompleted && user?.uid === card.createdBy && (
                             <button

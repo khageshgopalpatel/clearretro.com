@@ -36,6 +36,7 @@ import {
   updateCard,
   togglePrivateMode,
   toggleReaction,
+  toggleVote,
   completeRetro,
   adjustTimer,
 } from "../../hooks/useBoard";
@@ -55,6 +56,7 @@ import ConfirmDialog from "../ConfirmDialog";
 import { Providers } from "../Providers";
 import { Logo } from "../Logo";
 import AISmartAdd from "../AISmartAdd";
+import ActionItemSidebar from "../ActionItemSidebar";
 import BoardNotFound from "./BoardNotFound";
 
 // --- Sub Components ---
@@ -68,6 +70,7 @@ interface SortableCardWrapperProps {
   onDelete?: (cardId: string) => Promise<void>;
   onUpdate?: (cardId: string, newText: string) => Promise<void>;
   onReaction?: (cardId: string, emoji: string) => Promise<void>;
+  onVote?: (cardId: string) => Promise<void>;
 }
 
 const COLUMN_COLORS: Record<string, string> = {
@@ -90,6 +93,7 @@ const SortableCardWrapper: React.FC<SortableCardWrapperProps> = ({
   onDelete,
   onUpdate,
   onReaction,
+  onVote,
 }) => {
   const {
     attributes,
@@ -114,6 +118,7 @@ const SortableCardWrapper: React.FC<SortableCardWrapperProps> = ({
       onDelete={onDelete}
       onUpdate={onUpdate}
       onReaction={onReaction}
+      onVote={onVote}
       sortableProps={{
         attributes,
         listeners,
@@ -197,7 +202,9 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
   );
   const [isAISmartAddOpen, setIsAISmartAddOpen] = useState(false);
   const [isAISmartAddActive, setIsAISmartAddActive] = useState(false);
-  const [aiAvailable, setAIAvailable] = useState<boolean>(false);
+  const [isTaskSidebarOpen, setIsTaskSidebarOpen] = useState(false);
+  const [aiStatus, setAIStatus] = useState<string>('unknown');
+  const [showHowToEnableAI, setShowHowToEnableAI] = useState(false);
 
   const openAISmartAdd = () => {
     setIsAISmartAddOpen(true);
@@ -215,7 +222,7 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
 
   useEffect(() => {
     checkChromiumAIAvailability().then(status => {
-      setAIAvailable(status !== 'no');
+      setAIStatus(status);
     });
   }, []);
 
@@ -654,6 +661,30 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
       showSnackbar("Failed to toggle reaction", "error");
     }
   };
+  const handleVoteOptimistic = async (cardId: string) => {
+    if (!user) return;
+    
+    // Optimistic update
+    setItems((prev) => prev.map(c => {
+      if (c.id === cardId) {
+        const votedBy = [...(c.votedBy || [])];
+        const hasVoted = votedBy.includes(user.uid);
+        return {
+          ...c,
+          votes: Math.max(0, (c.votes || 0) + (hasVoted ? -1 : 1)),
+          votedBy: hasVoted ? votedBy.filter(uid => uid !== user.uid) : [...votedBy, user.uid]
+        };
+      }
+      return c;
+    }));
+
+    try {
+      await toggleVote(id, cardId, user.uid);
+    } catch (e) {
+      console.error("Failed to toggle vote", e);
+      showSnackbar("Failed to vote", "error");
+    }
+  };
 
   const handleDeleteCardOptimistic = async (cardId: string) => {
     // Optimistically remove from UI immediately
@@ -700,7 +731,7 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
     }
   };
 
-  const handleAISmartAdd = async (columnId: string, text: string) => {
+  const handleAISmartAdd = async (columnId: string, text: string, isActionItem?: boolean) => {
     if (!board) return;
     if (analytics) {
       logEvent(analytics, 'add_card_ai', {
@@ -720,11 +751,12 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
       creatorName: user?.displayName || 'Anonymous',
       createdAt: { toDate: () => new Date() } as any, // Mock Timestamp
       votedBy: [],
+      isActionItem: !!isActionItem,
     };
     setItems((prev) => [...prev, newCard]);
 
     try {
-      await addCard(id, columnId, text, user);
+      await addCard(id, columnId, text, user, isActionItem);
     } catch (e) {
       console.error("Failed to add AI card", e);
       setItems((prev) => prev.filter(c => c.id !== tempId));
@@ -904,7 +936,7 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
   return (
     <div className="h-[calc(100vh-64px)] flex flex-col bg-[#f8fafc] dark:bg-[#050505] overflow-hidden bg-grid-pattern transition-colors duration-500 relative">
       {/* Board Header */}
-      <div className="px-4 md:px-6 py-3 border-b border-gray-200 dark:border-gray-800 bg-white/70 dark:bg-dark-950/70 backdrop-blur-xl flex flex-wrap md:flex-nowrap justify-between items-center shrink-0 z-20 sticky top-0 gap-y-3">
+      <div className="px-4 md:px-6 py-3 border-b border-gray-200 dark:border-gray-800 bg-white/70 dark:bg-dark-950/70 backdrop-blur-xl flex flex-wrap md:flex-nowrap justify-between items-center shrink-0 z-50 sticky top-0 gap-y-3">
         {/* Left Section: Logo & Info */}
         <div className="flex items-center gap-2 md:gap-6 order-1">
           <div className="flex flex-row items-center gap-4">
@@ -1285,6 +1317,26 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
             )}
           </div>
 
+          {/* Task Sidebar Toggle */}
+          <button
+            onClick={() => setIsTaskSidebarOpen(true)}
+            className="flex items-center gap-2 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 px-3 py-2 rounded-xl border border-blue-100 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-all font-bold group"
+            title="View Board Action Items"
+          >
+            <div className="relative">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="group-hover:rotate-12 transition-transform">
+                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
+              </svg>
+              {items.filter(i => i.isActionItem).length > 0 && (
+                <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-blue-500"></span>
+                </span>
+              )}
+            </div>
+            <span className="text-xs uppercase tracking-wider hidden sm:block">Tasks</span>
+          </button>
+
           {/* User Dropdown */}
           <HeaderDropdown
             user={user}
@@ -1448,28 +1500,51 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
         cancelText="Cancel"
       />
 
-      {/* Private Mode Banner */}
+      {/* Private Mode Banner (Compact) */}
       {isPrivateMode && (
-         <div className="bg-indigo-600 dark:bg-indigo-900 text-white px-4 py-2 text-center text-sm font-medium animate-in slide-in-from-top-0 flex items-center justify-center gap-2 shadow-md relative z-30">
-            <span className="text-lg">🙈</span>
+         <div className="bg-indigo-600 dark:bg-indigo-900/90 backdrop-blur-sm text-white px-4 py-1 text-center text-xs font-medium animate-in slide-in-from-top-0 flex items-center justify-center gap-2 shadow-md relative z-30 border-b border-white/10">
+            <span className="text-base">🙈</span>
             <span>Private Mode is Active. You cannot see other users' cards until it is disabled.</span>
          </div>
       )}
-      {/* AI Smart Add Banner */}
-      {aiAvailable && !isCompleted && !isAISmartAddOpen && (
-        <div 
-          onClick={openAISmartAdd}
-          className="bg-gradient-to-r from-brand-600 to-purple-600 text-white px-4 py-2 text-center text-xs font-medium animate-slideDownIn flex items-center justify-center gap-3 cursor-pointer hover:brightness-110 transition-all shadow-md relative z-30 group"
-        >
-          <span className="flex items-center gap-2">
-            <span className="text-sm animate-pulse">✨</span>
-            <span className="hidden sm:inline">New: Use AI Smart Add to automatically sort your thoughts into columns!</span>
-            <span className="sm:hidden">Try AI Smart Add!</span>
-          </span>
-          <span className="bg-white/20 px-1.5 py-0.5 rounded text-[9px] uppercase font-bold tracking-wider group-hover:bg-white/30 transition-colors">
-            Try Now
-          </span>
-        </div>
+      {/* AI Status Banner */}
+      {!isCompleted && !isAISmartAddOpen && (
+        <>
+          {(aiStatus === 'readily' || aiStatus === 'downloading' || aiStatus === 'downloadable') ? (
+            <div 
+              onClick={openAISmartAdd}
+              className="bg-gradient-to-r from-brand-600 to-purple-600 text-white px-4 py-2 text-center text-xs font-medium animate-slideDownIn flex items-center justify-center gap-3 cursor-pointer hover:brightness-110 transition-all shadow-md relative z-30 group"
+            >
+              <span className="flex items-center gap-2">
+                <span className="text-sm animate-pulse">✨</span>
+                {aiStatus === 'downloading' ? (
+                  <span>AI Model is downloading in the background (0-100%)... Please wait.</span>
+                ) : (
+                  <>
+                    <span className="hidden sm:inline">New: Use AI Smart Add to automatically sort your thoughts into columns!</span>
+                    <span className="sm:hidden">Try AI Smart Add!</span>
+                  </>
+                )}
+              </span>
+              <span className="bg-white/20 px-1.5 py-0.5 rounded text-[9px] uppercase font-bold tracking-wider group-hover:bg-white/30 transition-colors">
+                {aiStatus === 'downloading' ? 'Status' : 'Try Now'}
+              </span>
+            </div>
+          ) : (aiStatus === 'no' || aiStatus === 'unknown') && (
+            <div 
+              onClick={() => setShowHowToEnableAI(true)}
+              className="bg-dark-800 text-gray-300 px-4 py-1.5 text-center text-[10px] sm:text-xs font-medium animate-slideDownIn flex items-center justify-center gap-3 cursor-pointer hover:bg-dark-700 transition-all shadow-md relative z-30 group border-b border-white/5"
+            >
+              <span className="flex items-center gap-2">
+                <span className="text-xs grayscale group-hover:grayscale-0 transition-all">🤖</span>
+                <span className="opacity-80">Want to use AI to sort your board? Unlock Chrome's built-in AI features in 2 minutes.</span>
+              </span>
+              <span className="text-brand-400 font-bold uppercase tracking-widest text-[9px] border border-brand-500/30 px-2 py-0.5 rounded group-hover:border-brand-500 transition-all">
+                Learn How
+              </span>
+            </div>
+          )}
+        </>
       )}
 
 
@@ -1526,6 +1601,7 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
                             onDelete={handleDeleteCardOptimistic}
                             onUpdate={handleUpdateCardOptimistic}
                             onReaction={handleReactionOptimistic}
+                            onVote={handleVoteOptimistic}
                           />
                         ))}
                     </SortableContext>
@@ -1631,7 +1707,7 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
         </div>
       )}
       {/* AI Smart Add Floating Toggle (Compact & High Visibility) */}
-      {aiAvailable && !isCompleted && !isAISmartAddOpen && (
+      {(aiStatus === 'readily' || aiStatus === 'downloadable' || aiStatus === 'downloading') && !isCompleted && !isAISmartAddOpen && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40">
           <div className="animate-slideUp">
             <button
@@ -1645,6 +1721,83 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
           </div>
         </div>
       )}
+
+      {/* How to Enable AI Modal */}
+      {showHowToEnableAI && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
+           <div className="bg-white dark:bg-dark-900 rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden border border-gray-100 dark:border-white/10 relative">
+              <div className="h-1.5 w-full bg-gradient-to-r from-brand-500 to-purple-600"></div>
+              
+              <button 
+                onClick={() => setShowHowToEnableAI(false)}
+                className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
+              >
+                ✕
+              </button>
+
+              <div className="p-8">
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="w-12 h-12 bg-brand-50 dark:bg-brand-900/30 rounded-2xl flex items-center justify-center text-2xl">✨</div>
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">Enable Built-in AI</h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Unlock automatic board sorting in Chrome</p>
+                  </div>
+                </div>
+
+                <div className="space-y-6">
+                  <div className="flex gap-4">
+                    <div className="flex-shrink-0 w-6 h-6 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-xs font-bold">1</div>
+                    <div>
+                      <p className="text-sm font-semibold mb-1">Open Chrome Flags</p>
+                      <p className="text-xs text-gray-500 mb-2">Paste these into your address bar one by one:</p>
+                      <code className="block bg-gray-50 dark:bg-black/40 p-2 rounded text-[10px] break-all border border-gray-200 dark:border-white/10 mb-2 font-mono">
+                         chrome://flags/#optimization-guide-on-device-model
+                      </code>
+                      <code className="block bg-gray-50 dark:bg-black/40 p-2 rounded text-[10px] break-all border border-gray-200 dark:border-white/10 font-mono">
+                         chrome://flags/#prompt-api-for-gemini-nano
+                      </code>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-4">
+                    <div className="flex-shrink-0 w-6 h-6 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-xs font-bold">2</div>
+                    <div>
+                      <p className="text-sm font-semibold mb-1">Enable AI Settings</p>
+                      <p className="text-xs text-gray-500">Set both to <span className="text-brand-600 font-bold italic">Enabled BypassPrefCheck</span> or <span className="text-brand-600 font-bold italic">Enabled</span>.</p>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-4">
+                    <div className="flex-shrink-0 w-6 h-6 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-xs font-bold">3</div>
+                    <div>
+                      <p className="text-sm font-semibold mb-1">Relaunch & Refresh</p>
+                      <p className="text-xs text-gray-500">Click the **Relaunch** button at bottom right, then refresh this page!</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-10 p-4 bg-amber-50 dark:bg-amber-900/20 rounded-2xl border border-amber-100 dark:border-amber-800/30 flex gap-3">
+                   <div className="text-lg">💰</div>
+                   <p className="text-[11px] text-amber-800 dark:text-amber-300 leading-relaxed font-medium">
+                      **Why do this?** Built-in AI runs entirely on your device. It is **100% free** for you, more private, and works offline!
+                   </p>
+                </div>
+
+                <button 
+                  onClick={() => setShowHowToEnableAI(false)}
+                  className="w-full mt-8 bg-gray-900 dark:bg-white dark:text-gray-900 text-white py-3 rounded-xl font-bold hover:scale-[1.02] active:scale-[0.98] transition-all"
+                >
+                  Got it, I'll try that!
+                </button>
+              </div>
+           </div>
+        </div>
+      )}
+      <ActionItemSidebar 
+        isOpen={isTaskSidebarOpen} 
+        onClose={() => setIsTaskSidebarOpen(false)} 
+        items={items} 
+      />
     </div>
   );
 };

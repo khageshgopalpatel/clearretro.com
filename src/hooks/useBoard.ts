@@ -52,7 +52,7 @@ export const createBoard = async (name: string, userId: string, initialColumns: 
     }
 };
 
-export const addCard = async (boardId: string, columnId: string, text: string, user: any) => {
+export const addCard = async (boardId: string, columnId: string, text: string, user: any, isActionItem?: boolean) => {
     try {
         // Get current max order to append at the end
         const q = query(collection(db, `boards/${boardId}/cards`), where("columnId", "==", columnId), orderBy("order", "desc"), limit(1));
@@ -67,7 +67,8 @@ export const addCard = async (boardId: string, columnId: string, text: string, u
             creatorName: user.displayName,
             createdAt: serverTimestamp(),
             votedBy: [],
-            order: maxOrder + 10000 // Large increment to allow insertions
+            order: maxOrder + 10000, // Large increment to allow insertions
+            isActionItem: !!isActionItem
         });
     } catch (e) {
         console.error("Error adding card: ", e);
@@ -100,6 +101,23 @@ export const toggleReaction = async (boardId: string, cardId: string, emoji: str
                 [`reactions.${emoji}`]: arrayUnion(userId)
             });
         }
+    }
+};
+
+export const toggleVote = async (boardId: string, cardId: string, userId: string) => {
+    if (!userId) return;
+    const cardRef = doc(db, `boards/${boardId}/cards`, cardId);
+    const cardSnap = await getDoc(cardRef);
+
+    if (cardSnap.exists()) {
+        const data = cardSnap.data();
+        const votedBy = data.votedBy || [];
+        const hasVoted = votedBy.includes(userId);
+
+        await updateDoc(cardRef, {
+            votes: increment(hasVoted ? -1 : 1),
+            votedBy: hasVoted ? arrayRemove(userId) : arrayUnion(userId)
+        });
     }
 };
 
