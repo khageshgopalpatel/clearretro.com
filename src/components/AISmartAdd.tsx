@@ -7,9 +7,10 @@ interface AISmartAddProps {
   columns: RetroColumn[];
   onAddCard: (columnId: string, text: string, isActionItem?: boolean) => Promise<void>;
   disabled?: boolean;
+  autoFocus?: boolean;
 }
 
-const AISmartAdd: React.FC<AISmartAddProps> = ({ columns, onAddCard, disabled }) => {
+const AISmartAdd: React.FC<AISmartAddProps> = ({ columns, onAddCard, disabled, autoFocus }) => {
   const [availability, setAvailability] = useState<AIAvailability>('unknown');
   const [text, setText] = useState('');
   const [isActionItem, setIsActionItem] = useState(false);
@@ -24,10 +25,18 @@ const AISmartAdd: React.FC<AISmartAddProps> = ({ columns, onAddCard, disabled })
     const hasKeyword = words.some(word => taskKeywords.includes(word));
     
     if (hasKeyword) {
-        // We could auto-toggle, but that might be annoying. 
-        // Let's just keep it manual for now but maybe we can add a pulse to the icon later.
+        // ...
     }
   }, [text, isActionItem]);
+
+  useEffect(() => {
+    if (autoFocus && inputRef.current) {
+        // Small delay to ensure the animation/mount is complete
+        setTimeout(() => {
+            inputRef.current?.focus();
+        }, 100);
+    }
+  }, [autoFocus]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;

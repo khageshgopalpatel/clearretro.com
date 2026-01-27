@@ -204,7 +204,7 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
   const [isAISmartAddActive, setIsAISmartAddActive] = useState(false);
   const [isTaskSidebarOpen, setIsTaskSidebarOpen] = useState(false);
   const [aiStatus, setAIStatus] = useState<string>('unknown');
-  const [showHowToEnableAI, setShowHowToEnableAI] = useState(false);
+  const [isChrome, setIsChrome] = useState(false);
 
   const openAISmartAdd = () => {
     setIsAISmartAddOpen(true);
@@ -221,9 +221,15 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
   };
 
   useEffect(() => {
-    checkChromiumAIAvailability().then(status => {
-      setAIStatus(status);
-    });
+    // Basic Chrome/Chromium detection
+    const isChromium = !!(window as any).chrome || (navigator.userAgent.indexOf("Chrome") !== -1);
+    setIsChrome(isChromium);
+
+    if (isChromium) {
+      checkChromiumAIAvailability().then(status => {
+        setAIStatus(status);
+      });
+    }
   }, []);
 
   // Rollover States
@@ -1508,43 +1514,26 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
          </div>
       )}
       {/* AI Status Banner */}
-      {!isCompleted && !isAISmartAddOpen && (
-        <>
-          {(aiStatus === 'readily' || aiStatus === 'downloading' || aiStatus === 'downloadable') ? (
-            <div 
-              onClick={openAISmartAdd}
-              className="bg-gradient-to-r from-brand-600 to-purple-600 text-white px-4 py-2 text-center text-xs font-medium animate-slideDownIn flex items-center justify-center gap-3 cursor-pointer hover:brightness-110 transition-all shadow-md relative z-30 group"
-            >
-              <span className="flex items-center gap-2">
-                <span className="text-sm animate-pulse">✨</span>
-                {aiStatus === 'downloading' ? (
-                  <span>AI Model is downloading in the background (0-100%)... Please wait.</span>
-                ) : (
-                  <>
-                    <span className="hidden sm:inline">New: Use AI Smart Add to automatically sort your thoughts into columns!</span>
-                    <span className="sm:hidden">Try AI Smart Add!</span>
-                  </>
-                )}
-              </span>
-              <span className="bg-white/20 px-1.5 py-0.5 rounded text-[9px] uppercase font-bold tracking-wider group-hover:bg-white/30 transition-colors">
-                {aiStatus === 'downloading' ? 'Status' : 'Try Now'}
-              </span>
-            </div>
-          ) : (aiStatus === 'no' || aiStatus === 'unknown') && (
-            <div 
-              onClick={() => setShowHowToEnableAI(true)}
-              className="bg-dark-800 text-gray-300 px-4 py-1.5 text-center text-[10px] sm:text-xs font-medium animate-slideDownIn flex items-center justify-center gap-3 cursor-pointer hover:bg-dark-700 transition-all shadow-md relative z-30 group border-b border-white/5"
-            >
-              <span className="flex items-center gap-2">
-                <span className="text-xs grayscale group-hover:grayscale-0 transition-all">🤖</span>
-                <span className="opacity-80">Want to use AI to sort your board? Unlock Chrome's built-in AI features in 2 minutes.</span>
-              </span>
-              <span className="text-brand-400 font-bold uppercase tracking-widest text-[9px] border border-brand-500/30 px-2 py-0.5 rounded group-hover:border-brand-500 transition-all">
-                Learn How
-              </span>
-            </div>
-          )}
-        </>
+      {isChrome && !isCompleted && !isAISmartAddOpen && (aiStatus === 'readily' || aiStatus === 'downloading' || aiStatus === 'downloadable') && (
+        <div 
+          onClick={openAISmartAdd}
+          className="bg-gradient-to-r from-brand-600 to-purple-600 text-white px-4 py-2 text-center text-xs font-medium animate-slideDownIn flex items-center justify-center gap-3 cursor-pointer hover:brightness-110 transition-all shadow-md relative z-30 group"
+        >
+          <span className="flex items-center gap-2">
+            <span className="text-sm animate-pulse">✨</span>
+            {aiStatus === 'downloading' ? (
+              <span>AI Model is downloading in the background (0-100%)... Please wait.</span>
+            ) : (
+              <>
+                <span className="hidden sm:inline">New: Use AI Smart Add to automatically sort your thoughts into columns!</span>
+                <span className="sm:hidden">Try AI Smart Add!</span>
+              </>
+            )}
+          </span>
+          <span className="bg-white/20 px-1.5 py-0.5 rounded text-[9px] uppercase font-bold tracking-wider group-hover:bg-white/30 transition-colors">
+            {aiStatus === 'downloading' ? 'Status' : 'Try Now'}
+          </span>
+        </div>
       )}
 
 
@@ -1658,16 +1647,16 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
 
       {/* AI Smart Add Bottom Sheet Overlay */}
       {isAISmartAddOpen && !isCompleted && (
-        <div className="fixed inset-0 z-[100] flex flex-col justify-end pointer-events-none">
-          {/* Backdrop */}
+        <div className="fixed inset-0 z-[100] flex flex-col justify-end pointer-events-none sticky-ai-sheet">
+          {/* Backdrop with stronger blur */}
           <div 
-            className={`absolute inset-0 bg-black/40 pointer-events-auto transition-opacity duration-500 ease-in-out ${isAISmartAddActive ? 'opacity-100' : 'opacity-0'}`}
+            className={`absolute inset-0 bg-black/60 backdrop-blur-[2px] pointer-events-auto transition-opacity duration-500 ease-in-out ${isAISmartAddActive ? 'opacity-100' : 'opacity-0'}`}
             onClick={closeAISmartAdd}
           ></div>
           
-          {/* Sheet */}
+          {/* Sheet with clearer separation */}
           <div 
-            className={`relative w-full max-w-2xl mx-auto bg-white dark:bg-dark-900 rounded-t-[2.5rem] shadow-2xl pointer-events-auto transform transition-all duration-700 [transition-timing-function:cubic-bezier(0.32,0.72,0,1)] p-6 pt-10 pb-12 border-t border-white/20 ${isAISmartAddActive ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'}`}
+            className={`relative w-full max-w-2xl mx-auto bg-white dark:bg-dark-900 rounded-t-[2.5rem] shadow-[0_-20px_50px_rgba(0,0,0,0.3)] pointer-events-auto transform transition-all duration-700 [transition-timing-function:cubic-bezier(0.32,0.72,0,1)] p-6 pt-10 pb-12 border-t border-brand-500/30 ring-1 ring-white/10 ${isAISmartAddActive ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'}`}
           >
             {/* Handle */}
             <div className="absolute top-4 left-1/2 -translate-x-1/2 w-12 h-1.5 bg-gray-200 dark:bg-gray-800 rounded-full"></div>
@@ -1679,7 +1668,7 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
               ✕
             </button>
             
-            <div className="mb-8 text-center">
+            <div className="mb-8 text-center text-ai-header">
               <h3 className="text-2xl font-bold bg-gradient-to-r from-brand-500 to-purple-600 bg-clip-text text-transparent flex justify-center items-center gap-2 mb-2">
                 <span>✨</span>
                 AI Smart Add
@@ -1693,6 +1682,7 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
               columns={board.columns} 
               onAddCard={handleAISmartAdd}
               disabled={loading}
+              autoFocus={isAISmartAddOpen}
             />
             
             <div className="mt-4 text-center">
@@ -1707,7 +1697,7 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
         </div>
       )}
       {/* AI Smart Add Floating Toggle (Compact & High Visibility) */}
-      {(aiStatus === 'readily' || aiStatus === 'downloadable' || aiStatus === 'downloading') && !isCompleted && !isAISmartAddOpen && (
+      {isChrome && (aiStatus === 'readily' || aiStatus === 'downloadable' || aiStatus === 'downloading') && !isCompleted && !isAISmartAddOpen && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40">
           <div className="animate-slideUp">
             <button
@@ -1722,77 +1712,6 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
         </div>
       )}
 
-      {/* How to Enable AI Modal */}
-      {showHowToEnableAI && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
-           <div className="bg-white dark:bg-dark-900 rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden border border-gray-100 dark:border-white/10 relative">
-              <div className="h-1.5 w-full bg-gradient-to-r from-brand-500 to-purple-600"></div>
-              
-              <button 
-                onClick={() => setShowHowToEnableAI(false)}
-                className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
-              >
-                ✕
-              </button>
-
-              <div className="p-8">
-                <div className="flex items-center gap-4 mb-6">
-                  <div className="w-12 h-12 bg-brand-50 dark:bg-brand-900/30 rounded-2xl flex items-center justify-center text-2xl">✨</div>
-                  <div>
-                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">Enable Built-in AI</h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Unlock automatic board sorting in Chrome</p>
-                  </div>
-                </div>
-
-                <div className="space-y-6">
-                  <div className="flex gap-4">
-                    <div className="flex-shrink-0 w-6 h-6 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-xs font-bold">1</div>
-                    <div>
-                      <p className="text-sm font-semibold mb-1">Open Chrome Flags</p>
-                      <p className="text-xs text-gray-500 mb-2">Paste these into your address bar one by one:</p>
-                      <code className="block bg-gray-50 dark:bg-black/40 p-2 rounded text-[10px] break-all border border-gray-200 dark:border-white/10 mb-2 font-mono">
-                         chrome://flags/#optimization-guide-on-device-model
-                      </code>
-                      <code className="block bg-gray-50 dark:bg-black/40 p-2 rounded text-[10px] break-all border border-gray-200 dark:border-white/10 font-mono">
-                         chrome://flags/#prompt-api-for-gemini-nano
-                      </code>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-4">
-                    <div className="flex-shrink-0 w-6 h-6 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-xs font-bold">2</div>
-                    <div>
-                      <p className="text-sm font-semibold mb-1">Enable AI Settings</p>
-                      <p className="text-xs text-gray-500">Set both to <span className="text-brand-600 font-bold italic">Enabled BypassPrefCheck</span> or <span className="text-brand-600 font-bold italic">Enabled</span>.</p>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-4">
-                    <div className="flex-shrink-0 w-6 h-6 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-xs font-bold">3</div>
-                    <div>
-                      <p className="text-sm font-semibold mb-1">Relaunch & Refresh</p>
-                      <p className="text-xs text-gray-500">Click the **Relaunch** button at bottom right, then refresh this page!</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-10 p-4 bg-amber-50 dark:bg-amber-900/20 rounded-2xl border border-amber-100 dark:border-amber-800/30 flex gap-3">
-                   <div className="text-lg">💰</div>
-                   <p className="text-[11px] text-amber-800 dark:text-amber-300 leading-relaxed font-medium">
-                      **Why do this?** Built-in AI runs entirely on your device. It is **100% free** for you, more private, and works offline!
-                   </p>
-                </div>
-
-                <button 
-                  onClick={() => setShowHowToEnableAI(false)}
-                  className="w-full mt-8 bg-gray-900 dark:bg-white dark:text-gray-900 text-white py-3 rounded-xl font-bold hover:scale-[1.02] active:scale-[0.98] transition-all"
-                >
-                  Got it, I'll try that!
-                </button>
-              </div>
-           </div>
-        </div>
-      )}
       <ActionItemSidebar 
         isOpen={isTaskSidebarOpen} 
         onClose={() => setIsTaskSidebarOpen(false)} 
