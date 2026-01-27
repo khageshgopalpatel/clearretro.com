@@ -7,15 +7,19 @@ const Pricing = () => {
   const faqs = [
     {
       q: "Is it really free?",
-      a: "Yes. Clear Retro is completely free for engineering teams. You get access to all features including AI insights, unlimited boards, and team members without any hidden paywalls."
+      a: "The Community Edition of Clear Retro is completely free. You get access to all current features including AI Smart Add, Professional Exports, and Numerical Voting without any hidden paywalls."
     },
     {
       q: "Are there any limits?",
-      a: "There are no hard limits on the number of boards you can create or members you can invite. We monitor for abuse regarding AI generation usage, but typical teams will never hit a limit."
+      a: "There are no hard limits on the number of boards or members. We use a hybrid AI model (On-device + Cloud) to ensure high availability. While we monitor for abuse, typical teams will never hit a limit."
     },
     {
       q: "How do you make money?",
-      a: "We are currently focused on building the best developer-focused retrospective tool and growing our community. In the future, we may introduce specialized enterprise features (like On-premise hosting or Audit Logs), but the core features available today will remain free."
+      a: "Our goal is to keep a generous free tier indefinitely. In the future, we may introduce a 'Pro' or 'Enterprise' plan with advanced team management features, SSO, or audit logs to support the project's development, but the core features you use today are free."
+    },
+    {
+      q: "Will you charge for AI in the future?",
+      a: "Generating AI insights has a cost. We aim to keep basic AI features free on the Community tier, but we may introduce higher-usage limits or premium AI models for professional teams later on."
     },
     {
       q: "Is my data safe?",
@@ -31,7 +35,7 @@ const Pricing = () => {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 min-h-screen">
       <div className="text-center mb-16">
         <h1 className="text-4xl font-extrabold text-gray-900 dark:text-white sm:text-5xl tracking-tight font-mono">
-          Premium Features. <span className="text-brand-500">Zero Cost.</span>
+          Community Edition. <span className="text-brand-500">Free Access.</span>
         </h1>
         <p className="mt-4 text-xl text-gray-500 dark:text-gray-400 max-w-2xl mx-auto">
           We believe effective team improvement shouldn't be behind a paywall.
@@ -54,7 +58,7 @@ const Pricing = () => {
               <h3 className="text-3xl font-bold text-gray-900 dark:text-white font-mono mb-2">The All-Inclusive Plan</h3>
               <div className="mt-6 flex items-baseline justify-center lg:justify-start">
                 <span className="text-7xl font-extrabold text-gray-900 dark:text-white tracking-tighter">$0</span>
-                <span className="ml-3 text-2xl text-gray-500 font-mono">/ forever</span>
+                <span className="ml-3 text-2xl text-gray-500 font-mono">/ free tier</span>
               </div>
               <p className="text-gray-500 dark:text-gray-400 mt-6 leading-relaxed text-lg">
                 Everything you need to run high-velocity agile retrospectives. Unlimited teams, unlimited history, fully unlocked AI.
@@ -72,15 +76,17 @@ const Pricing = () => {
                 {[
                   'Unlimited Boards',
                   'Unlimited Members',
-                  'Gemini 2.0 AI Insights',
+                  'Universal AI Smart Add',
+                  'Numerical 0-5 Voting',
+                  'AI-Augmented PDF/Excel',
                   'Real-time Sync',
                   'Private & Focus Mode',
-                  'PDF & Excel Export',
+                  'AI Action Item Discovery',
                   'Smart Semantic Grouping',
                   'Unlimited History',
                   'Guest Access (No Login)',
                   'Dark Mode Support',
-                  'Jira Compatible Exports',
+                  'Board Executive Summaries',
                   'Priority Community Support'
                 ].map(feat => (
                   <div key={feat} className="flex items-start text-sm group/item">

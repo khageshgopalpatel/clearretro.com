@@ -28,14 +28,14 @@ const Features: React.FC = () => {
           </div>
         </div>
 
-        {/* Gemini AI */}
+        {/* Universal Gemini AI */}
         <div className="bg-gray-900 dark:bg-white rounded-lg p-8 border border-transparent shadow-xl flex flex-col text-white dark:text-gray-900 relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-purple-600 to-blue-600 opacity-20 dark:opacity-10"></div>
           <div className="relative z-10">
             <div className="w-12 h-12 bg-white/10 dark:bg-gray-900/10 rounded-lg flex items-center justify-center mb-6 text-2xl">🤖</div>
-            <h3 className="text-2xl font-bold mb-3 font-mono">Gemini 2.0 AI</h3>
+            <h3 className="text-2xl font-bold mb-3 font-mono">Universal Gemini AI</h3>
             <p className="opacity-80 leading-relaxed">
-              Don't spend 20 minutes grouping cards manually. Our semantic clustering engine organizes feedback instantly and writes the executive summary for you. It detects sentiment trends across "Start, Stop, Continue" boards automatically.
+              Our hybrid AI engine (Local + Cloud) works on every browser. Use <strong>AI Smart Add</strong> to share thoughts in a single stream—they'll be categorized and grouped automatically using semantic clustering.
             </p>
           </div>
         </div>
@@ -59,11 +59,20 @@ const Features: React.FC = () => {
         </div>
 
         {/* Exports */}
-        <div className="bg-white dark:bg-dark-900 rounded-lg p-8 border border-gray-200 dark:border-gray-800 shadow-sm hover:shadow-[0_0_15px_rgba(45,212,191,0.1)] transition-shadow">
+        <div className="bg-white dark:bg-dark-900 rounded-lg p-8 border border-gray-200 dark:border-gray-800 shadow-sm hover:border-brand-500/50 transition-colors">
           <div className="w-12 h-12 bg-green-50 dark:bg-green-900/20 rounded-lg flex items-center justify-center mb-6 text-green-600 text-2xl border border-green-100 dark:border-green-900/50">📤</div>
-          <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3 font-mono">Universal Export</h3>
+          <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3 font-mono">AI-Augmented Exports</h3>
           <p className="text-gray-500 dark:text-gray-400 leading-relaxed">
-            Your data belongs to you. Export retro results to formatted PDF reports for stakeholders or raw Excel/CSV for data analysis in Jira or Confluence.
+            Export results to professional PDF & Excel reports. Includes AI-generated executive summaries and sentiment analysis to help stakeholders understand team morale at a glance.
+          </p>
+        </div>
+
+        {/* Numerical Voting */}
+        <div className="bg-white dark:bg-dark-900 rounded-lg p-8 border border-gray-200 dark:border-gray-800 shadow-sm hover:border-brand-500/50 transition-colors">
+          <div className="w-12 h-12 bg-blue-50 dark:bg-blue-900/20 rounded-lg flex items-center justify-center mb-6 text-blue-600 text-2xl border border-blue-100 dark:border-blue-900/50">🔢</div>
+          <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3 font-mono">Numerical 0-5 Voting</h3>
+          <p className="text-gray-500 dark:text-gray-400 leading-relaxed">
+            Break free from simple upvotes. Our 0-5 point system allows for nuanced prioritization, letting teams weigh the impact and urgency of every issue more accurately.
           </p>
         </div>
       </div>

@@ -18,11 +18,11 @@ const BuyMeCoffeeWidget: React.FC = () => {
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={handleClick}
-                className="group flex items-center justify-center w-12 h-12 bg-yellow-400 hover:bg-yellow-300 text-yellow-900 rounded-full shadow-lg hover:shadow-xl ring-1 ring-yellow-500/50 transition-all duration-300 hover:scale-110"
+                className="group flex items-center justify-center w-10 h-10 md:w-12 md:h-12 bg-yellow-400 hover:bg-yellow-300 text-yellow-900 rounded-full shadow-lg hover:shadow-xl ring-1 ring-yellow-500/50 transition-all duration-300 hover:scale-110"
                 title="Buy us a coffee"
             >
-                <span className="text-xl group-hover:animate-bounce">☕</span>
-                <span className="absolute left-14 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                <span className="text-lg md:text-xl group-hover:animate-bounce">☕</span>
+                <span className="hidden sm:inline absolute left-14 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
                     Support us
                 </span>
             </a>

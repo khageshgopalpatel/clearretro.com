@@ -1,20 +1,25 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { checkChromiumAIAvailability, classifyThought, type AIAvailability } from '../utils/ai';
+import { checkChromiumAIAvailability, classifyThought, type AIAvailability, type ClassificationResult } from '../utils/ai';
 import type { RetroColumn } from '../types';
-import { Sparkles, Send, Loader2, Download } from 'lucide-react';
+import { Sparkles, Send, Loader2, Download, AlertCircle } from 'lucide-react';
+import { useSnackbar } from '../context/SnackbarContext';
+import { analytics, logEvent } from '../lib/firebase';
 
 interface AISmartAddProps {
+  boardId: string;
   columns: RetroColumn[];
   onAddCard: (columnId: string, text: string, isActionItem?: boolean) => Promise<void>;
   disabled?: boolean;
   autoFocus?: boolean;
 }
 
-const AISmartAdd: React.FC<AISmartAddProps> = ({ columns, onAddCard, disabled, autoFocus }) => {
+const AISmartAdd: React.FC<AISmartAddProps> = ({ boardId, columns, onAddCard, disabled, autoFocus }) => {
   const [availability, setAvailability] = useState<AIAvailability>('unknown');
   const [text, setText] = useState('');
   const [isActionItem, setIsActionItem] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const { showSnackbar } = useSnackbar();
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Simple keyword detection to suggest action item
@@ -65,8 +70,7 @@ const AISmartAdd: React.FC<AISmartAddProps> = ({ columns, onAddCard, disabled, a
 
   const isAvailable = availability === 'readily' || availability === 'after-download' || availability === 'downloadable' || availability === 'downloading';
   const isDownloading = availability === 'after-download' || availability === 'downloadable' || availability === 'downloading';
-
-  if (!isAvailable && availability !== 'unknown') return null;
+  const isCloudFallback = availability === 'no' || availability === 'unknown';
 
   const handleSubmit = async (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -74,16 +78,55 @@ const AISmartAdd: React.FC<AISmartAddProps> = ({ columns, onAddCard, disabled, a
     if (!trimmedText || isProcessing || disabled || isDownloading) return;
 
     setIsProcessing(true);
+    setError(null);
+    const startTime = Date.now();
+    
+    // Log submission
+    logEvent(analytics, 'ai_smart_add_submit', { 
+        board_id: boardId, 
+        char_count: trimmedText.length 
+    });
+
     try {
-      const columnId = await classifyThought(trimmedText, columns);
+      const result: ClassificationResult = await classifyThought(trimmedText, columns);
+      const { columnId, source } = result;
+
       if (columnId) {
         await onAddCard(columnId, trimmedText, isActionItem);
+        
+        // Log success
+        logEvent(analytics, 'ai_smart_add_success', {
+            board_id: boardId,
+            source: source,
+            is_action_item: isActionItem,
+            latency_ms: Date.now() - startTime
+        });
+
         setText('');
         setIsActionItem(false); // Reset after add
         inputRef.current?.focus();
+      } else {
+        const errorMsg = "AI couldn't figure out where to put this. Try adding it normally!";
+        setError(errorMsg);
+        showSnackbar("AI Classification failed. Please add the card manually.", "error");
+        
+        // Log error
+        logEvent(analytics, 'ai_smart_add_error', {
+            board_id: boardId,
+            source: source,
+            error: 'no_column_id'
+        });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Smart Add failed:", error);
+      showSnackbar("An unexpected error occurred with AI Smart Add.", "error");
+
+      // Log error
+      logEvent(analytics, 'ai_smart_add_error', {
+          board_id: boardId,
+          source: 'unknown',
+          error: error.message || 'unexpected_error'
+      });
     } finally {
       setIsProcessing(false);
     }
@@ -114,30 +157,21 @@ const AISmartAdd: React.FC<AISmartAddProps> = ({ columns, onAddCard, disabled, a
             value={text}
             onChange={(e) => setText(e.target.value)}
             disabled={isProcessing || disabled || isDownloading}
-            placeholder={isDownloading ? "Downloading AI Model... Please wait" : "Share your thoughts... AI will find the right column"}
-            className="flex-1 bg-transparent border-none focus:ring-0 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 py-3 px-2 text-base outline-none disabled:opacity-50"
+            placeholder={
+                isDownloading 
+                    ? "Downloading local AI model..." 
+                    : isCloudFallback 
+                        ? "Share your thoughts... Cloud AI will sort them!"
+                        : "Share your thoughts... Local AI will sort them!"
+            }
+            className="flex-1 bg-transparent border-none focus:ring-0 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 py-3 px-2 text-base outline-none disabled:opacity-50 min-w-0"
           />
 
-          <button
-            type="button"
-            onClick={() => setIsActionItem(!isActionItem)}
-            className={`p-2 mr-1 rounded-lg transition-all duration-300 flex items-center gap-1.5 ${isActionItem 
-                ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800' 
-                : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 border border-transparent'}`}
-            title={isActionItem ? "Action Item enabled" : "Mark as Action Item"}
-          >
-            <div className={`transition-transform duration-300 ${isActionItem ? 'scale-110' : 'scale-100'}`}>
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill={isActionItem ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
-                </svg>
-            </div>
-            {isActionItem && <span className="text-[10px] font-bold uppercase tracking-tighter">Action</span>}
-          </button>
           
           <button
             type="submit"
             disabled={!text.trim() || isProcessing || disabled || isDownloading}
-            className="flex items-center justify-center p-3 bg-brand-500 hover:bg-brand-600 disabled:bg-gray-200 dark:disabled:bg-gray-800 disabled:text-gray-400 text-white rounded-lg transition-all duration-300 shadow-lg shadow-brand-500/20 active:scale-95"
+            className="flex items-center justify-center p-3 bg-brand-500 hover:bg-brand-600 disabled:bg-gray-200 dark:disabled:bg-gray-800 disabled:text-gray-400 text-white rounded-lg transition-all duration-300 shadow-lg shadow-brand-500/20 active:scale-95 flex-shrink-0"
           >
             {isProcessing ? (
               <Loader2 className="w-5 h-5 animate-spin" />
@@ -146,11 +180,22 @@ const AISmartAdd: React.FC<AISmartAddProps> = ({ columns, onAddCard, disabled, a
             )}
           </button>
         </div>
+
+        {error && (
+            <div className="mt-3 flex items-center gap-2 text-red-500 bg-red-50 dark:bg-red-900/20 px-3 py-2 rounded-lg border border-red-100 dark:border-red-900/30 animate-in slide-in-from-top-1 duration-200">
+                <AlertCircle className="w-4 h-4" />
+                <span className="text-[11px] font-medium">{error}</span>
+            </div>
+        )}
         
         <div className="mt-2 flex items-center justify-center gap-4 text-[10px] uppercase tracking-widest text-gray-400 font-medium">
           <div className="flex items-center gap-2">
             <span className={`w-2 h-2 rounded-full ${isDownloading ? 'bg-orange-400 animate-bounce' : 'bg-brand-400 animate-pulse'}`}></span>
-            {isDownloading ? 'AI Model is initializing (1.5GB) - Checking status...' : 'Chromium AI Powered Smart Entry'}
+            {isDownloading 
+                ? 'Local AI model is initializing (1.5GB) - Checking status...' 
+                : isCloudFallback 
+                    ? 'Gemini Cloud AI Powered Smart Entry' 
+                    : 'Chromium Local AI Powered Smart Entry'}
           </div>
           {isDownloading && (
             <button 

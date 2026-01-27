@@ -137,6 +137,113 @@ exports.generateBoardSummary = onRequest({
     });
 });
 
+exports.classifyThought = onRequest({
+    secrets: ["GEMINI_API_KEY"],
+}, async (req, res) => {
+    return cors(req, res, async () => {
+        // 1. Validate Auth
+        const idToken = req.headers.authorization?.split('Bearer ')[1];
+        if (!idToken) {
+            res.status(401).json({ error: 'Unauthorized: No token provided' });
+            return;
+        }
+
+        try {
+            await auth.verifyIdToken(idToken);
+        } catch (e) {
+            console.error("Token verification failed:", e);
+            res.status(401).json({ error: 'Unauthorized: Invalid token' });
+            return;
+        }
+
+        // 2. Parse Data
+        const { text, columns } = req.body;
+
+        if (!text || !columns || !Array.isArray(columns)) {
+            res.status(400).json({ error: "Missing text or columns data" });
+            return;
+        }
+
+        try {
+            // 3. Check Cache
+            const cacheKey = generateCacheKey({ text, columns: columns.map(c => c.id) });
+            const cacheRef = db.collection("ai_classifier_cache").doc(cacheKey);
+            const cacheDoc = await cacheRef.get();
+
+            if (cacheDoc.exists) {
+                console.log("Classifier Cache HIT for key:", cacheKey);
+                res.status(200).json(cacheDoc.data().result);
+                return;
+            }
+
+            console.log("Classifier Cache MISS for key:", cacheKey);
+
+            // 4. Call AI
+            const apiKey = process.env.GEMINI_API_KEY;
+            if (!apiKey) {
+                throw new Error("GEMINI_API_KEY is not set");
+            }
+
+            const genAI = new GoogleGenerativeAI(apiKey);
+            const modelsToTry = ["gemini-2.5-flash", "gemini-2.5-pro"];
+
+            const prompt = `
+            You are an agile assistant. Categorize the following retrospective thought into exactly one of the provided columns.
+            
+            Thought: "${text}"
+            
+            Columns:
+            ${columns.map(c => `- ${c.title} (ID: ${c.id})`).join("\n")}
+            
+            Return ONLY the ID of the most appropriate column. If unsure, pick the most logically fitting one.
+            `;
+
+            let lastError = null;
+            let columnId = null;
+
+            for (const modelName of modelsToTry) {
+                try {
+                    console.log(`Attempting classification with model: ${modelName}`);
+                    const model = genAI.getGenerativeModel({ model: modelName });
+                    const result = await model.generateContent(prompt);
+                    const response = await result.response;
+                    columnId = response.text().trim();
+                    break; // Success
+                } catch (error) {
+                    console.warn(`Classification failed with model ${modelName}:`, error);
+                    lastError = error;
+                }
+            }
+
+            if (!columnId) {
+                throw new Error(`All classification models failed. Last error: ${lastError?.message}`);
+            }
+
+            // Validate that the returned ID actually exists in the columns
+            const validColumnId = columns.find(c => c.id === columnId) ? columnId : columns[0].id;
+
+            const resultPayload = { columnId: validColumnId };
+
+            // 5. Save to Cache
+            try {
+                await cacheRef.set({
+                    result: resultPayload,
+                    timestamp: new Date().toISOString(),
+                    originalInput: { text, columnIds: columns.map(c => c.id) }
+                });
+            } catch (e) {
+                console.error("Failed to write to classifier cache:", e);
+            }
+
+            res.status(200).json(resultPayload);
+
+        } catch (error) {
+            console.error("Error in classifyThought:", error);
+            res.status(500).json({ error: error.message });
+        }
+    });
+});
+
 const { slackAuth, postSummaryToSlack } = require("./slack");
 const { slackCommands, slackInteractions } = require("./slack_commands");
 

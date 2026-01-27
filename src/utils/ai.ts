@@ -1,5 +1,5 @@
-
 import type { RetroColumn } from "../types";
+import { auth } from "../lib/firebase";
 
 export interface LanguageModelSession {
   prompt: (input: string) => Promise<string>;
@@ -60,30 +60,33 @@ export const checkChromiumAIAvailability = async (): Promise<AIAvailability> => 
   }
 };
 
+export interface ClassificationResult {
+  columnId: string | null;
+  source: 'local' | 'cloud' | 'none';
+}
+
 /**
  * Classifies a user's thought into one of the provided retro columns.
+ * Tries Chromium's built-in AI first, then falls back to Cloud Gemini via Firebase Functions.
  */
 export const classifyThought = async (
   text: string,
   columns: RetroColumn[]
-): Promise<string | null> => {
+): Promise<ClassificationResult> => {
   const anyWindow = window as any;
   const ai = anyWindow.ai;
   const assistantNamespace = ai?.languageModel || ai?.assistant || anyWindow.assistant || anyWindow.LanguageModel;
 
-  if (!assistantNamespace) {
-    console.error("AI classifyCalled but namespace is missing.");
-    return null;
-  }
+  // 1. Try Built-in Chrome AI first
+  if (assistantNamespace) {
+    try {
+      const session = await assistantNamespace.create({
+        expectedInputLanguages: ['en'],
+        expectedOutputLanguages: ['en'],
+        systemPrompt: `You are a strict data classification engine. You categorize text into these specific buckets: ${columns.map(c => `"${c.title}" (ID: ${c.id})`).join(', ')}.`,
+      });
 
-  try {
-    const session = await assistantNamespace.create({
-      expectedInputLanguages: ['en'],
-      expectedOutputLanguages: ['en'],
-      systemPrompt: `You are a strict data classification engine. You categorize text into these specific buckets: ${columns.map(c => `"${c.title}" (ID: ${c.id})`).join(', ')}.`,
-    });
-
-    const prompt = `
+      const prompt = `
 Task: Classify the user thought into exactly one valid ID.
 
 Allowed IDs:
@@ -97,23 +100,50 @@ Now classify this:
 Thought: "${text}"
 ID:`;
 
-    const rawResponse = await session.prompt(prompt);
-    session.destroy();
+      const rawResponse = await session.prompt(prompt);
+      session.destroy();
 
-    const responseText = rawResponse.toLowerCase();
-    
-    // 1. Try exact match first
-    const exactMatch = columns.find(c => responseText.includes(c.id.toLowerCase()));
-    if (exactMatch) return exactMatch.id;
+      const responseText = rawResponse.toLowerCase();
+      
+      // 1. Try exact match first
+      const exactMatch = columns.find(c => responseText.includes(c.id.toLowerCase()));
+      if (exactMatch) return { columnId: exactMatch.id, source: 'local' };
 
-    // 2. Try matching title if ID fails
-    const titleMatch = columns.find(c => responseText.includes(c.title.toLowerCase()));
-    if (titleMatch) return titleMatch.id;
+      // 2. Try matching title if ID fails
+      const titleMatch = columns.find(c => responseText.includes(c.title.toLowerCase()));
+      if (titleMatch) return { columnId: titleMatch.id, source: 'local' };
+    } catch (error) {
+      console.warn("Local AI classification failed, falling back to Cloud AI:", error);
+    }
+  }
 
-    // 3. Last resort fallback
-    return columns[0]?.id || null;
+  // 2. Fallback to Cloud AI (Firebase Function)
+  try {
+    const user = auth.currentUser;
+    if (!user) {
+        console.error("User must be logged in to use Cloud AI Fallback");
+        return { columnId: null, source: 'none' };
+    }
+
+    const idToken = await user.getIdToken();
+    const response = await fetch('https://us-central1-clear-retro-app.cloudfunctions.net/classifyThought', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${idToken}`
+        },
+        body: JSON.stringify({ text, columns: columns.map(c => ({ id: c.id, title: c.title })) })
+    });
+
+    if (!response.ok) {
+        throw new Error(`Cloud AI failed with status: ${response.status}`);
+    }
+
+    const result = await response.json();
+    return { columnId: result.columnId || null, source: 'cloud' };
+
   } catch (error) {
-    console.error("AI classification failed:", error);
-    return columns[0]?.id || null; // Return first column as fallback during error
+    console.error("Universal AI classification failed:", error);
+    return { columnId: null, source: 'none' };
   }
 };

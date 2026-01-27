@@ -208,6 +208,8 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
 
   const openAISmartAdd = () => {
     setIsAISmartAddOpen(true);
+    // Log event when AI Smart Add is opened
+    logEvent(analytics, 'ai_smart_add_open', { board_id: id });
     // Tiny delay to ensure the component is in DOM before starting transition
     setTimeout(() => setIsAISmartAddActive(true), 10);
   };
@@ -1318,15 +1320,55 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
                       </button>
                     </li>
                   )}
+            {/* Tasks Sidebar Toggle - Mobile Menu Item */}
+                  <li>
+                    <button
+                      onClick={() => {
+                        setIsTaskSidebarOpen(true);
+                        setActiveId(null);
+                      }}
+                      className="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 dark:hover:bg-dark-800 flex items-center gap-3 text-gray-700 dark:text-gray-300 transition-colors"
+                    >
+                      <div className="p-1.5 rounded-md bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400 relative">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
+                        </svg>
+                        {items.filter(i => i.isActionItem).length > 0 && (
+                          <span className="absolute -top-1 -right-1 flex h-2 w-2">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex flex-col">
+                        <span>View Tasks</span>
+                        {items.filter(i => i.isActionItem).length > 0 && (
+                           <span className="text-[10px] text-blue-500 font-bold uppercase tracking-wider">
+                              {items.filter(i => i.isActionItem).length} Active
+                           </span>
+                        )}
+                      </div>
+                    </button>
+                  </li>
                 </ul>
               </div>
             )}
           </div>
 
-          {/* Task Sidebar Toggle */}
+          {/* Tasks Sidebar Toggle - Restored to Main Header */}
           <button
             onClick={() => setIsTaskSidebarOpen(true)}
-            className="flex items-center gap-2 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 px-3 py-2 rounded-xl border border-blue-100 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-all font-bold group"
+            className="hidden md:flex items-center gap-2 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 px-3 py-2 rounded-xl border border-blue-100 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-all font-bold group"
             title="View Board Action Items"
           >
             <div className="relative">
@@ -1343,7 +1385,7 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
             <span className="text-xs uppercase tracking-wider hidden sm:block">Tasks</span>
           </button>
 
-          {/* User Dropdown */}
+          {/* User Dropdown - Restored to Main Header */}
           <HeaderDropdown
             user={user}
             onLogout={handleLogout}
@@ -1354,49 +1396,55 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
           />
         </div>
 
-        {/* Center Section: Timer */}
-        <div className="order-3 md:order-2 w-full md:w-auto flex justify-center md:block">
-          <div
-            className={`flex items-center gap-2 md:gap-3 px-2 py-1 md:px-4 md:py-1.5 rounded-lg border transition-all ${board.timer?.status === "running" ? "border-brand-500 bg-brand-50/50 dark:bg-brand-900/10 shadow-[0_0_10px_rgba(45,212,191,0.2)]" : "border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-dark-900"}`}
+        {/* Center Section: Timer (Order 3 - New Row on Mobile, Center on Desktop) */}
+        <div className="order-3 md:order-2 w-full md:w-auto flex justify-center mt-1 md:mt-0">
+           <div
+            className={`flex items-center gap-2 md:gap-3 px-3 py-2 md:px-4 md:py-1.5 rounded-lg border transition-all w-auto justify-between md:justify-center ${board.timer?.status === "running" ? "border-brand-500 bg-brand-50/50 dark:bg-brand-900/10 shadow-[0_0_10px_rgba(45,212,191,0.2)]" : "border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-dark-900"}`}
           >
-            <span
-              className={`font-mono text-lg md:text-2xl font-bold ${getTimeLeft() < 60 && board.timer?.status === "running" ? "text-red-500 animate-pulse" : "text-gray-800 dark:text-gray-200"}`}
-            >
-              {formatTime(getTimeLeft())}
-            </span>
-            {!isCompleted && user?.uid === board.createdBy && (
-              <div className="flex items-center gap-1">
-                <button
-                  onClick={() => {
-                    adjustTimer(id, -60);
-                    if (analytics) logEvent(analytics, 'adjust_timer', { board_id: id, amount: -60 });
-                  }}
-                  className="w-6 h-6 flex items-center justify-center rounded text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors text-xs font-bold"
-                  title="-1 Minute"
-                >
-                  -
-                </button>
-                <button
-                  onClick={toggleTimer}
-                  className="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors"
-                >
-                  {board.timer?.status === "running" ? "⏸" : "▶️"}
-                </button>
-                <button
-                  onClick={() => {
-                    adjustTimer(id, 60);
-                    if (analytics) logEvent(analytics, 'adjust_timer', { board_id: id, amount: 60 });
-                  }}
-                  className="w-6 h-6 flex items-center justify-center rounded text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors text-xs font-bold"
-                  title="+1 Minute"
-                >
-                  +
-                </button>
-              </div>
-            )}
-          </div>
+            <span className="text-gray-500 dark:text-gray-400 text-xs font-bold uppercase tracking-wider md:hidden">Timer</span>
+             <div className="flex items-center gap-3">
+               <span
+                 className={`font-mono text-lg md:text-2xl font-bold ${getTimeLeft() < 60 && board.timer?.status === "running" ? "text-red-500 animate-pulse" : "text-gray-800 dark:text-gray-200"}`}
+               >
+                 {formatTime(getTimeLeft())}
+               </span>
+               {!isCompleted && user?.uid === board.createdBy && (
+                 <div className="flex items-center gap-1">
+                   <button
+                     onClick={() => {
+                        adjustTimer(id, -60);
+                        if (analytics) logEvent(analytics, 'adjust_timer', { board_id: id, amount: -60 });
+                      }}
+                     className="w-6 h-6 flex items-center justify-center rounded text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors text-xs font-bold"
+                     title="-1 Minute"
+                   >
+                     -
+                   </button>
+                   <button
+                     onClick={toggleTimer}
+                     className="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors"
+                   >
+                     {board.timer?.status === "running" ? "⏸" : "▶️"}
+                   </button>
+                   <button
+                     onClick={() => {
+                        adjustTimer(id, 60);
+                        if (analytics) logEvent(analytics, 'adjust_timer', { board_id: id, amount: 60 });
+                      }}
+                     className="w-6 h-6 flex items-center justify-center rounded text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors text-xs font-bold"
+                     title="+1 Minute"
+                   >
+                     +
+                   </button>
+                 </div>
+               )}
+            </div>
+           </div>
         </div>
       </div>
+        
+
+
 
       {/* AI Summary Modal Overlay */}
       {summaryResult && (
@@ -1514,14 +1562,14 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
          </div>
       )}
       {/* AI Status Banner */}
-      {isChrome && !isCompleted && !isAISmartAddOpen && (aiStatus === 'readily' || aiStatus === 'downloading' || aiStatus === 'downloadable') && (
+      {!isCompleted && !isAISmartAddOpen && (
         <div 
           onClick={openAISmartAdd}
-          className="bg-gradient-to-r from-brand-600 to-purple-600 text-white px-4 py-2 text-center text-xs font-medium animate-slideDownIn flex items-center justify-center gap-3 cursor-pointer hover:brightness-110 transition-all shadow-md relative z-30 group"
+          className="bg-gradient-to-r from-brand-600 to-purple-600 text-white px-4 py-2 text-center text-xs font-medium animate-slideDownIn flex items-center justify-center gap-3 cursor-pointer hover:brightness-110 transition-all shadow-md relative z-30 group mb-1 sm:mb-0"
         >
           <span className="flex items-center gap-2">
             <span className="text-sm animate-pulse">✨</span>
-            {aiStatus === 'downloading' ? (
+            {isChrome && aiStatus === 'downloading' ? (
               <span>AI Model is downloading in the background (0-100%)... Please wait.</span>
             ) : (
               <>
@@ -1531,7 +1579,7 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
             )}
           </span>
           <span className="bg-white/20 px-1.5 py-0.5 rounded text-[9px] uppercase font-bold tracking-wider group-hover:bg-white/30 transition-colors">
-            {aiStatus === 'downloading' ? 'Status' : 'Try Now'}
+            {isChrome && aiStatus === 'downloading' ? 'Status' : 'Try Now'}
           </span>
         </div>
       )}
@@ -1546,7 +1594,7 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
           onDragOver={handleDragOver}
           onDragEnd={handleDragEnd}
         >
-          <div className="min-h-full flex flex-col md:flex-row p-4 md:p-6 gap-6 min-w-full mx-auto">
+          <div className="min-h-full flex flex-col md:flex-row p-4 md:p-6 pt-2 sm:pt-6 gap-6 min-w-full mx-auto">
             <SortableContext
               items={board.columns.map((c) => c.id)}
               strategy={verticalListSortingStrategy}
@@ -1679,6 +1727,7 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
             </div>
             
             <AISmartAdd 
+              boardId={id}
               columns={board.columns} 
               onAddCard={handleAISmartAdd}
               disabled={loading}
@@ -1697,8 +1746,8 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
         </div>
       )}
       {/* AI Smart Add Floating Toggle (Compact & High Visibility) */}
-      {isChrome && (aiStatus === 'readily' || aiStatus === 'downloadable' || aiStatus === 'downloading') && !isCompleted && !isAISmartAddOpen && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40">
+      {!isCompleted && !isAISmartAddOpen && (
+        <div className="fixed bottom-6 sm:bottom-6 left-1/2 -translate-x-1/2 z-40 mb-2 sm:mb-0">
           <div className="animate-slideUp">
             <button
               onClick={openAISmartAdd}
