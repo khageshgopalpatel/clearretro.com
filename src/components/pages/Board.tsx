@@ -43,6 +43,7 @@ import { useAuth } from "../../hooks/useAuth";
 import { useSnackbar } from "../../context/SnackbarContext";
 import { generateBoardSummary } from "../../services/ai";
 import { analytics, logEvent } from "../../lib/firebase";
+import { checkChromiumAIAvailability, type AIAvailability } from "../../utils/ai";
 
 import { exportToPDF, exportToExcel } from "../../utils/export";
 
@@ -53,6 +54,7 @@ import FocusMode from "../FocusMode";
 import ConfirmDialog from "../ConfirmDialog";
 import { Providers } from "../Providers";
 import { Logo } from "../Logo";
+import AISmartAdd from "../AISmartAdd";
 import BoardNotFound from "./BoardNotFound";
 
 // --- Sub Components ---
@@ -193,6 +195,29 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
   const [summaryResult, setSummaryResult] = useState<AISummaryResult | null>(
     null
   );
+  const [isAISmartAddOpen, setIsAISmartAddOpen] = useState(false);
+  const [isAISmartAddActive, setIsAISmartAddActive] = useState(false);
+  const [aiAvailable, setAIAvailable] = useState<boolean>(false);
+
+  const openAISmartAdd = () => {
+    setIsAISmartAddOpen(true);
+    // Tiny delay to ensure the component is in DOM before starting transition
+    setTimeout(() => setIsAISmartAddActive(true), 10);
+  };
+
+  const closeAISmartAdd = () => {
+    setIsAISmartAddActive(false);
+    // Wait for transition duration before unmounting
+    setTimeout(() => {
+      setIsAISmartAddOpen(false);
+    }, 700);
+  };
+
+  useEffect(() => {
+    checkChromiumAIAvailability().then(status => {
+      setAIAvailable(status !== 'no');
+    });
+  }, []);
 
   // Rollover States
 
@@ -205,38 +230,38 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
   const [sharingToSlack, setSharingToSlack] = useState(false);
 
   // Fetch Slack Connection
-  useEffect(() => {
-    if (user?.uid) {
-      console.log("Checking Slack connection for user:", user.uid);
-      import("../../lib/firebase").then(({ db }) => {
-        import("firebase/firestore").then(
-          ({ collection, query, where, getDocs, limit }) => {
-            const q = query(
-              collection(db, "slack_installations"),
-              where("installedBy", "==", user.uid),
-              limit(1)
-            );
-            getDocs(q)
-              .then((snapshot) => {
-                console.log("Slack Query Result:", snapshot.size, "docs");
-                if (!snapshot.empty) {
-                  const data = snapshot.docs[0].data();
-                  console.log("Slack Connection Found:", data);
-                  setSlackConnection({
-                    teamId: snapshot.docs[0].id,
-                    teamName: data.teamName,
-                    channel: data.incomingWebhook?.channel,
-                  });
-                } else {
-                  console.log("No Slack connection found for this user.");
-                }
-              })
-              .catch((err) => console.error("Slack Query Error:", err));
-          }
-        );
-      });
-    }
-  }, [user?.uid]);
+  // useEffect(() => {
+  //   if (user?.uid) {
+  //     console.log("Checking Slack connection for user:", user.uid);
+  //     import("../../lib/firebase").then(({ db }) => {
+  //       import("firebase/firestore").then(
+  //         ({ collection, query, where, getDocs, limit }) => {
+  //           const q = query(
+  //             collection(db, "slack_installations"),
+  //             where("installedBy", "==", user.uid),
+  //             limit(1)
+  //           );
+  //           getDocs(q)
+  //             .then((snapshot) => {
+  //               console.log("Slack Query Result:", snapshot.size, "docs");
+  //               if (!snapshot.empty) {
+  //                 const data = snapshot.docs[0].data();
+  //                 console.log("Slack Connection Found:", data);
+  //                 setSlackConnection({
+  //                   teamId: snapshot.docs[0].id,
+  //                   teamName: data.teamName,
+  //                   channel: data.incomingWebhook?.channel,
+  //                 });
+  //               } else {
+  //                 console.log("No Slack connection found for this user.");
+  //               }
+  //             })
+  //             .catch((err) => console.error("Slack Query Error:", err));
+  //         }
+  //       );
+  //     });
+  //   }
+  // }, [user?.uid]);
 
   const handleShareToSlack = async () => {
     if (!summaryResult || !slackConnection) return;
@@ -672,6 +697,38 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
       console.error(e);
       showSnackbar("AI Analysis Failed", "error");
       setSummaryStatus(AISummaryStatus.ERROR);
+    }
+  };
+
+  const handleAISmartAdd = async (columnId: string, text: string) => {
+    if (!board) return;
+    if (analytics) {
+      logEvent(analytics, 'add_card_ai', {
+        board_id: board.id,
+        column_id: columnId
+      });
+    }
+    
+    // Optimistic Update: Add card to UI immediately
+    const tempId = `temp-ai-${Date.now()}`;
+    const newCard: RetroCard = {
+      id: tempId,
+      text: text,
+      columnId: columnId,
+      votes: 0,
+      createdBy: user?.uid || 'anonymous',
+      creatorName: user?.displayName || 'Anonymous',
+      createdAt: { toDate: () => new Date() } as any, // Mock Timestamp
+      votedBy: [],
+    };
+    setItems((prev) => [...prev, newCard]);
+
+    try {
+      await addCard(id, columnId, text, user);
+    } catch (e) {
+      console.error("Failed to add AI card", e);
+      setItems((prev) => prev.filter(c => c.id !== tempId));
+      showSnackbar("Failed to add card via AI", "error");
     }
   };
 
@@ -1398,6 +1455,23 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
             <span>Private Mode is Active. You cannot see other users' cards until it is disabled.</span>
          </div>
       )}
+      {/* AI Smart Add Banner */}
+      {aiAvailable && !isCompleted && !isAISmartAddOpen && (
+        <div 
+          onClick={openAISmartAdd}
+          className="bg-gradient-to-r from-brand-600 to-purple-600 text-white px-4 py-2 text-center text-xs font-medium animate-slideDownIn flex items-center justify-center gap-3 cursor-pointer hover:brightness-110 transition-all shadow-md relative z-30 group"
+        >
+          <span className="flex items-center gap-2">
+            <span className="text-sm animate-pulse">✨</span>
+            <span className="hidden sm:inline">New: Use AI Smart Add to automatically sort your thoughts into columns!</span>
+            <span className="sm:hidden">Try AI Smart Add!</span>
+          </span>
+          <span className="bg-white/20 px-1.5 py-0.5 rounded text-[9px] uppercase font-bold tracking-wider group-hover:bg-white/30 transition-colors">
+            Try Now
+          </span>
+        </div>
+      )}
+
 
       {/* Columns Area */}
       <div className="flex-1 overflow-x-hidden md:overflow-x-auto overflow-y-auto">
@@ -1505,6 +1579,72 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
           </div>
         </DndContext>
       </div>
+
+      {/* AI Smart Add Bottom Sheet Overlay */}
+      {isAISmartAddOpen && !isCompleted && (
+        <div className="fixed inset-0 z-[100] flex flex-col justify-end pointer-events-none">
+          {/* Backdrop */}
+          <div 
+            className={`absolute inset-0 bg-black/40 pointer-events-auto transition-opacity duration-500 ease-in-out ${isAISmartAddActive ? 'opacity-100' : 'opacity-0'}`}
+            onClick={closeAISmartAdd}
+          ></div>
+          
+          {/* Sheet */}
+          <div 
+            className={`relative w-full max-w-2xl mx-auto bg-white dark:bg-dark-900 rounded-t-[2.5rem] shadow-2xl pointer-events-auto transform transition-all duration-700 [transition-timing-function:cubic-bezier(0.32,0.72,0,1)] p-6 pt-10 pb-12 border-t border-white/20 ${isAISmartAddActive ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'}`}
+          >
+            {/* Handle */}
+            <div className="absolute top-4 left-1/2 -translate-x-1/2 w-12 h-1.5 bg-gray-200 dark:bg-gray-800 rounded-full"></div>
+            
+            <button 
+              onClick={closeAISmartAdd}
+              className="absolute top-6 right-8 p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors text-xl"
+            >
+              ✕
+            </button>
+            
+            <div className="mb-8 text-center">
+              <h3 className="text-2xl font-bold bg-gradient-to-r from-brand-500 to-purple-600 bg-clip-text text-transparent flex justify-center items-center gap-2 mb-2">
+                <span>✨</span>
+                AI Smart Add
+              </h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400 max-w-md mx-auto">
+                Type your thoughts, and our on-device AI will automatically figure out which column they belong to.
+              </p>
+            </div>
+            
+            <AISmartAdd 
+              columns={board.columns} 
+              onAddCard={handleAISmartAdd}
+              disabled={loading}
+            />
+            
+            <div className="mt-4 text-center">
+               <button 
+                 onClick={closeAISmartAdd}
+                 className="text-gray-400 hover:text-brand-500 text-xs font-medium transition-colors"
+               >
+                 Close and go back to board
+               </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* AI Smart Add Floating Toggle (Compact & High Visibility) */}
+      {aiAvailable && !isCompleted && !isAISmartAddOpen && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40">
+          <div className="animate-slideUp">
+            <button
+              onClick={openAISmartAdd}
+              className="flex items-center gap-2 bg-brand-500 dark:bg-brand-600 text-white px-4 py-2 rounded-full shadow-[0_4px_20px_rgb(20,184,166,0.4)] hover:shadow-[0_4px_25px_rgb(20,184,166,0.6)] hover:scale-105 active:scale-95 transition-all duration-300 font-bold group border border-white/20 relative"
+            >
+              <span className="text-sm group-hover:animate-bounce">✨</span>
+              <span className="text-xs uppercase tracking-tighter">AI Smart Add</span>
+              <div className="absolute -inset-0.5 rounded-full bg-brand-400 opacity-20 animate-ping pointer-events-none"></div>
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

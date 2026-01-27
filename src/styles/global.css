@@ -3,19 +3,21 @@
 @tailwind utilities;
 
 body {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: "JetBrains Mono", monospace;
 }
 
 /* Technical Grid Background */
 .bg-grid-pattern {
   background-color: #f8fafc;
-  background-image: linear-gradient(#cbd5e1 1px, transparent 1px), linear-gradient(to right, #cbd5e1 1px, transparent 1px);
+  background-image:
+    linear-gradient(#cbd5e1 1px, transparent 1px),
+    linear-gradient(to right, #cbd5e1 1px, transparent 1px);
   background-size: 24px 24px;
 }
 .dark .bg-grid-pattern {
   background-color: #050505;
-  background-image: 
-    linear-gradient(rgba(45, 212, 191, 0.05) 1px, transparent 1px), 
+  background-image:
+    linear-gradient(rgba(45, 212, 191, 0.05) 1px, transparent 1px),
     linear-gradient(to right, rgba(45, 212, 191, 0.05) 1px, transparent 1px);
   background-size: 30px 30px;
 }
@@ -40,4 +42,72 @@ body {
 }
 .dark ::-webkit-scrollbar-thumb:hover {
   background: #52525b;
+}
+
+/* Custom Animations for AI Sheet */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideDownIn {
+  from {
+    transform: translateY(-100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideDownOut {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.4s ease-out;
+}
+
+.animate-fadeOut {
+  animation: fadeOut 0.4s ease-out forwards;
+}
+
+.animate-slideUp {
+  animation: slideUp 0.6s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.animate-slideDownIn {
+  animation: slideDownIn 0.4s ease-out;
+}
+
+.animate-slideDownOut {
+  animation: slideDownOut 0.6s cubic-bezier(0.32, 0.72, 0, 1) forwards;
 }
