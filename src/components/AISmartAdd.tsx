@@ -93,7 +93,17 @@ const AISmartAdd: React.FC<AISmartAddProps> = ({ boardId, columns, onAddCard, di
       recognition.onerror = (event: any) => {
         console.error("Speech recognition error", event.error);
         setIsListening(false);
-        showSnackbar("Voice input error: " + event.error, "error");
+        
+        let errorMessage = "Voice input error occurred.";
+        if (event.error === 'network') {
+            errorMessage = "Network error: Voice input requires an active internet connection.";
+        } else if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+            errorMessage = "Microphone access denied. Please check your browser settings.";
+        } else if (event.error === 'no-speech') {
+            return; // Ignore no-speech errors, just stop listening
+        }
+        
+        showSnackbar(errorMessage, "error");
       };
 
       recognition.onend = () => {
@@ -178,6 +188,12 @@ const AISmartAdd: React.FC<AISmartAddProps> = ({ boardId, columns, onAddCard, di
 
       if (columnId) {
         await onAddCard(columnId, trimmedText, isActionItem);
+        
+        // Show success notification
+        const targetColumn = columns.find(c => c.id === columnId);
+        if (targetColumn) {
+            showSnackbar(`Card added to "${targetColumn.title}"`, "success");
+        }
         
         // Log success
         logEvent(analytics, 'ai_smart_add_success', {
