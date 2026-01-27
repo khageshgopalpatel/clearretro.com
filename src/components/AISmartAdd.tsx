@@ -32,6 +32,12 @@ const AISmartAdd: React.FC<AISmartAddProps> = ({ boardId, columns, onAddCard, di
     }
   }, []);
 
+  /* Ref refs to keep track of speech state across renders without causing re-renders themselves 
+     until we are ready to update the UI */
+  const finalTranscriptRef = useRef('');
+  const interimTranscriptRef = useRef('');
+  const initialTextRef = useRef('');
+
   const toggleListening = () => {
     if (isListening) {
       recognitionRef.current?.stop();
@@ -44,70 +50,69 @@ const AISmartAdd: React.FC<AISmartAddProps> = ({ boardId, columns, onAddCard, di
       const recognition = new SpeechRecognition();
       recognitionRef.current = recognition;
 
-      recognition.continuous = true; // Keep listening 
-      recognition.interimResults = true; // Show results as they are spoken
+      recognition.continuous = true;
+      recognition.interimResults = true;
 
       recognition.onstart = () => {
         setIsListening(true);
+        // Capture what was already in the input box so we can append to it
+        initialTextRef.current = text;
+        finalTranscriptRef.current = '';
+        interimTranscriptRef.current = '';
       };
 
       recognition.onresult = (event: any) => {
-        let transcript = '';
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-            transcript += event.results[i][0].transcript;
+        let interimTranscript = '';
+        let finalTranscriptChunk = '';
+
+        // Iterate through the results starting from resultIndex
+        // This is crucial for Android which sometimes returns the whole history again
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          if (event.results[i].isFinal) {
+            finalTranscriptChunk += event.results[i][0].transcript;
+          } else {
+            interimTranscript += event.results[i][0].transcript;
+          }
         }
-        
-        // Append to existing text if it's a new session, or replace if we want that behavior
-        // Here we just set it. A better UX might be appending if there is already text.
-        // For simplicity in this "Smart Add", let's append.
-        
-        setText(prev => {
-             // Avoid duplicating if the previous transcript is a prefix of the new one (common in interim results)
-             // But since we are getting the *full* transcript from the event loop in simple implementations,
-             // proper handling depends on `continuous`.
-             
-             // Simplest approach for "smart add": just update the text with the latest final result
-             // But we want to support typing + speaking.
-             
-             // Let's just append the *new* part. 
-             // Actually, `transcript` contains the chunk for this result event.
-             
-             // Correct logic for interim+final in React state:
-             // 1. We should probably use `interimResults = false` for simplicity to avoid flicker,
-             // OR handle the text cursor carefully.
-             
-             // Let's use a simpler approach: Append *final* results only to avoid complex state merging.
-             // And show interim results in a placeholder or separate UI? No, input box is best.
-             
-             return prev; // We will handle the update below
-        });
-        
-        // Actually, simplest proven way for mixed input:
-        const currentTranscript = Array.from(event.results)
-          .map((result: any) => result[0].transcript)
-          .join('');
-          
-        setText(currentTranscript);
+
+        // Update our accumulated final transcript
+        finalTranscriptRef.current += finalTranscriptChunk;
+        interimTranscriptRef.current = interimTranscript;
+
+        // Construct the full text: Initial + Final (accumulated) + Interim (current)
+        // Add a space before the new speech if the initial text didn't end with one and wasn't empty
+        let prefix = initialTextRef.current;
+        if (prefix && !prefix.endsWith(' ') && (finalTranscriptRef.current || interimTranscript)) {
+             prefix += ' ';
+        }
+
+        const newText = prefix + finalTranscriptRef.current + interimTranscript;
+        setText(newText);
       };
 
       recognition.onerror = (event: any) => {
         console.error("Speech recognition error", event.error);
-        setIsListening(false);
         
-        let errorMessage = "Voice input error occurred.";
-        if (event.error === 'network') {
-            errorMessage = "Network error: Voice input requires an active internet connection.";
-        } else if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
-            errorMessage = "Microphone access denied. Please check your browser settings.";
-        } else if (event.error === 'no-speech') {
-            return; // Ignore no-speech errors, just stop listening
+        // If it's a 'no-speech' error, we might just want to stay listening or stop quietly
+        // But for other errors, we should stop.
+        if (event.error !== 'no-speech') {
+             setIsListening(false);
         }
-        
-        showSnackbar(errorMessage, "error");
+
+        if (event.error === 'network') {
+            showSnackbar("Network error: Voice input requires an active internet connection.", "error");
+        } else if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+            showSnackbar("Microphone access denied. Please check your browser settings.", "error");
+        }
       };
 
       recognition.onend = () => {
         setIsListening(false);
+        // When it ends, perform one final update to ensure everything is "committed"
+        // (Though usually onresult accounts for the last bit)
+        
+        // We could also re-start here if we wanted "always on" listening, 
+        // but for a button press, stopping is correct.
       };
 
       recognition.start();

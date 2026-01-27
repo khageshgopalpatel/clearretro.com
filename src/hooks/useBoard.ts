@@ -23,7 +23,14 @@ import { db } from '../lib/firebase';
 import type { RetroBoard, RetroCard, RetroColumn } from '../types';
 
 // Actions (Keep as pure functions where possible)
-export const createBoard = async (name: string, userId: string, initialColumns: RetroColumn[], teamId: string | null = null, templateName?: string) => {
+export const createBoard = async (
+    name: string, 
+    userId: string, 
+    initialColumns: RetroColumn[], 
+    teamId: string | null = null, 
+    templateName?: string,
+    settings?: { voteLimit?: number; defaultSort?: 'date' | 'votes' }
+) => {
     if (!userId) throw new Error("User ID required");
 
     try {
@@ -34,6 +41,8 @@ export const createBoard = async (name: string, userId: string, initialColumns: 
             createdAt: serverTimestamp(),
             isPublic: true,
             templateName: templateName || 'Custom',
+            voteLimit: settings?.voteLimit || 0,
+            defaultSort: settings?.defaultSort || 'date',
             timer: {
                 endTime: null,
                 duration: 0,
@@ -129,15 +138,14 @@ export const updateBoardTimer = async (boardId: string, status: 'running' | 'pau
     };
 
     if (status === 'running' && durationInSeconds > 0) {
+        const cappedDuration = Math.min(durationInSeconds, 1800);
         const endTime = new Date();
-        endTime.setSeconds(endTime.getSeconds() + durationInSeconds);
+        endTime.setSeconds(endTime.getSeconds() + cappedDuration);
         updateData['timer.endTime'] = endTime;
-        updateData['timer.duration'] = durationInSeconds;
+        updateData['timer.duration'] = cappedDuration;
     } else if (status === 'stopped') {
         updateData['timer.endTime'] = null;
-        if (durationInSeconds > 0) {
-            updateData['timer.duration'] = durationInSeconds;
-        }
+        updateData['timer.duration'] = Math.min(Math.max(0, durationInSeconds), 1800);
     }
 
     await updateDoc(doc(db, "boards", boardId), updateData);
@@ -155,14 +163,21 @@ export const adjustTimer = async (boardId: string, seconds: number) => {
             // If running, extend endTime
             const currentEndTime = timer.endTime.toDate();
             const newEndTime = new Date(currentEndTime.getTime() + (seconds * 1000));
+            
+            // Limit to 30 minutes from NOW
+            const now = new Date();
+            const maxEndTime = new Date(now.getTime() + (1800 * 1000));
+            const finalEndTime = newEndTime > maxEndTime ? maxEndTime : newEndTime;
+            const finalDuration = Math.max(0, Math.ceil((finalEndTime.getTime() - now.getTime()) / 1000));
+
             await updateDoc(boardRef, {
-                'timer.endTime': newEndTime,
-                'timer.duration': increment(seconds)
+                'timer.endTime': finalEndTime,
+                'timer.duration': finalDuration
             });
         } else {
-            // If stopped, just increase duration (prevent negative)
+            // If stopped, just increase duration (prevent negative, max 30 min)
             const currentDuration = timer.duration || 0;
-            const newDuration = Math.max(0, currentDuration + seconds);
+            const newDuration = Math.max(0, Math.min(currentDuration + seconds, 1800));
             await updateDoc(boardRef, {
                 'timer.duration': newDuration
             });
@@ -375,6 +390,16 @@ export const updateBoardVisibility = async (boardId: string, isPublic: boolean) 
         });
     } catch (e) {
         console.error("Error updating board visibility: ", e);
+        throw e;
+    }
+};
+
+export const updateBoardSettings = async (boardId: string, settings: { voteLimit?: number; defaultSort?: 'date' | 'votes' }) => {
+    try {
+        const boardRef = doc(db, "boards", boardId);
+        await updateDoc(boardRef, settings);
+    } catch (e) {
+        console.error("Error updating board settings: ", e);
         throw e;
     }
 };

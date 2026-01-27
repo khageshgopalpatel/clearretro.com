@@ -45,6 +45,8 @@ import { useSnackbar } from "../../context/SnackbarContext";
 import { generateBoardSummary } from "../../services/ai";
 import { analytics, logEvent } from "../../lib/firebase";
 import { checkChromiumAIAvailability } from "../../utils/ai";
+import { Settings, ArrowUpDown, Merge, LayoutGrid, Clock, Play, Pause, Square, Share2 } from 'lucide-react';
+import { updateBoardSettings, mergeCards } from "../../hooks/useBoard";
 
 import { exportToPDF, exportToExcel } from "../../utils/export";
 
@@ -71,6 +73,7 @@ interface SortableCardWrapperProps {
   onUpdate?: (cardId: string, newText: string) => Promise<void>;
   onReaction?: (cardId: string, emoji: string) => Promise<void>;
   onVote?: (cardId: string) => Promise<void>;
+  onMerge?: (cardId: string) => void;
 }
 
 const COLUMN_COLORS: Record<string, string> = {
@@ -94,6 +97,7 @@ const SortableCardWrapper: React.FC<SortableCardWrapperProps> = ({
   onUpdate,
   onReaction,
   onVote,
+  onMerge,
 }) => {
   const {
     attributes,
@@ -119,6 +123,7 @@ const SortableCardWrapper: React.FC<SortableCardWrapperProps> = ({
       onUpdate={onUpdate}
       onReaction={onReaction}
       onVote={onVote}
+      onMerge={onMerge}
       sortableProps={{
         attributes,
         listeners,
@@ -205,6 +210,15 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
   const [isTaskSidebarOpen, setIsTaskSidebarOpen] = useState(false);
   const [aiStatus, setAIStatus] = useState<string>('unknown');
   const [isChrome, setIsChrome] = useState(false);
+
+  // New Features State
+  const [sortBy, setSortBy] = useState<'date' | 'votes'>('date');
+  const [showSettingsDialog, setShowSettingsDialog] = useState(false);
+  const [newVoteLimit, setNewVoteLimit] = useState<number>(0);
+  const [newDefaultSort, setNewDefaultSort] = useState<'date' | 'votes'>('date');
+  const [mergeSourceId, setMergeSourceId] = useState<string | null>(null);
+  const [mergeTargetId, setMergeTargetId] = useState<string>('');
+  const [isMerging, setIsMerging] = useState(false);
 
   const openAISmartAdd = () => {
     setIsAISmartAddOpen(true);
@@ -350,6 +364,12 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
   }, [board?.isPrivate]);
 
   useEffect(() => {
+    if (board?.defaultSort) {
+      setSortBy(board.defaultSort);
+    }
+  }, [board?.defaultSort]);
+
+  useEffect(() => {
     // If timer is active, update the local display based on endTime every second
     if (board?.timer?.status === "running" && board.timer.endTime) {
       const int = setInterval(() => {
@@ -419,8 +439,7 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
   const getTimeLeft = () => {
     if (!board?.timer) return 300; // Default to 5 minutes if no timer state
     if (board.timer.status === "stopped") {
-      const duration = board.timer.duration || 0;
-      return duration > 0 ? duration : 300; // Default to 5 mins if stopped at 0
+      return board.timer.duration || 0;
     }
     if (board.timer.endTime) {
       const end = board.timer.endTime.toDate
@@ -432,14 +451,69 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
     return 300;
   };
 
+  const timeLeft = getTimeLeft();
+
+  const handleStartTimer = async (minutes: number) => {
+    if (!user || user.uid !== board?.createdBy) return;
+    try {
+        const cappedMinutes = Math.min(minutes, 30);
+        await updateBoardTimer(id, "running", cappedMinutes * 60);
+    } catch (e) {
+        console.error("Failed to start timer", e);
+        showSnackbar("Failed to start timer", "error");
+    }
+  };
+
+  const handlePauseTimer = async () => {
+    if (!user || user.uid !== board?.createdBy) return;
+    try {
+        const remaining = getTimeLeft();
+        await updateBoardTimer(id, "stopped", remaining);
+        setTimerInterval(null); // Clear local interval
+    } catch (e) {
+        console.error("Failed to pause timer", e);
+    }
+  };
+
+  const handleResumeTimer = async () => {
+    if (!user || user.uid !== board?.createdBy) return;
+    try {
+        const currentDuration = board?.timer?.duration || 300;
+        await updateBoardTimer(id, "running", currentDuration);
+    } catch (e) {
+        console.error("Failed to resume timer", e);
+    }
+  };
+
+  const handleStopTimer = async () => {
+     if (!user || user.uid !== board?.createdBy) return;
+     try {
+         await updateBoardTimer(id, "stopped", 0);
+     } catch (e) {
+         console.error("Failed to stop timer", e);
+     }
+  };
+
+  const [showTimerDialog, setShowTimerDialog] = useState(false);
+
   // --- Actions ---
 
   // Local state for optimistic updates
   const [items, setItems] = useState<RetroCard[]>([]);
 
   useEffect(() => {
-    setItems(cards);
-  }, [cards]);
+    // Sort items based on configuration
+    const sorted = [...cards].sort((a, b) => {
+      if (sortBy === 'votes') {
+        const diff = (b.votes || 0) - (a.votes || 0);
+        if (diff !== 0) return diff;
+      }
+      // Default to date/order (using order if valid, else createdAt)
+      // Note: order is float, so simpler comparison
+      return (a.order || 0) - (b.order || 0); 
+    });
+    setItems(sorted);
+  }, [cards, sortBy]);
 
   const handleDragStart = (event: DragStartEvent) => {
     setActiveId(event.active.id as string);
@@ -672,21 +746,32 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
   const handleVoteOptimistic = async (cardId: string) => {
     if (!user) return;
     
-    // Optimistic update
-    setItems((prev) => prev.map(c => {
-      if (c.id === cardId) {
-        const votedBy = [...(c.votedBy || [])];
-        const hasVoted = votedBy.includes(user.uid);
-        return {
-          ...c,
-          votes: Math.max(0, (c.votes || 0) + (hasVoted ? -1 : 1)),
-          votedBy: hasVoted ? votedBy.filter(uid => uid !== user.uid) : [...votedBy, user.uid]
-        };
+    // Vote Limit Check
+    if (board?.voteLimit && board.voteLimit > 0) {
+      const userVotes = cards.reduce((acc, c) => acc + (c.votedBy?.includes(user.uid) ? 1 : 0), 0);
+      const isAddingVote = !cards.find(c => c.id === cardId)?.votedBy?.includes(user.uid);
+      
+      if (isAddingVote && userVotes >= board.voteLimit) {
+        showSnackbar(`Vote limit reached (${board.voteLimit} votes max)`, "error");
+        return;
       }
-      return c;
-    }));
+    }
 
     try {
+      // Optimistic update
+      setItems((prev) => prev.map(c => {
+        if (c.id === cardId) {
+          const votedBy = [...(c.votedBy || [])];
+          const hasVoted = votedBy.includes(user.uid);
+          return {
+            ...c,
+            votes: Math.max(0, (c.votes || 0) + (hasVoted ? -1 : 1)),
+            votedBy: hasVoted ? votedBy.filter(uid => uid !== user.uid) : [...votedBy, user.uid]
+          };
+        }
+        return c;
+      }));
+
       await toggleVote(id, cardId, user.uid);
     } catch (e) {
       console.error("Failed to toggle vote", e);
@@ -775,6 +860,36 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
   // --- Exports ---
 
 
+
+  const handleMergeCards = async () => {
+    if (!mergeSourceId || !mergeTargetId || !board) return;
+    setIsMerging(true);
+    try {
+        await mergeCards(id, mergeSourceId, mergeTargetId);
+        showSnackbar("Cards merged successfully", "success");
+        setMergeSourceId(null);
+        setMergeTargetId('');
+    } catch (e) {
+        console.error(e);
+        showSnackbar("Failed to merge cards", "error");
+    } finally {
+        setIsMerging(false);
+    }
+  };
+
+  const handleSaveSettings = async () => {
+    if (newVoteLimit < 0) return;
+    try {
+        await updateBoardSettings(id, { 
+            voteLimit: newVoteLimit,
+            defaultSort: newDefaultSort
+        });
+        setShowSettingsDialog(false);
+        showSnackbar("Board settings updated", "success");
+    } catch (e) {
+        showSnackbar("Failed to update settings", "error");
+    }
+  };
 
   // --- New Features ---
 
@@ -931,7 +1046,7 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
   const formatTime = (s: number) => {
     const mins = Math.floor(s / 60);
     const secs = s % 60;
-    return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
+    return `${mins < 10 ? "0" : ""}${mins}:${secs < 10 ? "0" : ""}${secs}`;
   };
 
   const isCompleted = board.status === "completed";
@@ -945,503 +1060,240 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
     <div className="h-[calc(100vh-64px)] flex flex-col bg-[#f8fafc] dark:bg-[#050505] overflow-hidden bg-grid-pattern transition-colors duration-500 relative">
       {/* Board Header */}
       <div className="px-4 md:px-6 py-3 border-b border-gray-200 dark:border-gray-800 bg-white/70 dark:bg-dark-950/70 backdrop-blur-xl flex flex-wrap md:flex-nowrap justify-between items-center shrink-0 z-50 sticky top-0 gap-y-3">
-        {/* Left Section: Logo & Info */}
-        <div className="flex items-center gap-2 md:gap-6 order-1">
-          <div className="flex flex-row items-center gap-4">
-            {/* Primary Branding */}
+        {/* --- ROW 1 (MOBILE/DESKTOP) --- */}
+        <div className="flex items-center justify-between w-full md:w-auto order-1">
+          <div className="flex items-center gap-2 md:gap-4 min-w-0 pr-2">
             <div className="flex items-center gap-3">
               <a href="/dashboard" className="flex items-center gap-3 group">
-                <div className="p-1.5 bg-white dark:bg-dark-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 group-hover:border-brand-500/50 transition-colors">
-                  <Logo className="w-8 h-8 md:w-10 md:h-10 text-brand-600 dark:text-brand-400" />
+                <div className="p-1 md:p-1.5 bg-white dark:bg-dark-800 rounded-lg md:rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 group-hover:border-brand-500/50 transition-colors">
+                  <Logo className="w-7 h-7 md:w-10 md:h-10 text-brand-600 dark:text-brand-400" />
                 </div>
               </a>
             </div>
 
-            {/* Divider */}
-            <div className="h-8 w-px bg-gray-200 dark:bg-gray-800"></div>
+            <div className="h-6 w-px bg-gray-200 dark:bg-gray-800 mx-1"></div>
 
-            {/* Board Info (Secondary) */}
-            <div className="flex flex-col">
+            <div className="flex flex-col min-w-0">
               <div className="flex items-center gap-2">
-                <h2 className="text-lg font-bold text-gray-700 dark:text-gray-200 font-mono truncate max-w-[150px] md:max-w-[300px]">
+                <h2 className="text-sm md:text-lg font-bold text-gray-700 dark:text-gray-200 font-mono truncate max-w-[120px] md:max-w-[300px]">
                   {board.name}
                 </h2>
                 {isCompleted && (
-                  <span className="text-[10px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded border border-red-200 uppercase font-bold tracking-wider">
-                    Completed
+                  <span className="text-[8px] md:text-[10px] bg-red-100 text-red-600 px-1 py-0.5 rounded border border-red-200 uppercase font-bold tracking-wider">
+                    Done
                   </span>
                 )}
               </div>
-              <span className="text-[10px] text-gray-400 font-mono tracking-widest uppercase truncate">
-                {board.createdAt
-                  ? typeof board.createdAt.toDate === "function"
-                    ? board.createdAt.toDate().toDateString()
-                    : new Date(board.createdAt).toDateString()
-                  : ""}
-              </span>
             </div>
+          </div>
+
+          {/* User Profile (Mobile Only - Row 1) */}
+          <div className="md:hidden">
+            <HeaderDropdown
+                user={user}
+                onLogout={handleLogout}
+                onExportPDF={user?.uid === board.createdBy ? () => exportToPDF(board.name, board.columns, cards) : undefined}
+                onExportExcel={
+                  user?.uid === board.createdBy ? () => exportToExcel(board.name, board.columns, cards) : undefined
+                }
+            />
           </div>
         </div>
 
-        {/* Right Section: Mobile Menu & User Profile */}
-        <div className="flex items-center gap-3 order-2 md:order-3">
-          {/* Private Mode Toggle */}
-          {user?.uid === board.createdBy && (
-            <button
-              onClick={() => {
-                const newMode = !isPrivateMode;
-                togglePrivateMode(id, newMode);
-                if (analytics) {
-                  logEvent(analytics, 'toggle_private_mode', {
-                    board_id: board.id,
-                    board_name: board.name,
-                    enabled: newMode
-                  });
-                }
-              }}
-              className={`hidden md:flex items-center justify-center w-10 h-10 rounded-lg border transition-all ${isPrivateMode ? "bg-purple-100 dark:bg-purple-900/20 border-purple-500 text-purple-600 shadow-[0_0_15px_rgba(216,180,254,0.3)]" : "bg-white dark:bg-dark-900 border-gray-200 dark:border-gray-800 text-gray-500"}`}
-              title={
-                isPrivateMode
-                  ? "Private Mode: ON (Text Blurred)"
-                  : "Private Mode: OFF"
-              }
-            >
-              {isPrivateMode ? "🙈" : "👁️"}
-            </button>
-          )}
-
-          {/* Focus Mode Button */}
-          <button
-            onClick={() => {
-              setFocusModeIndex(0);
-              if (analytics) {
-                logEvent(analytics, 'enter_focus_mode', {
-                  board_id: board.id,
-                  board_name: board.name
-                });
-              }
-            }}
-            className="hidden md:flex items-center justify-center w-10 h-10 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-dark-900 text-gray-500 hover:bg-gray-50 dark:hover:bg-dark-800 transition-colors"
-            title="Enter Focus Mode"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M15 3h6v6"></path>
-              <path d="M9 21H3v-6"></path>
-              <path d="M21 3l-7 7"></path>
-              <path d="M3 21l7-7"></path>
-              <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
-            </svg>
-          </button>
-
-          <div className="h-8 w-px bg-gray-200 dark:bg-gray-800 mx-2 hidden md:block"></div>
-
-          {user?.uid === board.createdBy && (
-            <button
-              onClick={handleGenerateSummary}
-              disabled={summaryStatus === AISummaryStatus.LOADING}
-              className="hidden md:flex items-center gap-2 px-4 py-2 bg-white dark:bg-dark-900 border border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-dark-800 transition-all text-sm font-bold font-mono disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {summaryStatus === AISummaryStatus.LOADING ? (
-                <>
-                  <svg
-                    className="animate-spin h-4 w-4 text-brand-600"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                  </svg>
-                  Generating...
-                </>
-              ) : (
-                <>📝 AI Summary</>
-              )}
-            </button>
-          )}
-
-          <div className="hidden md:block h-8 w-px bg-gray-200 dark:bg-gray-800 mx-2"></div>
-
-          {/* Share Button */}
-          <button
-            onClick={() => handleShare('header')}
-            className="hidden md:flex items-center justify-center w-10 h-10 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-dark-900 text-gray-500 hover:text-brand-500 hover:border-brand-500 transition-colors"
-            title="Share Board Link"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <circle cx="18" cy="5" r="3"></circle>
-              <circle cx="6" cy="12" r="3"></circle>
-              <circle cx="18" cy="19" r="3"></circle>
-              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
-              <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
-            </svg>
-          </button>
-
-          {/* End Retro Button */}
-          {!isCompleted && user?.uid === board.createdBy && (
-            <button
-              onClick={() => setShowEndRetroDialog(true)}
-              className="hidden md:block px-4 py-2 bg-red-50 text-red-600 border border-red-200 rounded-lg hover:bg-red-100 transition-colors text-sm font-bold font-mono"
-            >
-              End Retro
-            </button>
-          )}
-
-          {/* Mobile Menu Button */}
-          <div className="md:hidden relative">
-            <button
-              onClick={() =>
-                setActiveId(activeId === "mobile-menu" ? null : "mobile-menu")
-              }
-              className="p-2 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <circle cx="12" cy="12" r="1"></circle>
-                <circle cx="12" cy="5" r="1"></circle>
-                <circle cx="12" cy="19" r="1"></circle>
-              </svg>
-            </button>
-
-            {/* Mobile Menu Dropdown */}
-            {activeId === "mobile-menu" && (
-              <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-dark-900 border border-gray-200 dark:border-gray-800 rounded-xl shadow-xl z-50 animate-in fade-in zoom-in-95 duration-200 overflow-hidden">
-                <ul className="py-1">
-                  {/* Share */}
-                  <li>
-                    <button
-                      onClick={() => {
-                        handleShare('mobile_menu');
-                        setActiveId(null);
-                      }}
-                      className="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 dark:hover:bg-dark-800 flex items-center gap-3 text-gray-700 dark:text-gray-300 transition-colors"
-                    >
-                      <div className="p-1.5 rounded-md bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="16"
-                          height="16"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        >
-                          <circle cx="18" cy="5" r="3"></circle>
-                          <circle cx="6" cy="12" r="3"></circle>
-                          <circle cx="18" cy="19" r="3"></circle>
-                          <line
-                            x1="8.59"
-                            y1="13.51"
-                            x2="15.42"
-                            y2="17.49"
-                          ></line>
-                          <line
-                            x1="15.41"
-                            y1="6.51"
-                            x2="8.59"
-                            y2="10.49"
-                          ></line>
-                        </svg>
-                      </div>
-                      <span>Share Board</span>
-                    </button>
-                  </li>
-
-                  {/* Focus Mode */}
-                  <li>
-                    <button
-                      onClick={() => {
-                        setFocusModeIndex(0);
-                        if (analytics) {
-                          logEvent(analytics, 'enter_focus_mode', {
-                            board_id: board.id,
-                            board_name: board.name
-                          });
-                        }
-                        setActiveId(null);
-                      }}
-                      className="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 dark:hover:bg-dark-800 flex items-center gap-3 text-gray-700 dark:text-gray-300 transition-colors"
-                    >
-                      <div className="p-1.5 rounded-md bg-purple-50 text-purple-600 dark:bg-purple-900/20 dark:text-purple-400">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="16"
-                          height="16"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        >
-                          <path d="M15 3h6v6"></path>
-                          <path d="M9 21H3v-6"></path>
-                          <path d="M21 3l-7 7"></path>
-                          <path d="M3 21l7-7"></path>
-                        </svg>
-                      </div>
-                      <span>Focus Mode</span>
-                    </button>
-                  </li>
-
-                  {/* Private Mode (Owner) */}
-                  {user?.uid === board.createdBy && (
-                    <li>
-                      <button
-                        onClick={() => {
-                          const newMode = !isPrivateMode;
-                          setIsPrivateMode(newMode); // Optimistic
-                          togglePrivateMode(id, newMode).catch(() => {
-                              setIsPrivateMode(!newMode); // Revert on error
-                              showSnackbar("Failed to toggle private mode", "error");
-                          });
-                          if (analytics) {
-                            logEvent(analytics, 'toggle_private_mode', {
-                              board_id: board.id,
-                              board_name: board.name,
-                              enabled: newMode
-                            });
-                          }
-                          setActiveId(null);
-                        }}
-                        className="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 dark:hover:bg-dark-800 flex items-center gap-3 text-gray-700 dark:text-gray-300 transition-colors"
-                      >
-                        <div className="p-1.5 rounded-md bg-indigo-50 text-indigo-600 dark:bg-indigo-900/20 dark:text-indigo-400">
-                          {isPrivateMode ? "🙈" : "👁️"}
-                        </div>
-                        <span>
-                          {isPrivateMode
-                            ? "Disable Private Mode"
-                            : "Enable Private Mode"}
-                        </span>
-                      </button>
-                    </li>
-                  )}
-
-                  {/* AI Summary (Owner) */}
-                  {user?.uid === board.createdBy && (
-                    <li>
-                      <button
-                        onClick={() => {
-                          handleGenerateSummary();
-                          setActiveId(null);
-                        }}
-                        className="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 dark:hover:bg-dark-800 flex items-center gap-3 text-gray-700 dark:text-gray-300 transition-colors"
-                      >
-                        <div className="p-1.5 rounded-md bg-brand-50 text-brand-600 dark:bg-brand-900/20 dark:text-brand-400">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>
-                          </svg>
-                        </div>
-                        <span>Generate AI Summary</span>
-                      </button>
-                    </li>
-                  )}
-
-                  {/* End Retro (Owner) */}
-                  {!isCompleted && user?.uid === board.createdBy && (
-                    <li className="border-t border-gray-100 dark:border-gray-800 mt-1 pt-1">
-                      <button
-                        onClick={() => {
-                          setShowEndRetroDialog(true);
-                          setActiveId(null);
-                        }}
-                        className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-3 transition-colors"
-                      >
-                        <div className="p-1.5 rounded-md bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <circle cx="12" cy="12" r="10"></circle>
-                            <rect x="9" y="9" width="6" height="6"></rect>
-                          </svg>
-                        </div>
-                        <span>End Retro</span>
-                      </button>
-                    </li>
-                  )}
-            {/* Tasks Sidebar Toggle - Mobile Menu Item */}
-                  <li>
-                    <button
-                      onClick={() => {
-                        setIsTaskSidebarOpen(true);
-                        setActiveId(null);
-                      }}
-                      className="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 dark:hover:bg-dark-800 flex items-center gap-3 text-gray-700 dark:text-gray-300 transition-colors"
-                    >
-                      <div className="p-1.5 rounded-md bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400 relative">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="16"
-                          height="16"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        >
-                          <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
-                        </svg>
-                        {items.filter(i => i.isActionItem).length > 0 && (
-                          <span className="absolute -top-1 -right-1 flex h-2 w-2">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                            <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex flex-col">
-                        <span>View Tasks</span>
-                        {items.filter(i => i.isActionItem).length > 0 && (
-                           <span className="text-[10px] text-blue-500 font-bold uppercase tracking-wider">
-                              {items.filter(i => i.isActionItem).length} Active
-                           </span>
-                        )}
-                      </div>
-                    </button>
-                  </li>
-                </ul>
-              </div>
+        {/* --- ROW 2 (MOBILE) / EXTENSION (DESKTOP) --- */}
+        <div className="flex items-center justify-between md:justify-end w-full md:w-auto order-2 gap-2">
+          {/* Desktop Toggles (Private/Focus) - Hidden on Mobile */}
+          <div className="hidden md:flex items-center gap-2">
+            {user?.uid === board.createdBy && (
+                <button
+                onClick={() => {
+                    const newMode = !isPrivateMode;
+                    togglePrivateMode(id, newMode);
+                }}
+                className={`flex items-center justify-center w-9 h-9 rounded-lg border transition-all ${isPrivateMode ? "bg-purple-100 dark:bg-purple-900/20 border-purple-500 text-purple-600 shadow-[0_0_15px_rgba(216,180,254,0.3)]" : "bg-white dark:bg-dark-900 border-gray-200 dark:border-gray-800 text-gray-500"}`}
+                title="Private Mode"
+                >
+                {isPrivateMode ? "🙈" : "👁️"}
+                </button>
             )}
+            <button
+                onClick={() => setFocusModeIndex(0)}
+                className="flex items-center justify-center w-9 h-9 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-dark-900 text-gray-500 hover:bg-gray-50 dark:hover:bg-dark-800 transition-colors"
+                title="Focus Mode"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h6v6"></path><path d="M9 21H3v-6"></path><path d="M21 3l-7 7"></path><path d="M3 21l7-7"></path></svg>
+            </button>
           </div>
 
           {/* Tasks Sidebar Toggle - Restored to Main Header */}
-          <button
-            onClick={() => setIsTaskSidebarOpen(true)}
-            className="hidden md:flex items-center gap-2 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 px-3 py-2 rounded-xl border border-blue-100 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-all font-bold group"
-            title="View Board Action Items"
-          >
-            <div className="relative">
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="group-hover:rotate-12 transition-transform">
-                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
-              </svg>
-              {items.filter(i => i.isActionItem).length > 0 && (
-                <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-blue-500"></span>
-                </span>
-              )}
-            </div>
-            <span className="text-xs uppercase tracking-wider hidden sm:block">Tasks</span>
-          </button>
 
-          {/* User Dropdown - Restored to Main Header */}
-          <HeaderDropdown
-            user={user}
-            onLogout={handleLogout}
-            onExportPDF={user?.uid === board.createdBy ? () => exportToPDF(board.name, board.columns, cards) : undefined}
-            onExportExcel={
-              user?.uid === board.createdBy ? () => exportToExcel(board.name, board.columns, cards) : undefined
-            }
-          />
-        </div>
 
-        {/* Center Section: Timer (Order 3 - New Row on Mobile, Center on Desktop) */}
-        <div className="order-3 md:order-2 w-full md:w-auto flex justify-center mt-1 md:mt-0">
-           <div
-            className={`flex items-center gap-2 md:gap-3 px-3 py-2 md:px-4 md:py-1.5 rounded-lg border transition-all w-auto justify-between md:justify-center ${board.timer?.status === "running" ? "border-brand-500 bg-brand-50/50 dark:bg-brand-900/10 shadow-[0_0_10px_rgba(45,212,191,0.2)]" : "border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-dark-900"}`}
-          >
-            <span className="text-gray-500 dark:text-gray-400 text-xs font-bold uppercase tracking-wider md:hidden">Timer</span>
-             <div className="flex items-center gap-3">
-               <span
-                 className={`font-mono text-lg md:text-2xl font-bold ${getTimeLeft() < 60 && board.timer?.status === "running" ? "text-red-500 animate-pulse" : "text-gray-800 dark:text-gray-200"}`}
-               >
-                 {formatTime(getTimeLeft())}
-               </span>
-               {!isCompleted && user?.uid === board.createdBy && (
-                 <div className="flex items-center gap-1">
-                   <button
-                     onClick={() => {
-                        adjustTimer(id, -60);
-                        if (analytics) logEvent(analytics, 'adjust_timer', { board_id: id, amount: -60 });
-                      }}
-                     className="w-6 h-6 flex items-center justify-center rounded text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors text-xs font-bold"
-                     title="-1 Minute"
-                   >
-                     -
-                   </button>
-                   <button
-                     onClick={toggleTimer}
-                     className="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors"
-                   >
-                     {board.timer?.status === "running" ? "⏸" : "▶️"}
-                   </button>
-                   <button
-                     onClick={() => {
-                        adjustTimer(id, 60);
-                        if (analytics) logEvent(analytics, 'adjust_timer', { board_id: id, amount: 60 });
-                      }}
-                     className="w-6 h-6 flex items-center justify-center rounded text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors text-xs font-bold"
-                     title="+1 Minute"
-                   >
-                     +
-                   </button>
+
+          {/* --- COMPACT HEADER CONTROLS --- */}
+          <div className="flex items-center justify-between md:justify-end w-full md:w-auto gap-1 md:gap-2">
+             {/* Left side: Timer (grouped with desktop icons on larger screens) */}
+             <div className="flex items-center gap-1 md:gap-2">
+                 {board.timer?.status && (
+                     <div className={`flex items-center gap-1.5 px-2 py-1.5 rounded-lg border ${
+                         board.timer?.status === 'running' 
+                         ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-600 dark:text-red-400' 
+                         : 'bg-gray-50 dark:bg-dark-800 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300'
+                     }`}>
+                         {user?.uid === board.createdBy && !isCompleted ? (
+                             <button 
+                               onClick={() => setShowTimerDialog(true)}
+                               className="hover:text-brand-500 transition-colors"
+                               title="Set Timer Presets"
+                             >
+                                 <Clock className="w-3.5 h-3.5" />
+                             </button>
+                         ) : (
+                             <Clock className="w-3.5 h-3.5" />
+                         )}
+                         <span className={`font-mono font-bold text-sm ${board.timer?.status === 'running' && timeLeft < 60 ? 'animate-pulse' : ''}`}>
+                             {formatTime(timeLeft)}
+                         </span>
+                         {user?.uid === board.createdBy && !isCompleted && (
+                            <div className="flex items-center gap-1 ml-1 border-l border-gray-300 dark:border-gray-600 pl-1">
+                                <button onClick={() => adjustTimer(id, -60)} className="p-0.5 hover:text-gray-900 dark:hover:text-white text-[10px] font-bold w-4 text-center">-</button>
+                                <button onClick={() => adjustTimer(id, 60)} className="p-0.5 hover:text-gray-900 dark:hover:text-white text-[10px] font-bold w-4 text-center">+</button>
+                                {board.timer?.status === 'running' ? (
+                                    <button onClick={handlePauseTimer} className="p-0.5 hover:text-gray-900 dark:hover:text-white"><Pause className="w-3 h-3" /></button>
+                                ) : (
+                                    <button onClick={handleResumeTimer} className="p-0.5 hover:text-gray-900 dark:hover:text-white"><Play className="w-3 h-3" /></button>
+                                )}
+                                <button onClick={handleStopTimer} className="p-0.5 hover:text-red-500"><Square className="w-3 h-3" /></button>
+                            </div>
+                         )}
+                     </div>
+                 )}
+
+
+                 {/* Desktop Controls (Hidden on Mobile) */}
+                 <div className="hidden md:flex items-center gap-1 md:gap-2">
+                    <button onClick={() => setSortBy(prev => prev === 'date' ? 'votes' : 'date')} className={`p-2 rounded-lg transition-all ${sortBy === 'votes' ? 'bg-brand-50 dark:bg-brand-900/20 text-brand-600 dark:text-brand-400' : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-dark-800'}`} title="Sort Cards"><ArrowUpDown className="w-4 h-4" /></button>
+                    <button onClick={() => setIsTaskSidebarOpen(true)} className="p-2 text-gray-500 hover:bg-gray-100 dark:hover:bg-dark-800 rounded-lg relative" title="View Tasks"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path></svg>{items.filter(i => i.isActionItem).length > 0 && <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-blue-500 border border-white dark:border-dark-900"></span>}</button>
+                    {user?.uid === board.createdBy && (
+                        <>
+                            <button onClick={handleGenerateSummary} className="p-2 text-gray-500 hover:bg-gray-100 dark:hover:bg-dark-800 rounded-lg" title="AI Summary"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg></button>
+                            <button onClick={() => { setNewVoteLimit(board.voteLimit || 0); setNewDefaultSort(board.defaultSort || 'date'); setShowSettingsDialog(true); }} className="p-2 text-gray-500 hover:bg-gray-100 dark:hover:bg-dark-800 rounded-lg" title="Settings"><Settings className="w-4 h-4" /></button>
+                            <button onClick={() => setShowEndRetroDialog(true)} className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg" title="End Retro"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><rect width="6" height="6" x="9" y="9"/></svg></button>
+                        </>
+                    )}
+                    <button onClick={async () => { await navigator.clipboard.writeText(window.location.href); showSnackbar("Copied!", "success"); }} className="bg-brand-600 hover:bg-brand-700 text-white px-3 py-1.5 rounded-lg font-bold text-xs flex items-center gap-2 shadow-sm"><Share2 className="w-3.5 h-3.5" /> Share</button>
                  </div>
-               )}
-            </div>
-           </div>
+             </div>
+
+             {/* Right side: Mobile toolbox (far right) */}
+             <div className="md:hidden relative">
+                <button onClick={() => setActiveId(activeId === 'header-more' ? null : 'header-more')} className="p-2 text-gray-500 hover:bg-gray-100 dark:hover:bg-dark-800 rounded-lg transition-colors">
+                    <LayoutGrid className="w-5 h-5" />
+                </button>
+                {activeId === 'header-more' && (
+                    <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-dark-900 border border-gray-200 dark:border-gray-800 rounded-xl shadow-xl z-50 py-2 animate-in fade-in zoom-in-95">
+                        <button 
+                            onClick={() => { setSortBy(prev => prev === 'date' ? 'votes' : 'date'); setActiveId(null); }} 
+                            className="w-full text-left px-4 py-2.5 text-sm flex items-center gap-3 hover:bg-gray-50 dark:hover:bg-dark-800 text-gray-700 dark:text-gray-300 transition-colors"
+                        >
+                            <ArrowUpDown className="w-4 h-4 text-gray-500" /> 
+                            <span>Sort: {sortBy === 'date' ? 'Votes' : 'Date'}</span>
+                        </button>
+
+                        <button 
+                            onClick={() => { setIsTaskSidebarOpen(true); setActiveId(null); }} 
+                            className="w-full text-left px-4 py-2.5 text-sm flex items-center gap-3 hover:bg-gray-50 dark:hover:bg-dark-800 text-gray-700 dark:text-gray-300 transition-colors"
+                        >
+                            <div className="relative">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-500"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path></svg>
+                                {items.filter(i => i.isActionItem).length > 0 && (
+                                    <span className="absolute -top-1 -right-1 h-1.5 w-1.5 rounded-full bg-blue-500"></span>
+                                )}
+                            </div>
+                            <span>View Tasks</span>
+                        </button>
+
+                        {user?.uid === board.createdBy && (
+                            <button 
+                                onClick={() => { handleGenerateSummary(); setActiveId(null); }} 
+                                className="w-full text-left px-4 py-2.5 text-sm flex items-center gap-3 hover:bg-gray-50 dark:hover:bg-dark-800 text-gray-700 dark:text-gray-300 transition-colors"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-500"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>
+                                <span>AI Summary</span>
+                            </button>
+                        )}
+
+                        {user?.uid === board.createdBy && (
+                            <button 
+                                onClick={() => { 
+                                    setNewVoteLimit(board.voteLimit || 0); 
+                                    setNewDefaultSort(board.defaultSort || 'date');
+                                    setShowSettingsDialog(true); 
+                                    setActiveId(null); 
+                                }} 
+                                className="w-full text-left px-4 py-2.5 text-sm flex items-center gap-3 hover:bg-gray-50 dark:hover:bg-dark-800 text-gray-700 dark:text-gray-300 transition-colors"
+                            >
+                                <Settings className="w-4 h-4 text-gray-500" />
+                                <span>Board Settings</span>
+                            </button>
+                        )}
+
+                         <button 
+                            onClick={() => { setFocusModeIndex(0); setActiveId(null); }} 
+                            className="w-full text-left px-4 py-2.5 text-sm flex items-center gap-3 hover:bg-gray-50 dark:hover:bg-dark-800 text-gray-700 dark:text-gray-300 transition-colors"
+                         >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-500"><path d="M15 3h6v6"></path><path d="M9 21H3v-6"></path><path d="M21 3l-7 7"></path><path d="M3 21l7-7"></path></svg>
+                            <span>Focus Mode</span>
+                         </button>
+
+                        {user?.uid === board.createdBy && (
+                            <button 
+                                onClick={() => { togglePrivateMode(id, !isPrivateMode); setActiveId(null); }} 
+                                className="w-full text-left px-4 py-2.5 text-sm flex items-center gap-3 hover:bg-gray-50 dark:hover:bg-dark-800 text-gray-700 dark:text-gray-300 transition-colors"
+                            >
+                                <span className="w-4 text-center text-base">{isPrivateMode ? "🙈" : "👁️"}</span>
+                                <span>{isPrivateMode ? "Disable Private Mode" : "Enable Private Mode"}</span>
+                            </button>
+                        )}
+
+                        <div className="border-t border-gray-100 dark:border-gray-800 my-1"></div>
+
+                        <button 
+                            onClick={async () => { await navigator.clipboard.writeText(window.location.href); showSnackbar("Copied!", "success"); setActiveId(null); }} 
+                            className="w-full text-left px-4 py-2.5 text-sm flex items-center gap-3 hover:bg-gray-50 dark:hover:bg-dark-800 text-gray-700 dark:text-gray-300 transition-colors"
+                        >
+                            <Share2 className="w-4 h-4 text-gray-500" />
+                            <span>Share Board</span>
+                        </button>
+
+                        {!isCompleted && user?.uid === board.createdBy && (
+                            <div className="border-t border-gray-100 dark:border-gray-800 mt-1 pt-1">
+                                <button 
+                                    onClick={() => { setShowEndRetroDialog(true); setActiveId(null); }} 
+                                    className="w-full text-left px-4 py-2.5 text-sm flex items-center gap-3 hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 transition-colors"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><rect width="6" height="6" x="9" y="9"/></svg>
+                                    <span>End Retro</span>
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                )}
+             </div>
+          </div>
+
+          {/* Desktop User Dropdown */}
+          <div className="hidden md:block ml-2">
+              <HeaderDropdown
+                user={user}
+                onLogout={handleLogout}
+                onExportPDF={user?.uid === board.createdBy ? () => exportToPDF(board.name, board.columns, cards) : undefined}
+                onExportExcel={user?.uid === board.createdBy ? () => exportToExcel(board.name, board.columns, cards) : undefined}
+              />
+          </div>
+
         </div>
       </div>
+
         
 
 
@@ -1531,6 +1383,178 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Timer Selection Dialog */}
+      {showTimerDialog && (
+         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in">
+            <div className="bg-white dark:bg-dark-900 rounded-xl shadow-2xl max-w-sm w-full p-6 border border-gray-100 dark:border-gray-700">
+               <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
+                  <Clock className="w-5 h-5 text-brand-600" />
+                  Set Timer
+               </h2>
+               
+               <div className="grid grid-cols-2 gap-3 mb-6">
+                  {[5, 10, 15, 30].map(mins => (
+                     <button
+                        key={mins}
+                        onClick={() => {
+                           handleStartTimer(mins);
+                           setShowTimerDialog(false);
+                        }}
+                        className="py-3 px-4 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-brand-500 hover:bg-brand-50 dark:hover:bg-brand-900/20 text-gray-700 dark:text-gray-300 font-bold transition-all"
+                     >
+                        {mins} Min
+                     </button>
+                  ))}
+               </div>
+
+               <div className="space-y-4">
+                  <div>
+                     <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 font-mono">Custom (1-30 min)</label>
+                     <div className="flex gap-2">
+                        <input 
+                           type="number" 
+                           min="1"
+                           max="30"
+                           className="flex-1 px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-black font-mono"
+                           placeholder="Mins"
+                           id="custom-timer-input"
+                        />
+                        <button 
+                           onClick={() => {
+                              const input = document.getElementById('custom-timer-input') as HTMLInputElement;
+                              const val = parseInt(input.value);
+                              if (val > 0) {
+                                 handleStartTimer(Math.min(val, 30));
+                                 setShowTimerDialog(false);
+                              }
+                           }}
+                           className="px-6 py-2 bg-brand-600 text-white rounded-lg font-bold hover:bg-brand-700 transition-colors"
+                        >
+                           Start
+                        </button>
+                     </div>
+                  </div>
+               </div>
+
+               <button 
+                  onClick={() => setShowTimerDialog(false)}
+                  className="w-full mt-6 py-2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 font-medium text-sm transition-colors"
+               >
+                  Cancel
+               </button>
+            </div>
+         </div>
+      )}
+
+      {/* Settings Dialog */}
+      {showSettingsDialog && (
+         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in">
+            <div className="bg-white dark:bg-dark-900 rounded-xl shadow-2xl max-w-md w-full p-6 border border-gray-100 dark:border-gray-700">
+               <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                  <Settings className="w-5 h-5" />
+                  Board Settings
+               </h2>
+               <div className="space-y-6">
+                  <div>
+                     <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 font-mono">
+                        Max Votes Per User
+                     </label>
+                     <div className="flex items-center gap-2">
+                        <input 
+                           type="number" 
+                           min="0"
+                           value={newVoteLimit}
+                           onChange={(e) => setNewVoteLimit(parseInt(e.target.value) || 0)}
+                           className="w-full p-2 rounded border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-black"
+                        />
+                        <span className="text-xs text-gray-500 whitespace-nowrap">
+                           (0 = Unlimited)
+                        </span>
+                     </div>
+                  </div>
+
+                  <div>
+                     <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 font-mono">
+                        Default Card Sorting
+                     </label>
+                     <select 
+                        value={newDefaultSort}
+                        onChange={(e) => setNewDefaultSort(e.target.value as 'date' | 'votes')}
+                        className="w-full p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-black font-mono text-sm focus:ring-1 focus:ring-brand-500 outline-none appearance-none"
+                     >
+                        <option value="date">Date Created</option>
+                        <option value="votes">Most Votes</option>
+                     </select>
+                  </div>
+               </div>
+               <div className="mt-6 flex justify-end gap-3">
+                  <button 
+                     onClick={() => setShowSettingsDialog(false)}
+                     className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg dark:text-gray-400 dark:hover:bg-gray-800"
+                  >
+                     Cancel
+                  </button>
+                  <button 
+                     onClick={handleSaveSettings}
+                     className="px-4 py-2 bg-brand-500 text-white rounded-lg hover:bg-brand-600 font-medium"
+                  >
+                     Save Settings
+                  </button>
+               </div>
+            </div>
+         </div>
+      )}
+
+      {/* Merge Cards Dialog */}
+      {mergeSourceId && (
+         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in">
+            <div className="bg-white dark:bg-dark-900 rounded-xl shadow-2xl max-w-lg w-full p-6 border border-gray-100 dark:border-gray-700">
+               <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                  <Merge className="w-5 h-5" />
+                  Merge Card
+               </h2>
+               <p className="text-sm text-gray-500 mb-4">
+                  Select a card to merge into. The text will be combined.
+                  <br/>
+                  <span className="font-bold italic">"{cards.find(c => c.id === mergeSourceId)?.text.substring(0, 50)}..."</span>
+               </p>
+               
+               <div className="space-y-2 max-h-60 overflow-y-auto mb-4 border rounded p-2 border-gray-200 dark:border-gray-700">
+                  {items
+                    .filter(c => c.id !== mergeSourceId && !c.isActionItem) // Don't merge with self or tasks
+                    .map(c => (
+                     <button
+                        key={c.id}
+                        onClick={() => setMergeTargetId(c.id)}
+                        className={`w-full text-left p-2 rounded text-sm mb-1 ${mergeTargetId === c.id ? 'bg-brand-100 dark:bg-brand-900/30 border-brand-500 border' : 'hover:bg-gray-100 dark:hover:bg-gray-800'}`}
+                     >
+                        {c.text}
+                     </button>
+                  ))}
+               </div>
+
+               <div className="mt-6 flex justify-end gap-3">
+                  <button 
+                     onClick={() => {
+                        setMergeSourceId(null);
+                        setMergeTargetId('');
+                     }}
+                     className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg dark:text-gray-400 dark:hover:bg-gray-800"
+                  >
+                     Cancel
+                  </button>
+                  <button 
+                     onClick={handleMergeCards}
+                     disabled={!mergeTargetId || isMerging}
+                     className="px-4 py-2 bg-brand-500 text-white rounded-lg hover:bg-brand-600 font-medium disabled:opacity-50"
+                  >
+                     {isMerging ? 'Merging...' : 'Confirm Merge'}
+                  </button>
+               </div>
+            </div>
+         </div>
       )}
 
       {/* Focus Mode Overlay */}
@@ -1639,6 +1663,7 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
                             onUpdate={handleUpdateCardOptimistic}
                             onReaction={handleReactionOptimistic}
                             onVote={handleVoteOptimistic}
+                            onMerge={(cardId) => setMergeSourceId(cardId)}
                           />
                         ))}
                     </SortableContext>

@@ -11,6 +11,7 @@ import EditableText from './EditableText';
 import ActionItemConvertModal from './ActionItemConvertModal';
 import ActionItemLogsModal from './ActionItemLogsModal';
 import type { RetroCard } from '../types';
+import { MoreHorizontal, Merge } from 'lucide-react';
 
 interface CardProps {
     card: RetroCard;
@@ -28,9 +29,10 @@ interface CardProps {
     onUpdate?: (cardId: string, newText: string) => Promise<void>;
     onReaction?: (cardId: string, emoji: string) => Promise<void>;
     onVote?: (cardId: string) => Promise<void>;
+    onMerge?: (cardId: string) => void;
 }
 
-const Card = ({ card, boardId, isPrivate, sortableProps, isCompleted, onDelete, onUpdate, onReaction, onVote }: CardProps) => {
+const Card = ({ card, boardId, isPrivate, sortableProps, isCompleted, onDelete, onUpdate, onReaction, onVote, onMerge }: CardProps) => {
     const { user } = useAuth();
     const [showReplyInput, setShowReplyInput] = useState(false);
     const [replyText, setReplyText] = useState('');
@@ -45,6 +47,7 @@ const Card = ({ card, boardId, isPrivate, sortableProps, isCompleted, onDelete, 
     const [showConvertModal, setShowConvertModal] = useState(false);
     const [showLogsModal, setShowLogsModal] = useState(false);
     const [showReplies, setShowReplies] = useState(false);
+    const [showMoreMenu, setShowMoreMenu] = useState(false);
     const EMOJIS = ['👍', '+1', '❤️', '😂', '😮', '🚀', '🎉'];
 
     const handleReaction = async (emoji: string) => {
@@ -459,6 +462,33 @@ const Card = ({ card, boardId, isPrivate, sortableProps, isCompleted, onDelete, 
                                     <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
                                 </svg>
                             </button>
+                        )}
+
+                        {/* More Menu */}
+                        {!isCompleted && onMerge && (
+                            <div className="relative">
+                                <button
+                                    onClick={() => setShowMoreMenu(!showMoreMenu)}
+                                    className="text-gray-400 hover:text-gray-900 dark:hover:text-white transition-all active:scale-95 p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
+                                    title="More actions"
+                                >
+                                    <MoreHorizontal className="w-3.5 h-3.5" />
+                                </button>
+                                {showMoreMenu && (
+                                    <div className="absolute right-0 bottom-full mb-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl overflow-hidden min-w-[120px] z-50 animate-in fade-in zoom-in duration-200">
+                                         <button
+                                            onClick={() => {
+                                                setShowMoreMenu(false);
+                                                onMerge(card.id);
+                                            }}
+                                            className="w-full text-left px-3 py-2 text-xs flex items-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition-colors"
+                                         >
+                                            <Merge className="w-3.5 h-3.5" />
+                                            Merge With...
+                                         </button>
+                                    </div>
+                                )}
+                            </div>
                         )}
                     </div>
                 </div>

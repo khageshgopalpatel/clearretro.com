@@ -44,6 +44,10 @@ const DashboardContent: React.FC = () => {
   const [selectedTemplate, setSelectedTemplate] = useState(BOARD_TEMPLATES[0]);
   const [customColumns, setCustomColumns] = useState(BOARD_TEMPLATES[0].columns);
 
+  // New Dashboard Settings State
+  const [newVoteLimit, setNewVoteLimit] = useState(0);
+  const [newDefaultSort, setNewDefaultSort] = useState<'date' | 'votes'>('date');
+
   // Sync custom columns when template changes
   React.useEffect(() => {
     setCustomColumns(selectedTemplate.columns);
@@ -87,7 +91,11 @@ const DashboardContent: React.FC = () => {
         user.uid,
         columnsWithIds,
         null, // selectedTeam removed
-        selectedTemplate.name
+        selectedTemplate.name,
+        {
+            voteLimit: newVoteLimit,
+            defaultSort: newDefaultSort
+        }
       );
 
       if (analytics) {
@@ -324,9 +332,11 @@ const calculateStreak = (boards: RetroBoard[]) => {
       {/* Create Modal */}
       {showCreateModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4 animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-dark-900 p-8 rounded-3xl shadow-2xl w-full max-w-lg border border-gray-200 dark:border-gray-700 transform transition-all scale-100 relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-brand-500 to-purple-600"></div>
-            <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white font-mono">Create New Board</h2>
+          <div className="bg-white dark:bg-dark-900 rounded-3xl shadow-2xl w-full max-w-lg border border-gray-200 dark:border-gray-700 transform transition-all scale-100 relative overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-brand-500 to-purple-600 z-10"></div>
+            
+            <div className="p-8 overflow-y-auto custom-scrollbar flex-1">
+            <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white font-mono sticky top-0 bg-white dark:bg-dark-900 z-10 pb-2">Create New Board</h2>
 
             <div className="mb-6">
               <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 font-mono">Board Name</label>
@@ -338,6 +348,31 @@ const calculateStreak = (boards: RetroBoard[]) => {
                 autoFocus
                 onChange={(e) => setNewBoardName(e.target.value)}
               />
+            </div>
+
+            <div className="flex gap-4 mb-6">
+                <div className="flex-1">
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 font-mono">Max Votes / User</label>
+                    <input
+                        type="number"
+                        min="0"
+                        className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-dark-800 dark:text-white focus:ring-2 focus:ring-brand-500 outline-none transition-all font-mono"
+                        value={newVoteLimit}
+                        onChange={(e) => setNewVoteLimit(parseInt(e.target.value) || 0)}
+                    />
+                    <div className="text-[10px] text-gray-400 mt-1">0 = Unlimited</div>
+                </div>
+                <div className="flex-1">
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 font-mono">Default Sort</label>
+                    <select
+                        className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-dark-800 dark:text-white focus:ring-2 focus:ring-brand-500 outline-none transition-all font-mono appearance-none"
+                        value={newDefaultSort}
+                        onChange={(e) => setNewDefaultSort(e.target.value as 'date' | 'votes')}
+                    >
+                        <option value="date">Date Created</option>
+                        <option value="votes">Most Votes</option>
+                    </select>
+                </div>
             </div>
 
 
@@ -404,7 +439,9 @@ const calculateStreak = (boards: RetroBoard[]) => {
               </div>
             </div>
 
-            <div className="flex justify-end gap-3 pt-4 border-t border-gray-100 dark:border-gray-800">
+            </div>
+
+            <div className="p-6 pt-4 border-t border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-dark-800/50 flex justify-end gap-3 z-20">
               <button
                 onClick={() => setShowCreateModal(false)}
                 className="px-5 py-2.5 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg font-medium transition-colors font-mono"
@@ -426,9 +463,11 @@ const calculateStreak = (boards: RetroBoard[]) => {
       {/* Edit Modal */}
       {editDialog.isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4 animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-dark-900 p-8 rounded-3xl shadow-2xl w-full max-w-lg border border-gray-200 dark:border-gray-700 transform transition-all scale-100 relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-brand-500 to-purple-600"></div>
-            <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white font-mono">Edit Board</h2>
+          <div className="bg-white dark:bg-dark-900 rounded-3xl shadow-2xl w-full max-w-lg border border-gray-200 dark:border-gray-700 transform transition-all scale-100 relative overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-brand-500 to-purple-600 z-10"></div>
+            
+            <div className="p-8 overflow-y-auto custom-scrollbar flex-1">
+            <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white font-mono sticky top-0 bg-white dark:bg-dark-900 z-10 pb-2">Edit Board</h2>
 
             <div className="mb-6">
               <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 font-mono">Board Name</label>
@@ -501,7 +540,9 @@ const calculateStreak = (boards: RetroBoard[]) => {
               </div>
             </div>
 
-            <div className="flex justify-end gap-3 pt-4 border-t border-gray-100 dark:border-gray-800">
+            </div>
+
+            <div className="p-6 pt-4 border-t border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-dark-800/50 flex justify-end gap-3 z-20">
               <button
                 onClick={() => setEditDialog({ isOpen: false, boardId: null, boardName: '', columns: [], lockedColumns: [] })}
                 className="px-5 py-2.5 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg font-medium transition-colors font-mono"

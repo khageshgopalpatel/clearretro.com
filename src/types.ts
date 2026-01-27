@@ -18,6 +18,7 @@ export interface RetroCard {
   votedBy?: string[];
   reactions?: Record<string, string[]>;
   mergedFrom?: string[];
+  mergedCards?: { id: string; text: string }[]; // Keep history of merged content
   isActionItem?: boolean;
   isDone?: boolean;
   assigneeId?: string;
@@ -57,6 +58,8 @@ export interface RetroBoard {
   columns: RetroColumn[];
   templateName?: string;
   // cards: RetroCard[]; // Cards are subcollection now
+  voteLimit?: number; // Max votes per user, 0 or null for unlimited
+  defaultSort?: 'date' | 'votes';
   timer?: {
     status: 'running' | 'stopped';
     duration: number;
