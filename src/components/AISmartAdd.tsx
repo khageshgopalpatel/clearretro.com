@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { checkChromiumAIAvailability, classifyThought, type AIAvailability, type ClassificationResult } from '../utils/ai';
 import type { RetroColumn } from '../types';
-import { Sparkles, Send, Loader2, Download, AlertCircle } from 'lucide-react';
+import { Sparkles, Send, Loader2, Download, AlertCircle, Mic, MicOff } from 'lucide-react';
 import { useSnackbar } from '../context/SnackbarContext';
 import { analytics, logEvent } from '../lib/firebase';
 
@@ -19,8 +19,93 @@ const AISmartAdd: React.FC<AISmartAddProps> = ({ boardId, columns, onAddCard, di
   const [isActionItem, setIsActionItem] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isListening, setIsListening] = useState(false);
+  const [hasSpeechSupport, setHasSpeechSupport] = useState(false);
+  const recognitionRef = useRef<any>(null);
   const { showSnackbar } = useSnackbar();
   const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    // Check for browser support
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      setHasSpeechSupport(true);
+    }
+  }, []);
+
+  const toggleListening = () => {
+    if (isListening) {
+      recognitionRef.current?.stop();
+      setIsListening(false);
+      return;
+    }
+
+    try {
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      const recognition = new SpeechRecognition();
+      recognitionRef.current = recognition;
+
+      recognition.continuous = true; // Keep listening 
+      recognition.interimResults = true; // Show results as they are spoken
+
+      recognition.onstart = () => {
+        setIsListening(true);
+      };
+
+      recognition.onresult = (event: any) => {
+        let transcript = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+            transcript += event.results[i][0].transcript;
+        }
+        
+        // Append to existing text if it's a new session, or replace if we want that behavior
+        // Here we just set it. A better UX might be appending if there is already text.
+        // For simplicity in this "Smart Add", let's append.
+        
+        setText(prev => {
+             // Avoid duplicating if the previous transcript is a prefix of the new one (common in interim results)
+             // But since we are getting the *full* transcript from the event loop in simple implementations,
+             // proper handling depends on `continuous`.
+             
+             // Simplest approach for "smart add": just update the text with the latest final result
+             // But we want to support typing + speaking.
+             
+             // Let's just append the *new* part. 
+             // Actually, `transcript` contains the chunk for this result event.
+             
+             // Correct logic for interim+final in React state:
+             // 1. We should probably use `interimResults = false` for simplicity to avoid flicker,
+             // OR handle the text cursor carefully.
+             
+             // Let's use a simpler approach: Append *final* results only to avoid complex state merging.
+             // And show interim results in a placeholder or separate UI? No, input box is best.
+             
+             return prev; // We will handle the update below
+        });
+        
+        // Actually, simplest proven way for mixed input:
+        const currentTranscript = Array.from(event.results)
+          .map((result: any) => result[0].transcript)
+          .join('');
+          
+        setText(currentTranscript);
+      };
+
+      recognition.onerror = (event: any) => {
+        console.error("Speech recognition error", event.error);
+        setIsListening(false);
+        showSnackbar("Voice input error: " + event.error, "error");
+      };
+
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+
+      recognition.start();
+    } catch (error) {
+      console.error("Speech recognition failed", error);
+      setIsListening(false);
+    }
+  };
 
   // Simple keyword detection to suggest action item
   useEffect(() => {
@@ -168,6 +253,25 @@ const AISmartAdd: React.FC<AISmartAddProps> = ({ boardId, columns, onAddCard, di
           />
 
           
+          {hasSpeechSupport && (
+            <button
+              type="button"
+              onClick={toggleListening}
+              className={`p-2 transition-all duration-300 rounded-full flex-shrink-0 mr-1 ${
+                isListening 
+                  ? 'bg-red-100 text-red-600 animate-pulse ring-2 ring-red-400/50' 
+                  : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-dark-800'
+              }`}
+              title={isListening ? "Stop listening" : "Voice input"}
+            >
+              {isListening ? (
+                <MicOff className="w-5 h-5" />
+              ) : (
+                <Mic className="w-5 h-5" />
+              )}
+            </button>
+          )}
+
           <button
             type="submit"
             disabled={!text.trim() || isProcessing || disabled || isDownloading}
