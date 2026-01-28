@@ -15,6 +15,7 @@ import {
     arrayUnion,
     arrayRemove,
     deleteDoc,
+    writeBatch,
     limit,
     deleteField, // Added
     type DocumentData
@@ -222,8 +223,11 @@ export const mergeCards = async (boardId: string, sourceCardId: string, targetCa
         // Track merge history
         const mergedFrom = [...(targetData.mergedFrom || []), sourceCardId, ...(sourceData.mergedFrom || [])];
 
+        // Use batch write for atomic operation (prevents race condition)
+        const batch = writeBatch(db);
+        
         // Update target card with merged content
-        await updateDoc(targetRef, {
+        batch.update(targetRef, {
             text: mergedText,
             votes: mergedVotes,
             reactions: mergedReactions,
@@ -231,7 +235,10 @@ export const mergeCards = async (boardId: string, sourceCardId: string, targetCa
         });
 
         // Delete source card
-        await deleteDoc(sourceRef);
+        batch.delete(sourceRef);
+        
+        // Commit both operations atomically
+        await batch.commit();
 
         return targetCardId;
     } catch (error) {

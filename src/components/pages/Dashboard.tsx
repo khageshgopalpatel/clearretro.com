@@ -62,6 +62,7 @@ const DashboardContent: React.FC = () => {
   const [renaming, setRenaming] = useState(false);
   const [logoutDialog, setLogoutDialog] = useState(false);
   const [guestSignInDialog, setGuestSignInDialog] = useState(false);
+  const [deletedBoardIds, setDeletedBoardIds] = useState<Set<string>>(new Set());
 
   const loading = authLoading || boardsLoading;
 
@@ -117,12 +118,24 @@ const DashboardContent: React.FC = () => {
 
   const handleDeleteBoard = async () => {
     if (!deleteDialog.boardId) return;
+    
+    const boardIdToDelete = deleteDialog.boardId;
+    
+    // Optimistic update: hide board immediately
+    setDeletedBoardIds(prev => new Set(prev).add(boardIdToDelete));
+    setDeleteDialog({ isOpen: false, boardId: null, boardName: '' });
+    
     try {
-      await deleteBoard(deleteDialog.boardId);
+      await deleteBoard(boardIdToDelete);
       showSnackbar("Board deleted successfully", "success");
-      setDeleteDialog({ isOpen: false, boardId: null, boardName: '' });
     } catch (error) {
       console.error("Error deleting board:", error);
+      // Rollback: show board again on error
+      setDeletedBoardIds(prev => {
+        const next = new Set(prev);
+        next.delete(boardIdToDelete);
+        return next;
+      });
       showSnackbar("Failed to delete board", "error");
     }
   };
@@ -236,7 +249,7 @@ const calculateStreak = (boards: RetroBoard[]) => {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {boards.map(board => (
+          {boards.filter(b => !deletedBoardIds.has(b.id)).map(board => (
             <div
               key={board.id}
               onClick={() => window.location.href = `/board/${board.id}`}
