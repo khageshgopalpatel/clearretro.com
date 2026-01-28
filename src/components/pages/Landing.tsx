@@ -79,35 +79,7 @@ const Landing: React.FC = () => {
                   className="relative rounded-xl overflow-hidden border border-gray-200 dark:border-gray-800/50 shadow-2xl bg-gray-900 aspect-video group cursor-pointer backdrop-blur-sm"
                   onClick={togglePlay}
                >
-                  <div className={`absolute inset-0 bg-gradient-to-t from-black/80 to-transparent z-10 ${isPlaying ? 'opacity-0 hover:opacity-100 transition-opacity duration-300' : ''}`}></div>
-
-                  {/* Fake UI Header */}
-                  <div className={`absolute top-0 left-0 right-0 h-10 bg-black/40 border-b border-white/10 flex items-center px-4 gap-2 z-20 backdrop-blur-md ${isPlaying ? 'opacity-0 hover:opacity-100 transition-opacity duration-300' : ''}`}>
-                     <div className="w-3 h-3 rounded-full bg-red-500/80"></div>
-                     <div className="w-3 h-3 rounded-full bg-yellow-500/80"></div>
-                     <div className="w-3 h-3 rounded-full bg-green-500/80"></div>
-                     <div className="ml-4 px-3 py-1 bg-white/10 rounded-md text-[10px] text-gray-400 font-mono w-64">clearretro.com/board/demo</div>
-                  </div>
-
-                  {!isPlaying && (
-                     <div className="absolute inset-0 flex items-center justify-center z-30 group-hover:scale-105 transition-transform duration-500">
-                        <div className="w-24 h-24 bg-brand-500/20 backdrop-blur-md rounded-full flex items-center justify-center border border-brand-400/50 shadow-[0_0_30px_rgba(45,212,191,0.3)] group-hover:bg-brand-500/30 transition-all">
-                           <div className="w-0 h-0 border-t-[12px] border-t-transparent border-l-[22px] border-l-brand-50 border-b-[12px] border-b-transparent ml-2"></div>
-                        </div>
-                     </div>
-                  )}
-
-                  <video 
-                     ref={videoRef}
-                     className="w-full h-full object-cover opacity-90"
-                     loop 
-                     playsInline
-                     src="/demo.mp4"
-                     poster="https://placehold.co/1200x675/09090b/2dd4bf?text=Clear+Retro+Demo"
-                     onPlay={() => setIsPlaying(true)}
-                     onPause={() => setIsPlaying(false)}
-                     controls={isPlaying}
-                  />
+                  <iframe className="w-full h-full object-cover opacity-90" src="https://www.youtube.com/embed/CdalILjCL_k?si=p2yPJumnBbHXt0Fr" title="YouTube video player" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerPolicy="strict-origin-when-cross-origin" allowFullScreen></iframe>
                </div>
             </div>
          </div>

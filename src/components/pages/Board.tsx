@@ -49,7 +49,17 @@ import { useSnackbar } from "../../context/SnackbarContext";
 import { generateBoardSummary } from "../../services/ai";
 import { analytics, logEvent } from "../../lib/firebase";
 import { checkChromiumAIAvailability } from "../../utils/ai";
-import { Settings, ArrowUpDown, Merge, LayoutGrid, Clock, Play, Pause, Square, Share2 } from 'lucide-react';
+import {
+  Settings,
+  ArrowUpDown,
+  Merge,
+  LayoutGrid,
+  Clock,
+  Play,
+  Pause,
+  Square,
+  Share2,
+} from "lucide-react";
 import { updateBoardSettings, mergeCards } from "../../hooks/useBoard";
 
 import { exportToPDF, exportToExcel } from "../../utils/export";
@@ -101,7 +111,6 @@ const SortableCardWrapper: React.FC<SortableCardWrapperProps> = ({
   onUpdate,
   onReaction,
   onVote,
-
 }) => {
   const {
     attributes,
@@ -120,7 +129,7 @@ const SortableCardWrapper: React.FC<SortableCardWrapperProps> = ({
   const { active } = useDndContext();
   const { setNodeRef: setDroppableRef, isOver } = useDroppable({
     id: `merge-${card.id}`,
-    data: { type: 'merge-target', cardId: card.id }
+    data: { type: "merge-target", cardId: card.id },
   });
 
   const isDraggingSomething = !!active;
@@ -130,19 +139,19 @@ const SortableCardWrapper: React.FC<SortableCardWrapperProps> = ({
     <div className="relative group">
       {/* Merge Target Overlay - High Z-index to capture drop and prevent sort */}
       {isTargetForMerge && (
-         <div 
-            ref={setDroppableRef} 
-            className={`absolute inset-0 z-20 rounded-xl transition-all duration-200 ${isOver ? 'bg-brand-500/10 border-2 border-brand-500 backdrop-blur-[1px]' : ''}`}
-         >
-            {isOver && (
-                <div className="absolute inset-0 flex items-center justify-center animate-in fade-in zoom-in duration-200">
-                    <div className="bg-brand-500 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1.5">
-                        <Merge className="w-3.5 h-3.5" />
-                        <span>Drop to Merge</span>
-                    </div>
-                </div>
-            )}
-         </div>
+        <div
+          ref={setDroppableRef}
+          className={`absolute inset-0 z-20 rounded-xl transition-all duration-200 ${isOver ? "bg-brand-500/10 border-2 border-brand-500 backdrop-blur-[1px]" : ""}`}
+        >
+          {isOver && (
+            <div className="absolute inset-0 flex items-center justify-center animate-in fade-in zoom-in duration-200">
+              <div className="bg-brand-500 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1.5">
+                <Merge className="w-3.5 h-3.5" />
+                <span>Drop to Merge</span>
+              </div>
+            </div>
+          )}
+        </div>
       )}
 
       <Card
@@ -154,13 +163,12 @@ const SortableCardWrapper: React.FC<SortableCardWrapperProps> = ({
         onUpdate={onUpdate}
         onReaction={onReaction}
         onVote={onVote}
-
         sortableProps={{
-            attributes,
-            listeners,
-            setNodeRef,
-            style,
-            isDragging,
+          attributes,
+          listeners,
+          setNodeRef,
+          style,
+          isDragging,
         }}
       />
     </div>
@@ -204,9 +212,11 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
   const customCollisionStrategy = (args: any) => {
     // First, look for specific collisions under the pointer (Merge targets, Columns, Cards)
     const pointerCollisions = pointerWithin(args);
-    
+
     // 1. Check for Merge Target (Priority)
-    const mergeTarget = pointerCollisions.find((c: any) => c.id.toString().startsWith('merge-'));
+    const mergeTarget = pointerCollisions.find((c: any) =>
+      c.id.toString().startsWith("merge-"),
+    );
     if (mergeTarget) {
       return [mergeTarget];
     }
@@ -252,28 +262,29 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
 
   // AI States
   const [summaryStatus, setSummaryStatus] = useState<AISummaryStatus>(
-    AISummaryStatus.IDLE
+    AISummaryStatus.IDLE,
   );
   const [summaryResult, setSummaryResult] = useState<AISummaryResult | null>(
-    null
+    null,
   );
   const [isAISmartAddOpen, setIsAISmartAddOpen] = useState(false);
   const [isAISmartAddActive, setIsAISmartAddActive] = useState(false);
   const [isTaskSidebarOpen, setIsTaskSidebarOpen] = useState(false);
-  const [aiStatus, setAIStatus] = useState<string>('unknown');
+  const [aiStatus, setAIStatus] = useState<string>("unknown");
   const [isChrome, setIsChrome] = useState(false);
 
   // New Features State
-  const [sortBy, setSortBy] = useState<'date' | 'votes'>('date');
+  const [sortBy, setSortBy] = useState<"date" | "votes">("date");
   const [showSettingsDialog, setShowSettingsDialog] = useState(false);
   const [newVoteLimit, setNewVoteLimit] = useState<number>(0);
-  const [newDefaultSort, setNewDefaultSort] = useState<'date' | 'votes'>('date');
-
+  const [newDefaultSort, setNewDefaultSort] = useState<"date" | "votes">(
+    "date",
+  );
 
   const openAISmartAdd = () => {
     setIsAISmartAddOpen(true);
     // Log event when AI Smart Add is opened
-    logEvent(analytics, 'ai_smart_add_open', { board_id: id });
+    logEvent(analytics, "ai_smart_add_open", { board_id: id });
     // Tiny delay to ensure the component is in DOM before starting transition
     setTimeout(() => setIsAISmartAddActive(true), 10);
   };
@@ -288,11 +299,12 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
 
   useEffect(() => {
     // Basic Chrome/Chromium detection
-    const isChromium = !!(window as any).chrome || (navigator.userAgent.indexOf("Chrome") !== -1);
+    const isChromium =
+      !!(window as any).chrome || navigator.userAgent.indexOf("Chrome") !== -1;
     setIsChrome(isChromium);
 
     if (isChromium) {
-      checkChromiumAIAvailability().then(status => {
+      checkChromiumAIAvailability().then((status) => {
         setAIStatus(status);
       });
     }
@@ -347,10 +359,10 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
     setSharingToSlack(true);
 
     if (analytics) {
-      logEvent(analytics, 'share_to_slack', {
+      logEvent(analytics, "share_to_slack", {
         board_id: board?.id,
         board_name: board?.name,
-        team_id: slackConnection.teamId
+        team_id: slackConnection.teamId,
       });
     }
 
@@ -376,14 +388,14 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
             teamId: slackConnection.teamId,
             message: lines.join("\n"),
           }),
-        }
+        },
       );
 
       const data = await res.json();
       if (data.success) {
         showSnackbar(
           `Posted to Slack (${slackConnection.teamName})`,
-          "success"
+          "success",
         );
       } else {
         throw new Error(data.error);
@@ -404,7 +416,9 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
   );
 
   useEffect(() => {
@@ -466,10 +480,10 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
 
     const newStatus = board.timer?.status === "running" ? "stopped" : "running";
     if (analytics) {
-      logEvent(analytics, 'toggle_timer', {
+      logEvent(analytics, "toggle_timer", {
         board_id: board.id,
         board_name: board.name,
-        status: newStatus
+        status: newStatus,
       });
     }
 
@@ -506,42 +520,42 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
   const handleStartTimer = async (minutes: number) => {
     if (!user || user.uid !== board?.createdBy) return;
     try {
-        const cappedMinutes = Math.min(minutes, 30);
-        await updateBoardTimer(id, "running", cappedMinutes * 60);
+      const cappedMinutes = Math.min(minutes, 30);
+      await updateBoardTimer(id, "running", cappedMinutes * 60);
     } catch (e) {
-        console.error("Failed to start timer", e);
-        showSnackbar("Failed to start timer", "error");
+      console.error("Failed to start timer", e);
+      showSnackbar("Failed to start timer", "error");
     }
   };
 
   const handlePauseTimer = async () => {
     if (!user || user.uid !== board?.createdBy) return;
     try {
-        const remaining = getTimeLeft();
-        await updateBoardTimer(id, "stopped", remaining);
-        setTimerInterval(null); // Clear local interval
+      const remaining = getTimeLeft();
+      await updateBoardTimer(id, "stopped", remaining);
+      setTimerInterval(null); // Clear local interval
     } catch (e) {
-        console.error("Failed to pause timer", e);
+      console.error("Failed to pause timer", e);
     }
   };
 
   const handleResumeTimer = async () => {
     if (!user || user.uid !== board?.createdBy) return;
     try {
-        const currentDuration = board?.timer?.duration || 300;
-        await updateBoardTimer(id, "running", currentDuration);
+      const currentDuration = board?.timer?.duration || 300;
+      await updateBoardTimer(id, "running", currentDuration);
     } catch (e) {
-        console.error("Failed to resume timer", e);
+      console.error("Failed to resume timer", e);
     }
   };
 
   const handleStopTimer = async () => {
-     if (!user || user.uid !== board?.createdBy) return;
-     try {
-         await updateBoardTimer(id, "stopped", 0);
-     } catch (e) {
-         console.error("Failed to stop timer", e);
-     }
+    if (!user || user.uid !== board?.createdBy) return;
+    try {
+      await updateBoardTimer(id, "stopped", 0);
+    } catch (e) {
+      console.error("Failed to stop timer", e);
+    }
   };
 
   const [showTimerDialog, setShowTimerDialog] = useState(false);
@@ -551,19 +565,26 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
   // Local state for optimistic updates
   const [items, setItems] = useState<RetroCard[]>([]);
 
+  // Track pending merge operations to prevent Firestore sync from overwriting optimistic updates
+  const [pendingMerge, setPendingMerge] = useState(false);
+
   useEffect(() => {
+    // Skip sync if there's a pending merge operation to prevent flicker
+    if (pendingMerge) {
+      return;
+    }
     // Sort items based on configuration
     const sorted = [...cards].sort((a, b) => {
-      if (sortBy === 'votes') {
+      if (sortBy === "votes") {
         const diff = (b.votes || 0) - (a.votes || 0);
         if (diff !== 0) return diff;
       }
       // Default to date/order (using order if valid, else createdAt)
       // Note: order is float, so simpler comparison
-      return (a.order || 0) - (b.order || 0); 
+      return (a.order || 0) - (b.order || 0);
     });
     setItems(sorted);
-  }, [cards, sortBy]);
+  }, [cards, sortBy, pendingMerge]);
 
   const handleDragStart = (event: DragStartEvent) => {
     setActiveId(event.active.id as string);
@@ -612,12 +633,12 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
         // 'order' is a float.
         // Let's just update columnId for now.
         return prev.map((c) =>
-          c.id === activeId ? { ...c, columnId: overColumnId } : c
+          c.id === activeId ? { ...c, columnId: overColumnId } : c,
         );
       } else {
         // Dropped on column
         return prev.map((c) =>
-          c.id === activeId ? { ...c, columnId: overColumnId } : c
+          c.id === activeId ? { ...c, columnId: overColumnId } : c,
         );
       }
     });
@@ -630,59 +651,71 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
     if (!over || !board || board.status === "completed") return;
 
     // Check for Merge Drop
-    if (over.id.toString().startsWith('merge-')) {
-        const targetCardId = over.id.toString().replace('merge-', '');
-        const sourceCardId = active.id.toString();
+    if (over.id.toString().startsWith("merge-")) {
+      const targetCardId = over.id.toString().replace("merge-", "");
+      const sourceCardId = active.id.toString();
 
-        if (targetCardId === sourceCardId) return;
+      if (targetCardId === sourceCardId) return;
 
-        // Perform Merge
-        const sourceCard = items.find(c => c.id === sourceCardId);
-        const targetCard = items.find(c => c.id === targetCardId);
+      // Perform Merge
+      const sourceCard = items.find((c) => c.id === sourceCardId);
+      const targetCard = items.find((c) => c.id === targetCardId);
 
-        if (!sourceCard || !targetCard) return;
+      if (!sourceCard || !targetCard) return;
 
-        // Optimistic UI Update
-        const mergedText = `${targetCard.text}\n\n---\n\n${sourceCard.text}`;
-        const mergedVotes = (targetCard.votes || 0) + (sourceCard.votes || 0);
-        
-        // Log analytics
-        if (analytics) {
-            logEvent(analytics, 'merge_cards_drag_drop', {
-                board_id: id,
-                source_id: sourceCardId,
-                target_id: targetCardId
-            });
-        }
+      // Set pending merge flag to prevent Firestore sync from overwriting optimistic updates
+      setPendingMerge(true);
 
-        // Remove source, update target
-        setItems(prev => prev.filter(c => c.id !== sourceCardId).map(c => {
+      // Optimistic UI Update
+      const mergedText = `${targetCard.text}\n\n---\n\n${sourceCard.text}`;
+      const mergedVotes = (targetCard.votes || 0) + (sourceCard.votes || 0);
+
+      // Log analytics
+      if (analytics) {
+        logEvent(analytics, "merge_cards_drag_drop", {
+          board_id: id,
+          source_id: sourceCardId,
+          target_id: targetCardId,
+        });
+      }
+
+      // Remove source, update target
+      setItems((prev) =>
+        prev
+          .filter((c) => c.id !== sourceCardId)
+          .map((c) => {
             if (c.id === targetCardId) {
-                return {
-                    ...c,
-                    text: mergedText,
-                    votes: mergedVotes,
-                    mergedCards: [
-                        ...(c.mergedCards || []),
-                        { id: sourceCard.id, text: sourceCard.text },
-                        ...(sourceCard.mergedCards || [])
-                    ]
-                };
+              return {
+                ...c,
+                text: mergedText,
+                votes: mergedVotes,
+                mergedCards: [
+                  ...(c.mergedCards || []),
+                  { id: sourceCard.id, text: sourceCard.text },
+                  ...(sourceCard.mergedCards || []),
+                ],
+              };
             }
             return c;
-        }));
+          }),
+      );
 
-        try {
-            await mergeCards(id, sourceCardId, targetCardId);
-            showSnackbar("Cards merged successfully", "success");
-        } catch (e) {
-            console.error("Merge failed", e);
-            showSnackbar("Failed to merge cards", "error");
-            // Revert would be complex here, assuming success for now or need reload
-        }
-        return;
+      try {
+        await mergeCards(id, sourceCardId, targetCardId);
+        showSnackbar("Cards merged successfully", "success");
+      } catch (e) {
+        console.error("Merge failed", e);
+        showSnackbar("Failed to merge cards", "error");
+        // Revert would be complex here, assuming success for now or need reload
+      } finally {
+        // Wait a short time for Firestore to propagate the merge,
+        // then clear the flag so useEffect can sync with fresh data
+        setTimeout(() => {
+          setPendingMerge(false);
+        }, 500);
+      }
+      return;
     }
-
 
     const activeCard = items.find((c) => c.id === active.id);
     if (!activeCard) return;
@@ -710,7 +743,7 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
         .sort((a, b) => (a.order || 0) - (b.order || 0));
       const overCardIndex = columnCards.findIndex((c) => c.id === overCard.id);
       const activeCardIndex = columnCards.findIndex(
-        (c) => c.id === activeCard.id
+        (c) => c.id === activeCard.id,
       );
 
       const isSameColumn = activeCard.columnId === overColumnId;
@@ -757,8 +790,8 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
         prev.map((c) =>
           c.id === activeCard.id
             ? { ...c, columnId: overColumnId!, order: newOrder }
-            : c
-        )
+            : c,
+        ),
       );
 
       await moveCard(id, activeCard.id, overColumnId, newOrder);
@@ -773,10 +806,10 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
     if (!board || !text || !user || board.status === "completed") return;
 
     if (analytics) {
-      logEvent(analytics, 'add_card', {
+      logEvent(analytics, "add_card", {
         board_id: board.id,
         board_name: board.name,
-        column_id: columnId
+        column_id: columnId,
       });
     }
 
@@ -791,7 +824,7 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
       columnId: columnId,
       votes: 0,
       createdBy: user.uid,
-      creatorName: user.displayName || 'Anonymous',
+      creatorName: user.displayName || "Anonymous",
       createdAt: { toDate: () => new Date() } as any, // Mock Timestamp
       votedBy: [],
       // Default other fields
@@ -806,15 +839,20 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
       // Restore text on failure
       setNewCardText((prev) => ({ ...prev, [columnId]: text }));
       // Remove optimistic card
-      setItems((prev) => prev.filter(c => c.id !== tempId));
+      setItems((prev) => prev.filter((c) => c.id !== tempId));
       showSnackbar("Failed to add card", "error");
     }
   };
 
-  const handleUpdateCardOptimistic = async (cardId: string, newText: string) => {
+  const handleUpdateCardOptimistic = async (
+    cardId: string,
+    newText: string,
+  ) => {
     // Optimistic update
-    setItems((prev) => prev.map(c => c.id === cardId ? { ...c, text: newText } : c));
-    
+    setItems((prev) =>
+      prev.map((c) => (c.id === cardId ? { ...c, text: newText } : c)),
+    );
+
     try {
       await updateCard(id, cardId, { text: newText });
     } catch (e) {
@@ -825,21 +863,23 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
 
   const handleReactionOptimistic = async (cardId: string, emoji: string) => {
     if (!user) return;
-    
+
     // Optimistic update
-    setItems((prev) => prev.map(c => {
-      if (c.id === cardId) {
-        const reactions = { ...(c.reactions || {}) };
-        const userIds = reactions[emoji] || [];
-        if (userIds.includes(user.uid)) {
-          reactions[emoji] = userIds.filter(uid => uid !== user.uid);
-        } else {
-          reactions[emoji] = [...userIds, user.uid];
+    setItems((prev) =>
+      prev.map((c) => {
+        if (c.id === cardId) {
+          const reactions = { ...(c.reactions || {}) };
+          const userIds = reactions[emoji] || [];
+          if (userIds.includes(user.uid)) {
+            reactions[emoji] = userIds.filter((uid) => uid !== user.uid);
+          } else {
+            reactions[emoji] = [...userIds, user.uid];
+          }
+          return { ...c, reactions };
         }
-        return { ...c, reactions };
-      }
-      return c;
-    }));
+        return c;
+      }),
+    );
 
     try {
       await toggleReaction(id, cardId, emoji, user.uid);
@@ -850,32 +890,44 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
   };
   const handleVoteOptimistic = async (cardId: string) => {
     if (!user) return;
-    
+
     // Vote Limit Check
     if (board?.voteLimit && board.voteLimit > 0) {
-      const userVotes = cards.reduce((acc, c) => acc + (c.votedBy?.includes(user.uid) ? 1 : 0), 0);
-      const isAddingVote = !cards.find(c => c.id === cardId)?.votedBy?.includes(user.uid);
-      
+      const userVotes = cards.reduce(
+        (acc, c) => acc + (c.votedBy?.includes(user.uid) ? 1 : 0),
+        0,
+      );
+      const isAddingVote = !cards
+        .find((c) => c.id === cardId)
+        ?.votedBy?.includes(user.uid);
+
       if (isAddingVote && userVotes >= board.voteLimit) {
-        showSnackbar(`Vote limit reached (${board.voteLimit} votes max)`, "error");
+        showSnackbar(
+          `Vote limit reached (${board.voteLimit} votes max)`,
+          "error",
+        );
         return;
       }
     }
 
     try {
       // Optimistic update
-      setItems((prev) => prev.map(c => {
-        if (c.id === cardId) {
-          const votedBy = [...(c.votedBy || [])];
-          const hasVoted = votedBy.includes(user.uid);
-          return {
-            ...c,
-            votes: Math.max(0, (c.votes || 0) + (hasVoted ? -1 : 1)),
-            votedBy: hasVoted ? votedBy.filter(uid => uid !== user.uid) : [...votedBy, user.uid]
-          };
-        }
-        return c;
-      }));
+      setItems((prev) =>
+        prev.map((c) => {
+          if (c.id === cardId) {
+            const votedBy = [...(c.votedBy || [])];
+            const hasVoted = votedBy.includes(user.uid);
+            return {
+              ...c,
+              votes: Math.max(0, (c.votes || 0) + (hasVoted ? -1 : 1)),
+              votedBy: hasVoted
+                ? votedBy.filter((uid) => uid !== user.uid)
+                : [...votedBy, user.uid],
+            };
+          }
+          return c;
+        }),
+      );
 
       await toggleVote(id, cardId, user.uid);
     } catch (e) {
@@ -887,9 +939,9 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
   const handleDeleteCardOptimistic = async (cardId: string) => {
     // Optimistically remove from UI immediately
     if (analytics) {
-      logEvent(analytics, 'delete_card', {
+      logEvent(analytics, "delete_card", {
         board_id: id,
-        card_id: cardId
+        card_id: cardId,
       });
     }
     setItems((prev) => prev.filter((c) => c.id !== cardId));
@@ -906,11 +958,11 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
   const handleGenerateSummary = async () => {
     if (!board || cards.length === 0) return;
     setSummaryStatus(AISummaryStatus.LOADING);
-    
+
     if (analytics) {
-      logEvent(analytics, 'generate_ai_summary', {
+      logEvent(analytics, "generate_ai_summary", {
         board_id: board.id,
-        board_name: board.name
+        board_name: board.name,
       });
     }
 
@@ -929,15 +981,19 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
     }
   };
 
-  const handleAISmartAdd = async (columnId: string, text: string, isActionItem?: boolean) => {
+  const handleAISmartAdd = async (
+    columnId: string,
+    text: string,
+    isActionItem?: boolean,
+  ) => {
     if (!board) return;
     if (analytics) {
-      logEvent(analytics, 'add_card_ai', {
+      logEvent(analytics, "add_card_ai", {
         board_id: board.id,
-        column_id: columnId
+        column_id: columnId,
       });
     }
-    
+
     // Optimistic Update: Add card to UI immediately
     const tempId = `temp-ai-${Date.now()}`;
     const newCard: RetroCard = {
@@ -945,8 +1001,8 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
       text: text,
       columnId: columnId,
       votes: 0,
-      createdBy: user?.uid || 'anonymous',
-      creatorName: user?.displayName || 'Anonymous',
+      createdBy: user?.uid || "anonymous",
+      creatorName: user?.displayName || "Anonymous",
       createdAt: { toDate: () => new Date() } as any, // Mock Timestamp
       votedBy: [],
       isActionItem: !!isActionItem,
@@ -957,28 +1013,24 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
       await addCard(id, columnId, text, user, isActionItem);
     } catch (e) {
       console.error("Failed to add AI card", e);
-      setItems((prev) => prev.filter(c => c.id !== tempId));
+      setItems((prev) => prev.filter((c) => c.id !== tempId));
       showSnackbar("Failed to add card via AI", "error");
     }
   };
 
   // --- Exports ---
 
-
-
-
-
   const handleSaveSettings = async () => {
     if (newVoteLimit < 0) return;
     try {
-        await updateBoardSettings(id, { 
-            voteLimit: newVoteLimit,
-            defaultSort: newDefaultSort
-        });
-        setShowSettingsDialog(false);
-        showSnackbar("Board settings updated", "success");
+      await updateBoardSettings(id, {
+        voteLimit: newVoteLimit,
+        defaultSort: newDefaultSort,
+      });
+      setShowSettingsDialog(false);
+      showSnackbar("Board settings updated", "success");
     } catch (e) {
-        showSnackbar("Failed to update settings", "error");
+      showSnackbar("Failed to update settings", "error");
     }
   };
 
@@ -986,23 +1038,23 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
 
   const handleShare = (source: string) => {
     navigator.clipboard.writeText(window.location.href);
-    showSnackbar('Board link copied to clipboard!', 'success');
+    showSnackbar("Board link copied to clipboard!", "success");
     if (analytics) {
-      logEvent(analytics, 'share_board', {
+      logEvent(analytics, "share_board", {
         board_id: id,
         board_name: board?.name,
-        source: source
+        source: source,
       });
     }
   };
 
   const handleEndRetro = async () => {
     if (!board) return;
-    
+
     if (analytics) {
-      logEvent(analytics, 'end_retro', {
+      logEvent(analytics, "end_retro", {
         board_id: board.id,
-        board_name: board.name
+        board_name: board.name,
       });
     }
 
@@ -1014,15 +1066,13 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
 
   const handleLogout = async () => {
     if (analytics) {
-      logEvent(analytics, 'logout', {
-        user_id: user?.uid
+      logEvent(analytics, "logout", {
+        user_id: user?.uid,
       });
     }
     await logout();
     window.location.href = "/signin";
   };
-
-
 
   if (loading)
     return (
@@ -1032,7 +1082,6 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
     );
 
   if (!board) return <BoardNotFound />;
-
 
   if (!user) {
     return (
@@ -1056,7 +1105,7 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
           <div className="space-y-3">
             <button
               onClick={() => {
-                if (analytics) logEvent(analytics, 'click_login_google');
+                if (analytics) logEvent(analytics, "click_login_google");
                 loginWithGoogle();
               }}
               className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-white dark:bg-dark-800 text-gray-700 dark:text-white border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-dark-700 transition-all font-medium shadow-sm hover:shadow-md group"
@@ -1095,7 +1144,7 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
 
             <button
               onClick={async () => {
-                if (analytics) logEvent(analytics, 'click_login_guest');
+                if (analytics) logEvent(analytics, "click_login_guest");
                 try {
                   await loginAsGuest();
                 } catch (e: any) {
@@ -1103,7 +1152,7 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
                   if (e.message.includes("ADMIN_ONLY_OPERATION")) {
                     showSnackbar(
                       "Guest login disabled in Firebase Console",
-                      "error"
+                      "error",
                     );
                   } else {
                     showSnackbar("Failed to sign in as guest", "error");
@@ -1181,219 +1230,447 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
           {/* User Profile (Mobile Only - Row 1) */}
           <div className="md:hidden">
             <HeaderDropdown
-                user={user}
-                onLogout={handleLogout}
-                onExportPDF={user?.uid === board.createdBy ? () => exportToPDF(board.name, board.columns, cards) : undefined}
-                onExportExcel={
-                  user?.uid === board.createdBy ? () => exportToExcel(board.name, board.columns, cards) : undefined
-                }
+              user={user}
+              onLogout={handleLogout}
+              onExportPDF={
+                user?.uid === board.createdBy
+                  ? () => exportToPDF(board.name, board.columns, cards)
+                  : undefined
+              }
+              onExportExcel={
+                user?.uid === board.createdBy
+                  ? () => exportToExcel(board.name, board.columns, cards)
+                  : undefined
+              }
             />
           </div>
         </div>
 
         {/* --- ROW 2 (MOBILE) / EXTENSION (DESKTOP) --- */}
         <div className="flex items-center justify-between md:justify-end w-full md:w-auto order-2 gap-2">
-
-
           {/* Tasks Sidebar Toggle - Restored to Main Header */}
-
-
 
           {/* --- COMPACT HEADER CONTROLS --- */}
           <div className="flex items-center justify-between md:justify-end w-full md:w-auto gap-1 md:gap-2">
-             {/* Left side: Timer (grouped with desktop icons on larger screens) */}
-             <div className="flex items-center gap-1 md:gap-2">
-                 {board.timer?.status && (
-                     <div className={`flex items-center gap-1.5 px-2 py-1.5 rounded-lg border ${
-                         board.timer?.status === 'running' 
-                         ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-600 dark:text-red-400' 
-                         : 'bg-gray-50 dark:bg-dark-800 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300'
-                     }`}>
-                         {user?.uid === board.createdBy && !isCompleted ? (
-                             <button 
-                               onClick={() => setShowTimerDialog(true)}
-                               className="hover:text-brand-500 transition-colors"
-                               title="Set Timer Presets"
-                             >
-                                 <Clock className="w-3.5 h-3.5" />
-                             </button>
-                         ) : (
-                             <Clock className="w-3.5 h-3.5" />
-                         )}
-                         <span className={`font-mono font-bold text-sm ${board.timer?.status === 'running' && timeLeft < 60 ? 'animate-pulse' : ''}`}>
-                             {formatTime(timeLeft)}
-                         </span>
-                         {user?.uid === board.createdBy && !isCompleted && (
-                            <div className="flex items-center gap-1 ml-1 border-l border-gray-300 dark:border-gray-600 pl-1">
-                                <button onClick={() => adjustTimer(id, -60)} className="p-0.5 hover:text-gray-900 dark:hover:text-white text-[10px] font-bold w-4 text-center">-</button>
-                                <button onClick={() => adjustTimer(id, 60)} className="p-0.5 hover:text-gray-900 dark:hover:text-white text-[10px] font-bold w-4 text-center">+</button>
-                                {board.timer?.status === 'running' ? (
-                                    <button onClick={handlePauseTimer} className="p-0.5 hover:text-gray-900 dark:hover:text-white"><Pause className="w-3 h-3" /></button>
-                                ) : (
-                                    <button onClick={handleResumeTimer} className="p-0.5 hover:text-gray-900 dark:hover:text-white"><Play className="w-3 h-3" /></button>
-                                )}
-                                <button onClick={handleStopTimer} className="p-0.5 hover:text-red-500"><Square className="w-3 h-3" /></button>
-                            </div>
-                         )}
-                     </div>
-                 )}
-
-
-                 {/* Desktop Toggles (Private/Focus) - Hidden on Mobile */}
-                 <div className="hidden md:flex items-center gap-1.5 ml-1">
-                    {user?.uid === board.createdBy && (
-                        <button
-                        onClick={() => {
-                            const newMode = !isPrivateMode;
-                            togglePrivateMode(id, newMode);
-                        }}
-                        className={`flex items-center justify-center w-8 h-8 rounded-lg border transition-all ${isPrivateMode ? "bg-purple-100 dark:bg-purple-900/20 border-purple-500 text-purple-600 shadow-[0_0_15px_rgba(216,180,254,0.3)]" : "bg-white dark:bg-dark-900 border-gray-200 dark:border-gray-800 text-gray-500 hover:bg-gray-50 dark:hover:bg-dark-800"}`}
-                        title="Private Mode"
-                        >
-                        {isPrivateMode ? "🙈" : "👁️"}
-                        </button>
-                    )}
+            {/* Left side: Timer (grouped with desktop icons on larger screens) */}
+            <div className="flex items-center gap-1 md:gap-2">
+              {board.timer?.status && (
+                <div
+                  className={`flex items-center gap-1.5 px-2 py-1.5 rounded-lg border ${
+                    board.timer?.status === "running"
+                      ? "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-600 dark:text-red-400"
+                      : "bg-gray-50 dark:bg-dark-800 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300"
+                  }`}
+                >
+                  {user?.uid === board.createdBy && !isCompleted ? (
                     <button
-                        onClick={() => setFocusModeIndex(0)}
-                        className="flex items-center justify-center w-8 h-8 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-dark-900 text-gray-500 hover:bg-gray-50 dark:hover:bg-dark-800 transition-colors"
-                        title="Focus Mode"
+                      onClick={() => setShowTimerDialog(true)}
+                      className="hover:text-brand-500 transition-colors"
+                      title="Set Timer Presets"
                     >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h6v6"></path><path d="M9 21H3v-6"></path><path d="M21 3l-7 7"></path><path d="M3 21l7-7"></path></svg>
+                      <Clock className="w-3.5 h-3.5" />
                     </button>
-                 </div>
-
-                 <div className="hidden md:block h-4 w-px bg-gray-200 dark:bg-gray-800 mx-1"></div>
-
-                 {/* Desktop Controls (Hidden on Mobile) */}
-                 <div className="hidden md:flex items-center gap-1 md:gap-2">
-                    <button onClick={() => setSortBy(prev => prev === 'date' ? 'votes' : 'date')} className={`p-2 rounded-lg transition-all ${sortBy === 'votes' ? 'bg-brand-50 dark:bg-brand-900/20 text-brand-600 dark:text-brand-400' : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-dark-800'}`} title="Sort Cards"><ArrowUpDown className="w-4 h-4" /></button>
-                    <button onClick={() => setIsTaskSidebarOpen(true)} className="p-2 text-gray-500 hover:bg-gray-100 dark:hover:bg-dark-800 rounded-lg relative" title="View Tasks"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path></svg>{items.filter(i => i.isActionItem).length > 0 && <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-blue-500 border border-white dark:border-dark-900"></span>}</button>
-                    {user?.uid === board.createdBy && (
-                        <>
-                            <button onClick={handleGenerateSummary} className="p-2 text-gray-500 hover:bg-gray-100 dark:hover:bg-dark-800 rounded-lg" title="AI Summary"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg></button>
-                            <button onClick={() => { setNewVoteLimit(board.voteLimit || 0); setNewDefaultSort(board.defaultSort || 'date'); setShowSettingsDialog(true); }} className="p-2 text-gray-500 hover:bg-gray-100 dark:hover:bg-dark-800 rounded-lg" title="Settings"><Settings className="w-4 h-4" /></button>
-                            {!isCompleted && (
-                                <button onClick={() => setShowEndRetroDialog(true)} className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg" title="End Retro"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><rect width="6" height="6" x="9" y="9"/></svg></button>
-                            )}
-                        </>
-                    )}
-                    <button onClick={async () => { await navigator.clipboard.writeText(window.location.href); showSnackbar("Copied!", "success"); }} className="bg-brand-600 hover:bg-brand-700 text-white px-3 py-1.5 rounded-lg font-bold text-xs flex items-center gap-2 shadow-sm"><Share2 className="w-3.5 h-3.5" /> Share</button>
-                 </div>
-             </div>
-
-             {/* Right side: Mobile toolbox (far right) */}
-             <div className="md:hidden relative">
-                <button onClick={() => setActiveId(activeId === 'header-more' ? null : 'header-more')} className="p-2 text-gray-500 hover:bg-gray-100 dark:hover:bg-dark-800 rounded-lg transition-colors">
-                    <LayoutGrid className="w-5 h-5" />
-                </button>
-                {activeId === 'header-more' && (
-                    <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-dark-900 border border-gray-200 dark:border-gray-800 rounded-xl shadow-xl z-50 py-2 animate-in fade-in zoom-in-95">
-                        <button 
-                            onClick={() => { setSortBy(prev => prev === 'date' ? 'votes' : 'date'); setActiveId(null); }} 
-                            className="w-full text-left px-4 py-2.5 text-sm flex items-center gap-3 hover:bg-gray-50 dark:hover:bg-dark-800 text-gray-700 dark:text-gray-300 transition-colors"
+                  ) : (
+                    <Clock className="w-3.5 h-3.5" />
+                  )}
+                  <span
+                    className={`font-mono font-bold text-sm ${board.timer?.status === "running" && timeLeft < 60 ? "animate-pulse" : ""}`}
+                  >
+                    {formatTime(timeLeft)}
+                  </span>
+                  {user?.uid === board.createdBy && !isCompleted && (
+                    <div className="flex items-center gap-1 ml-1 border-l border-gray-300 dark:border-gray-600 pl-1">
+                      <button
+                        onClick={() => adjustTimer(id, -60)}
+                        className="p-0.5 hover:text-gray-900 dark:hover:text-white text-[10px] font-bold w-4 text-center"
+                      >
+                        -
+                      </button>
+                      <button
+                        onClick={() => adjustTimer(id, 60)}
+                        className="p-0.5 hover:text-gray-900 dark:hover:text-white text-[10px] font-bold w-4 text-center"
+                      >
+                        +
+                      </button>
+                      {board.timer?.status === "running" ? (
+                        <button
+                          onClick={handlePauseTimer}
+                          className="p-0.5 hover:text-gray-900 dark:hover:text-white"
                         >
-                            <ArrowUpDown className="w-4 h-4 text-gray-500" /> 
-                            <span>Sort: {sortBy === 'date' ? 'Votes' : 'Date'}</span>
+                          <Pause className="w-3 h-3" />
                         </button>
-
-                        <button 
-                            onClick={() => { setIsTaskSidebarOpen(true); setActiveId(null); }} 
-                            className="w-full text-left px-4 py-2.5 text-sm flex items-center gap-3 hover:bg-gray-50 dark:hover:bg-dark-800 text-gray-700 dark:text-gray-300 transition-colors"
+                      ) : (
+                        <button
+                          onClick={handleResumeTimer}
+                          className="p-0.5 hover:text-gray-900 dark:hover:text-white"
                         >
-                            <div className="relative">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-500"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path></svg>
-                                {items.filter(i => i.isActionItem).length > 0 && (
-                                    <span className="absolute -top-1 -right-1 h-1.5 w-1.5 rounded-full bg-blue-500"></span>
-                                )}
-                            </div>
-                            <span>View Tasks</span>
+                          <Play className="w-3 h-3" />
                         </button>
-
-                        {user?.uid === board.createdBy && (
-                            <button 
-                                onClick={() => { handleGenerateSummary(); setActiveId(null); }} 
-                                className="w-full text-left px-4 py-2.5 text-sm flex items-center gap-3 hover:bg-gray-50 dark:hover:bg-dark-800 text-gray-700 dark:text-gray-300 transition-colors"
-                            >
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-500"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>
-                                <span>AI Summary</span>
-                            </button>
-                        )}
-
-                        {user?.uid === board.createdBy && (
-                            <button 
-                                onClick={() => { 
-                                    setNewVoteLimit(board.voteLimit || 0); 
-                                    setNewDefaultSort(board.defaultSort || 'date');
-                                    setShowSettingsDialog(true); 
-                                    setActiveId(null); 
-                                }} 
-                                className="w-full text-left px-4 py-2.5 text-sm flex items-center gap-3 hover:bg-gray-50 dark:hover:bg-dark-800 text-gray-700 dark:text-gray-300 transition-colors"
-                            >
-                                <Settings className="w-4 h-4 text-gray-500" />
-                                <span>Board Settings</span>
-                            </button>
-                        )}
-
-                         <button 
-                            onClick={() => { setFocusModeIndex(0); setActiveId(null); }} 
-                            className="w-full text-left px-4 py-2.5 text-sm flex items-center gap-3 hover:bg-gray-50 dark:hover:bg-dark-800 text-gray-700 dark:text-gray-300 transition-colors"
-                         >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-500"><path d="M15 3h6v6"></path><path d="M9 21H3v-6"></path><path d="M21 3l-7 7"></path><path d="M3 21l7-7"></path></svg>
-                            <span>Focus Mode</span>
-                         </button>
-
-                        {user?.uid === board.createdBy && (
-                            <button 
-                                onClick={() => { togglePrivateMode(id, !isPrivateMode); setActiveId(null); }} 
-                                className="w-full text-left px-4 py-2.5 text-sm flex items-center gap-3 hover:bg-gray-50 dark:hover:bg-dark-800 text-gray-700 dark:text-gray-300 transition-colors"
-                            >
-                                <span className="w-4 text-center text-base">{isPrivateMode ? "🙈" : "👁️"}</span>
-                                <span>{isPrivateMode ? "Disable Private Mode" : "Enable Private Mode"}</span>
-                            </button>
-                        )}
-
-                        <div className="border-t border-gray-100 dark:border-gray-800 my-1"></div>
-
-                        <button 
-                            onClick={async () => { await navigator.clipboard.writeText(window.location.href); showSnackbar("Copied!", "success"); setActiveId(null); }} 
-                            className="w-full text-left px-4 py-2.5 text-sm flex items-center gap-3 hover:bg-gray-50 dark:hover:bg-dark-800 text-gray-700 dark:text-gray-300 transition-colors"
-                        >
-                            <Share2 className="w-4 h-4 text-gray-500" />
-                            <span>Share Board</span>
-                        </button>
-
-                        {!isCompleted && user?.uid === board.createdBy && (
-                            <div className="border-t border-gray-100 dark:border-gray-800 mt-1 pt-1">
-                                <button 
-                                    onClick={() => { setShowEndRetroDialog(true); setActiveId(null); }} 
-                                    className="w-full text-left px-4 py-2.5 text-sm flex items-center gap-3 hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 transition-colors"
-                                >
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><rect width="6" height="6" x="9" y="9"/></svg>
-                                    <span>End Retro</span>
-                                </button>
-                            </div>
-                        )}
+                      )}
+                      <button
+                        onClick={handleStopTimer}
+                        className="p-0.5 hover:text-red-500"
+                      >
+                        <Square className="w-3 h-3" />
+                      </button>
                     </div>
+                  )}
+                </div>
+              )}
+
+              {/* Desktop Toggles (Private/Focus) - Hidden on Mobile */}
+              <div className="hidden md:flex items-center gap-1.5 ml-1">
+                {user?.uid === board.createdBy && (
+                  <button
+                    onClick={() => {
+                      const newMode = !isPrivateMode;
+                      togglePrivateMode(id, newMode);
+                    }}
+                    className={`flex items-center justify-center w-8 h-8 rounded-lg border transition-all ${isPrivateMode ? "bg-purple-100 dark:bg-purple-900/20 border-purple-500 text-purple-600 shadow-[0_0_15px_rgba(216,180,254,0.3)]" : "bg-white dark:bg-dark-900 border-gray-200 dark:border-gray-800 text-gray-500 hover:bg-gray-50 dark:hover:bg-dark-800"}`}
+                    title="Private Mode"
+                  >
+                    {isPrivateMode ? "🙈" : "👁️"}
+                  </button>
                 )}
-             </div>
+                <button
+                  onClick={() => setFocusModeIndex(0)}
+                  className="flex items-center justify-center w-8 h-8 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-dark-900 text-gray-500 hover:bg-gray-50 dark:hover:bg-dark-800 transition-colors"
+                  title="Focus Mode"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M15 3h6v6"></path>
+                    <path d="M9 21H3v-6"></path>
+                    <path d="M21 3l-7 7"></path>
+                    <path d="M3 21l7-7"></path>
+                  </svg>
+                </button>
+              </div>
+
+              <div className="hidden md:block h-4 w-px bg-gray-200 dark:bg-gray-800 mx-1"></div>
+
+              {/* Desktop Controls (Hidden on Mobile) */}
+              <div className="hidden md:flex items-center gap-1 md:gap-2">
+                <button
+                  onClick={() =>
+                    setSortBy((prev) => (prev === "date" ? "votes" : "date"))
+                  }
+                  className={`p-2 rounded-lg transition-all ${sortBy === "votes" ? "bg-brand-50 dark:bg-brand-900/20 text-brand-600 dark:text-brand-400" : "text-gray-500 hover:bg-gray-100 dark:hover:bg-dark-800"}`}
+                  title="Sort Cards"
+                >
+                  <ArrowUpDown className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => setIsTaskSidebarOpen(true)}
+                  className="p-2 text-gray-500 hover:bg-gray-100 dark:hover:bg-dark-800 rounded-lg relative"
+                  title="View Tasks"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
+                  </svg>
+                  {items.filter((i) => i.isActionItem).length > 0 && (
+                    <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-blue-500 border border-white dark:border-dark-900"></span>
+                  )}
+                </button>
+                {user?.uid === board.createdBy && (
+                  <>
+                    <button
+                      onClick={handleGenerateSummary}
+                      className="p-2 text-gray-500 hover:bg-gray-100 dark:hover:bg-dark-800 rounded-lg"
+                      title="AI Summary"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
+                        <path d="M5 3v4" />
+                        <path d="M19 17v4" />
+                        <path d="M3 5h4" />
+                        <path d="M17 19h4" />
+                      </svg>
+                    </button>
+                    <button
+                      onClick={() => {
+                        setNewVoteLimit(board.voteLimit || 0);
+                        setNewDefaultSort(board.defaultSort || "date");
+                        setShowSettingsDialog(true);
+                      }}
+                      className="p-2 text-gray-500 hover:bg-gray-100 dark:hover:bg-dark-800 rounded-lg"
+                      title="Settings"
+                    >
+                      <Settings className="w-4 h-4" />
+                    </button>
+                    {!isCompleted && (
+                      <button
+                        onClick={() => setShowEndRetroDialog(true)}
+                        className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg"
+                        title="End Retro"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <circle cx="12" cy="12" r="10" />
+                          <rect width="6" height="6" x="9" y="9" />
+                        </svg>
+                      </button>
+                    )}
+                  </>
+                )}
+                <button
+                  onClick={async () => {
+                    await navigator.clipboard.writeText(window.location.href);
+                    showSnackbar("Copied!", "success");
+                  }}
+                  className="bg-brand-600 hover:bg-brand-700 text-white px-3 py-1.5 rounded-lg font-bold text-xs flex items-center gap-2 shadow-sm"
+                >
+                  <Share2 className="w-3.5 h-3.5" /> Share
+                </button>
+              </div>
+            </div>
+
+            {/* Right side: Mobile toolbox (far right) */}
+            <div className="md:hidden relative">
+              <button
+                onClick={() =>
+                  setActiveId(activeId === "header-more" ? null : "header-more")
+                }
+                className="p-2 text-gray-500 hover:bg-gray-100 dark:hover:bg-dark-800 rounded-lg transition-colors"
+              >
+                <LayoutGrid className="w-5 h-5" />
+              </button>
+              {activeId === "header-more" && (
+                <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-dark-900 border border-gray-200 dark:border-gray-800 rounded-xl shadow-xl z-50 py-2 animate-in fade-in zoom-in-95">
+                  <button
+                    onClick={() => {
+                      setSortBy((prev) => (prev === "date" ? "votes" : "date"));
+                      setActiveId(null);
+                    }}
+                    className="w-full text-left px-4 py-2.5 text-sm flex items-center gap-3 hover:bg-gray-50 dark:hover:bg-dark-800 text-gray-700 dark:text-gray-300 transition-colors"
+                  >
+                    <ArrowUpDown className="w-4 h-4 text-gray-500" />
+                    <span>Sort: {sortBy === "date" ? "Votes" : "Date"}</span>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setIsTaskSidebarOpen(true);
+                      setActiveId(null);
+                    }}
+                    className="w-full text-left px-4 py-2.5 text-sm flex items-center gap-3 hover:bg-gray-50 dark:hover:bg-dark-800 text-gray-700 dark:text-gray-300 transition-colors"
+                  >
+                    <div className="relative">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="text-gray-500"
+                      >
+                        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
+                      </svg>
+                      {items.filter((i) => i.isActionItem).length > 0 && (
+                        <span className="absolute -top-1 -right-1 h-1.5 w-1.5 rounded-full bg-blue-500"></span>
+                      )}
+                    </div>
+                    <span>View Tasks</span>
+                  </button>
+
+                  {user?.uid === board.createdBy && (
+                    <button
+                      onClick={() => {
+                        handleGenerateSummary();
+                        setActiveId(null);
+                      }}
+                      className="w-full text-left px-4 py-2.5 text-sm flex items-center gap-3 hover:bg-gray-50 dark:hover:bg-dark-800 text-gray-700 dark:text-gray-300 transition-colors"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="text-gray-500"
+                      >
+                        <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
+                        <path d="M5 3v4" />
+                        <path d="M19 17v4" />
+                        <path d="M3 5h4" />
+                        <path d="M17 19h4" />
+                      </svg>
+                      <span>AI Summary</span>
+                    </button>
+                  )}
+
+                  {user?.uid === board.createdBy && (
+                    <button
+                      onClick={() => {
+                        setNewVoteLimit(board.voteLimit || 0);
+                        setNewDefaultSort(board.defaultSort || "date");
+                        setShowSettingsDialog(true);
+                        setActiveId(null);
+                      }}
+                      className="w-full text-left px-4 py-2.5 text-sm flex items-center gap-3 hover:bg-gray-50 dark:hover:bg-dark-800 text-gray-700 dark:text-gray-300 transition-colors"
+                    >
+                      <Settings className="w-4 h-4 text-gray-500" />
+                      <span>Board Settings</span>
+                    </button>
+                  )}
+
+                  <button
+                    onClick={() => {
+                      setFocusModeIndex(0);
+                      setActiveId(null);
+                    }}
+                    className="w-full text-left px-4 py-2.5 text-sm flex items-center gap-3 hover:bg-gray-50 dark:hover:bg-dark-800 text-gray-700 dark:text-gray-300 transition-colors"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="text-gray-500"
+                    >
+                      <path d="M15 3h6v6"></path>
+                      <path d="M9 21H3v-6"></path>
+                      <path d="M21 3l-7 7"></path>
+                      <path d="M3 21l7-7"></path>
+                    </svg>
+                    <span>Focus Mode</span>
+                  </button>
+
+                  {user?.uid === board.createdBy && (
+                    <button
+                      onClick={() => {
+                        togglePrivateMode(id, !isPrivateMode);
+                        setActiveId(null);
+                      }}
+                      className="w-full text-left px-4 py-2.5 text-sm flex items-center gap-3 hover:bg-gray-50 dark:hover:bg-dark-800 text-gray-700 dark:text-gray-300 transition-colors"
+                    >
+                      <span className="w-4 text-center text-base">
+                        {isPrivateMode ? "🙈" : "👁️"}
+                      </span>
+                      <span>
+                        {isPrivateMode
+                          ? "Disable Private Mode"
+                          : "Enable Private Mode"}
+                      </span>
+                    </button>
+                  )}
+
+                  <div className="border-t border-gray-100 dark:border-gray-800 my-1"></div>
+
+                  <button
+                    onClick={async () => {
+                      await navigator.clipboard.writeText(window.location.href);
+                      showSnackbar("Copied!", "success");
+                      setActiveId(null);
+                    }}
+                    className="w-full text-left px-4 py-2.5 text-sm flex items-center gap-3 hover:bg-gray-50 dark:hover:bg-dark-800 text-gray-700 dark:text-gray-300 transition-colors"
+                  >
+                    <Share2 className="w-4 h-4 text-gray-500" />
+                    <span>Share Board</span>
+                  </button>
+
+                  {!isCompleted && user?.uid === board.createdBy && (
+                    <div className="border-t border-gray-100 dark:border-gray-800 mt-1 pt-1">
+                      <button
+                        onClick={() => {
+                          setShowEndRetroDialog(true);
+                          setActiveId(null);
+                        }}
+                        className="w-full text-left px-4 py-2.5 text-sm flex items-center gap-3 hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 transition-colors"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <circle cx="12" cy="12" r="10" />
+                          <rect width="6" height="6" x="9" y="9" />
+                        </svg>
+                        <span>End Retro</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Desktop User Dropdown */}
           <div className="hidden md:block ml-2">
-              <HeaderDropdown
-                user={user}
-                onLogout={handleLogout}
-                onExportPDF={user?.uid === board.createdBy ? () => exportToPDF(board.name, board.columns, cards) : undefined}
-                onExportExcel={user?.uid === board.createdBy ? () => exportToExcel(board.name, board.columns, cards) : undefined}
-              />
+            <HeaderDropdown
+              user={user}
+              onLogout={handleLogout}
+              onExportPDF={
+                user?.uid === board.createdBy
+                  ? () => exportToPDF(board.name, board.columns, cards)
+                  : undefined
+              }
+              onExportExcel={
+                user?.uid === board.createdBy
+                  ? () => exportToExcel(board.name, board.columns, cards)
+                  : undefined
+              }
+            />
           </div>
-
         </div>
       </div>
-
-        
-
-
 
       {/* AI Summary Modal Overlay */}
       {summaryResult && (
@@ -1484,124 +1761,132 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
 
       {/* Timer Selection Dialog */}
       {showTimerDialog && (
-         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in">
-            <div className="bg-white dark:bg-dark-900 rounded-xl shadow-2xl max-w-sm w-full p-6 border border-gray-100 dark:border-gray-700">
-               <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
-                  <Clock className="w-5 h-5 text-brand-600" />
-                  Set Timer
-               </h2>
-               
-               <div className="grid grid-cols-2 gap-3 mb-6">
-                  {[5, 10, 15, 30].map(mins => (
-                     <button
-                        key={mins}
-                        onClick={() => {
-                           handleStartTimer(mins);
-                           setShowTimerDialog(false);
-                        }}
-                        className="py-3 px-4 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-brand-500 hover:bg-brand-50 dark:hover:bg-brand-900/20 text-gray-700 dark:text-gray-300 font-bold transition-all"
-                     >
-                        {mins} Min
-                     </button>
-                  ))}
-               </div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in">
+          <div className="bg-white dark:bg-dark-900 rounded-xl shadow-2xl max-w-sm w-full p-6 border border-gray-100 dark:border-gray-700">
+            <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
+              <Clock className="w-5 h-5 text-brand-600" />
+              Set Timer
+            </h2>
 
-               <div className="space-y-4">
-                  <div>
-                     <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 font-mono">Custom (1-30 min)</label>
-                     <div className="flex gap-2">
-                        <input 
-                           type="number" 
-                           min="1"
-                           max="30"
-                           className="flex-1 px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-black font-mono"
-                           placeholder="Mins"
-                           id="custom-timer-input"
-                        />
-                        <button 
-                           onClick={() => {
-                              const input = document.getElementById('custom-timer-input') as HTMLInputElement;
-                              const val = parseInt(input.value);
-                              if (val > 0) {
-                                 handleStartTimer(Math.min(val, 30));
-                                 setShowTimerDialog(false);
-                              }
-                           }}
-                           className="px-6 py-2 bg-brand-600 text-white rounded-lg font-bold hover:bg-brand-700 transition-colors"
-                        >
-                           Start
-                        </button>
-                     </div>
-                  </div>
-               </div>
-
-               <button 
-                  onClick={() => setShowTimerDialog(false)}
-                  className="w-full mt-6 py-2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 font-medium text-sm transition-colors"
-               >
-                  Cancel
-               </button>
+            <div className="grid grid-cols-2 gap-3 mb-6">
+              {[5, 10, 15, 30].map((mins) => (
+                <button
+                  key={mins}
+                  onClick={() => {
+                    handleStartTimer(mins);
+                    setShowTimerDialog(false);
+                  }}
+                  className="py-3 px-4 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-brand-500 hover:bg-brand-50 dark:hover:bg-brand-900/20 text-gray-700 dark:text-gray-300 font-bold transition-all"
+                >
+                  {mins} Min
+                </button>
+              ))}
             </div>
-         </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 font-mono">
+                  Custom (1-30 min)
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="number"
+                    min="1"
+                    max="30"
+                    className="flex-1 px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-black font-mono"
+                    placeholder="Mins"
+                    id="custom-timer-input"
+                  />
+                  <button
+                    onClick={() => {
+                      const input = document.getElementById(
+                        "custom-timer-input",
+                      ) as HTMLInputElement;
+                      const val = parseInt(input.value);
+                      if (val > 0) {
+                        handleStartTimer(Math.min(val, 30));
+                        setShowTimerDialog(false);
+                      }
+                    }}
+                    className="px-6 py-2 bg-brand-600 text-white rounded-lg font-bold hover:bg-brand-700 transition-colors"
+                  >
+                    Start
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setShowTimerDialog(false)}
+              className="w-full mt-6 py-2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 font-medium text-sm transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
       )}
 
       {/* Settings Dialog */}
       {showSettingsDialog && (
-         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in">
-            <div className="bg-white dark:bg-dark-900 rounded-xl shadow-2xl max-w-md w-full p-6 border border-gray-100 dark:border-gray-700">
-               <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-                  <Settings className="w-5 h-5" />
-                  Board Settings
-               </h2>
-               <div className="space-y-6">
-                  <div>
-                     <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 font-mono">
-                        Max Votes Per User
-                     </label>
-                     <div className="flex items-center gap-2">
-                        <input 
-                           type="number" 
-                           min="0"
-                           value={newVoteLimit}
-                           onChange={(e) => setNewVoteLimit(parseInt(e.target.value) || 0)}
-                           className="w-full p-2 rounded border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-black"
-                        />
-                        <span className="text-xs text-gray-500 whitespace-nowrap">
-                           (0 = Unlimited)
-                        </span>
-                     </div>
-                  </div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in">
+          <div className="bg-white dark:bg-dark-900 rounded-xl shadow-2xl max-w-md w-full p-6 border border-gray-100 dark:border-gray-700">
+            <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+              <Settings className="w-5 h-5" />
+              Board Settings
+            </h2>
+            <div className="space-y-6">
+              <div>
+                <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 font-mono">
+                  Max Votes Per User
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    min="0"
+                    value={newVoteLimit}
+                    onChange={(e) =>
+                      setNewVoteLimit(parseInt(e.target.value) || 0)
+                    }
+                    className="w-full p-2 rounded border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-black"
+                  />
+                  <span className="text-xs text-gray-500 whitespace-nowrap">
+                    (0 = Unlimited)
+                  </span>
+                </div>
+              </div>
 
-                  <div>
-                     <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 font-mono">
-                        Default Card Sorting
-                     </label>
-                     <select 
-                        value={newDefaultSort}
-                        onChange={(e) => setNewDefaultSort(e.target.value as 'date' | 'votes')}
-                        className="w-full p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-black font-mono text-sm focus:ring-1 focus:ring-brand-500 outline-none appearance-none"
-                     >
-                        <option value="date">Date Created</option>
-                        <option value="votes">Most Votes</option>
-                     </select>
-                  </div>
-               </div>
-               <div className="mt-6 flex justify-end gap-3">
-                  <button 
-                     onClick={() => setShowSettingsDialog(false)}
-                     className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg dark:text-gray-400 dark:hover:bg-gray-800"
-                  >
-                     Cancel
-                  </button>
-                  <button 
-                     onClick={handleSaveSettings}
-                     className="px-4 py-2 bg-brand-500 text-white rounded-lg hover:bg-brand-600 font-medium"
-                  >
-                     Save Settings
-                  </button>
-               </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 font-mono">
+                  Default Card Sorting
+                </label>
+                <select
+                  value={newDefaultSort}
+                  onChange={(e) =>
+                    setNewDefaultSort(e.target.value as "date" | "votes")
+                  }
+                  className="w-full p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-black font-mono text-sm focus:ring-1 focus:ring-brand-500 outline-none appearance-none"
+                >
+                  <option value="date">Date Created</option>
+                  <option value="votes">Most Votes</option>
+                </select>
+              </div>
             </div>
-         </div>
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={() => setShowSettingsDialog(false)}
+                className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg dark:text-gray-400 dark:hover:bg-gray-800"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveSettings}
+                className="px-4 py-2 bg-brand-500 text-white rounded-lg hover:bg-brand-600 font-medium"
+              >
+                Save Settings
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Merge Cards Dialog */}
@@ -1628,37 +1913,42 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
 
       {/* Private Mode Banner (Compact) */}
       {isPrivateMode && (
-         <div className="bg-indigo-600 dark:bg-indigo-900/90 backdrop-blur-sm text-white px-4 py-1 text-center text-xs font-medium animate-in slide-in-from-top-0 flex items-center justify-center gap-2 shadow-md relative z-30 border-b border-white/10">
-            <span className="text-base">🙈</span>
-            <span>Private Mode is Active. You cannot see other users' cards until it is disabled.</span>
-         </div>
+        <div className="bg-indigo-600 dark:bg-indigo-900/90 backdrop-blur-sm text-white px-4 py-1 text-center text-xs font-medium animate-in slide-in-from-top-0 flex items-center justify-center gap-2 shadow-md relative z-30 border-b border-white/10">
+          <span className="text-base">🙈</span>
+          <span>
+            Private Mode is Active. You cannot see other users' cards until it
+            is disabled.
+          </span>
+        </div>
       )}
       {/* AI Status Banner */}
       {!isCompleted && !isAISmartAddOpen && (
-        <div 
+        <div
           onClick={openAISmartAdd}
           className="bg-gradient-to-r from-brand-600 to-purple-600 text-white px-4 py-2 text-center text-xs font-medium animate-slideDownIn flex items-center justify-center gap-3 cursor-pointer hover:brightness-110 transition-all shadow-md relative z-30 group mb-1 sm:mb-0"
         >
           <span className="flex items-center gap-2">
             <span className="text-sm animate-pulse">✨</span>
-            {isChrome && aiStatus === 'downloading' ? (
-              <span>AI Model is downloading in the background (0-100%)... Please wait.</span>
+            {isChrome && aiStatus === "downloading" ? (
+              <span>
+                AI Model is downloading in the background (0-100%)... Please
+                wait.
+              </span>
             ) : (
               <>
-                <span className="hidden sm:inline">New: Use AI Smart Add to automatically sort your thoughts into columns!</span>
+                <span className="hidden sm:inline">
+                  New: Use AI Smart Add to automatically sort your thoughts into
+                  columns!
+                </span>
                 <span className="sm:hidden">Try AI Smart Add!</span>
               </>
             )}
           </span>
           <span className="bg-white/20 px-1.5 py-0.5 rounded text-[9px] uppercase font-bold tracking-wider group-hover:bg-white/30 transition-colors">
-            {isChrome && aiStatus === 'downloading' ? 'Status' : 'Try Now'}
+            {isChrome && aiStatus === "downloading" ? "Status" : "Try Now"}
           </span>
         </div>
       )}
-
-
-
-
 
       {/* Columns Area */}
       <div className="flex-1 overflow-x-hidden md:overflow-x-auto overflow-y-auto">
@@ -1675,7 +1965,11 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
               strategy={verticalListSortingStrategy}
             >
               {board.columns.map((column) => (
-                <DroppableColumn key={column.id} column={column} data-testid={`column-${column.id}`}>
+                <DroppableColumn
+                  key={column.id}
+                  column={column}
+                  data-testid={`column-${column.id}`}
+                >
                   {/* Column Header */}
                   <div
                     className={`p-4 border-b border-gray-100 dark:border-gray-800 bg-white/95 dark:bg-dark-900/95 rounded-t-lg backdrop-blur-sm sticky top-0 z-20 overflow-hidden shadow-sm`}
@@ -1690,36 +1984,36 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
                       </span>
                     </h3>
 
-                   {/* Add Card Input (Sticky) */}
-                   {!isCompleted && (
-                     <div className="relative group/input mb-1 z-20">
-                       <textarea
-                         placeholder="> Add card..."
-                         className="w-full text-sm p-3 pr-10 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#18181b] dark:text-white focus:ring-1 focus:ring-brand-500 focus:border-brand-500 focus:shadow-[0_0_10px_rgba(45,212,191,0.2)] outline-none resize-none shadow-sm transition-all font-mono"
-                         rows={2}
-                         value={newCardText[column.id] || ""}
-                         onChange={(e) =>
-                           setNewCardText({
-                             ...newCardText,
-                             [column.id]: e.target.value,
-                           })
-                         }
-                         onKeyDown={(e) => {
-                           if (e.key === "Enter" && !e.shiftKey) {
-                             e.preventDefault();
-                             handleAddCard(column.id);
-                           }
-                         }}
-                       />
-                       <button
-                         onClick={() => handleAddCard(column.id)}
-                         className="absolute bottom-2 right-2 p-2 text-gray-400 hover:text-brand-500 transition-colors opacity-50 group-hover/input:opacity-100"
-                         title="Add Card"
-                       >
-                         ↵
-                       </button>
-                     </div>
-                   )}
+                    {/* Add Card Input (Sticky) */}
+                    {!isCompleted && (
+                      <div className="relative group/input mb-1 z-20">
+                        <textarea
+                          placeholder="> Add card..."
+                          className="w-full text-sm p-3 pr-10 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#18181b] dark:text-white focus:ring-1 focus:ring-brand-500 focus:border-brand-500 focus:shadow-[0_0_10px_rgba(45,212,191,0.2)] outline-none resize-none shadow-sm transition-all font-mono"
+                          rows={2}
+                          value={newCardText[column.id] || ""}
+                          onChange={(e) =>
+                            setNewCardText({
+                              ...newCardText,
+                              [column.id]: e.target.value,
+                            })
+                          }
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" && !e.shiftKey) {
+                              e.preventDefault();
+                              handleAddCard(column.id);
+                            }
+                          }}
+                        />
+                        <button
+                          onClick={() => handleAddCard(column.id)}
+                          className="absolute bottom-2 right-2 p-2 text-gray-400 hover:text-brand-500 transition-colors opacity-50 group-hover/input:opacity-100"
+                          title="Add Card"
+                        >
+                          ↵
+                        </button>
+                      </div>
+                    )}
                   </div>
 
                   {/* Cards Container */}
@@ -1745,13 +2039,10 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
                             onUpdate={handleUpdateCardOptimistic}
                             onReaction={handleReactionOptimistic}
                             onVote={handleVoteOptimistic}
-
                           />
                         ))}
                     </SortableContext>
                   </div>
-
-
                 </DroppableColumn>
               ))}
             </SortableContext>
@@ -1773,50 +2064,52 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
       {isAISmartAddOpen && !isCompleted && (
         <div className="fixed inset-0 z-[100] flex flex-col justify-end pointer-events-none sticky-ai-sheet">
           {/* Backdrop with stronger blur */}
-          <div 
-            className={`absolute inset-0 bg-black/60 backdrop-blur-[2px] pointer-events-auto transition-opacity duration-500 ease-in-out ${isAISmartAddActive ? 'opacity-100' : 'opacity-0'}`}
+          <div
+            className={`absolute inset-0 bg-black/60 backdrop-blur-[2px] pointer-events-auto transition-opacity duration-500 ease-in-out ${isAISmartAddActive ? "opacity-100" : "opacity-0"}`}
             onClick={closeAISmartAdd}
           ></div>
-          
+
           {/* Sheet with clearer separation */}
-          <div 
-            className={`relative w-full max-w-2xl mx-auto bg-white dark:bg-dark-900 rounded-t-[2.5rem] shadow-[0_-20px_50px_rgba(0,0,0,0.3)] pointer-events-auto transform transition-all duration-700 [transition-timing-function:cubic-bezier(0.32,0.72,0,1)] p-6 pt-10 pb-12 border-t border-brand-500/30 ring-1 ring-white/10 ${isAISmartAddActive ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'}`}
+          <div
+            className={`relative w-full max-w-2xl mx-auto bg-white dark:bg-dark-900 rounded-t-[2.5rem] shadow-[0_-20px_50px_rgba(0,0,0,0.3)] pointer-events-auto transform transition-all duration-700 [transition-timing-function:cubic-bezier(0.32,0.72,0,1)] p-6 pt-10 pb-12 border-t border-brand-500/30 ring-1 ring-white/10 ${isAISmartAddActive ? "translate-y-0 opacity-100" : "translate-y-full opacity-0"}`}
           >
             {/* Handle */}
             <div className="absolute top-4 left-1/2 -translate-x-1/2 w-12 h-1.5 bg-gray-200 dark:bg-gray-800 rounded-full"></div>
-            
-            <button 
+
+            <button
               onClick={closeAISmartAdd}
               className="absolute top-6 right-8 p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors text-xl"
             >
               ✕
             </button>
-            
+
             <div className="mb-8 text-center text-ai-header">
               <h3 className="text-2xl font-bold bg-gradient-to-r from-brand-500 to-purple-600 bg-clip-text text-transparent flex justify-center items-center gap-2 mb-2">
                 <span>✨</span>
                 AI Smart Add
               </h3>
               <p className="text-sm text-gray-500 dark:text-gray-400 max-w-md mx-auto">
-                Type your thoughts and let our on-device AI sort them for you. If it's not quite right, you can always drag and drop cards to adjust them!
+                Type your thoughts and let our on-device AI sort them for you.
+                If it's not quite right, you can always drag and drop cards to
+                adjust them!
               </p>
             </div>
-            
-            <AISmartAdd 
+
+            <AISmartAdd
               boardId={id}
-              columns={board.columns} 
+              columns={board.columns}
               onAddCard={handleAISmartAdd}
               disabled={loading}
               autoFocus={isAISmartAddOpen}
             />
-            
+
             <div className="mt-4 text-center">
-               <button 
-                 onClick={closeAISmartAdd}
-                 className="text-gray-400 hover:text-brand-500 text-xs font-medium transition-colors"
-               >
-                 Close and go back to board
-               </button>
+              <button
+                onClick={closeAISmartAdd}
+                className="text-gray-400 hover:text-brand-500 text-xs font-medium transition-colors"
+              >
+                Close and go back to board
+              </button>
             </div>
           </div>
         </div>
@@ -1830,17 +2123,19 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
               className="flex items-center gap-2 bg-brand-500 dark:bg-brand-600 text-white px-4 py-2 rounded-full shadow-[0_4px_20px_rgb(20,184,166,0.4)] hover:shadow-[0_4px_25px_rgb(20,184,166,0.6)] hover:scale-105 active:scale-95 transition-all duration-300 font-bold group border border-white/20 relative"
             >
               <span className="text-sm group-hover:animate-bounce">✨</span>
-              <span className="text-xs uppercase tracking-tighter">AI Smart Add</span>
+              <span className="text-xs uppercase tracking-tighter">
+                AI Smart Add
+              </span>
               <div className="absolute -inset-0.5 rounded-full bg-brand-400 opacity-20 animate-ping pointer-events-none"></div>
             </button>
           </div>
         </div>
       )}
 
-      <ActionItemSidebar 
-        isOpen={isTaskSidebarOpen} 
-        onClose={() => setIsTaskSidebarOpen(false)} 
-        items={items} 
+      <ActionItemSidebar
+        isOpen={isTaskSidebarOpen}
+        onClose={() => setIsTaskSidebarOpen(false)}
+        items={items}
       />
     </div>
   );
