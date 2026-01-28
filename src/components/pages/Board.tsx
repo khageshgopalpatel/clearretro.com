@@ -9,6 +9,10 @@ import {
   useSensor,
   useSensors,
   useDroppable,
+  useDndContext, // Add this
+  pointerWithin,
+  rectIntersection,
+  getFirstCollision,
   type DragEndEvent,
   type DragStartEvent,
   type DragOverEvent,
@@ -97,7 +101,7 @@ const SortableCardWrapper: React.FC<SortableCardWrapperProps> = ({
   onUpdate,
   onReaction,
   onVote,
-  onMerge,
+
 }) => {
   const {
     attributes,
@@ -113,25 +117,53 @@ const SortableCardWrapper: React.FC<SortableCardWrapperProps> = ({
     transition,
   };
 
+  const { active } = useDndContext();
+  const { setNodeRef: setDroppableRef, isOver } = useDroppable({
+    id: `merge-${card.id}`,
+    data: { type: 'merge-target', cardId: card.id }
+  });
+
+  const isDraggingSomething = !!active;
+  const isTargetForMerge = isDraggingSomething && active.id !== card.id;
+
   return (
-    <Card
-      card={card}
-      boardId={boardId}
-      isPrivate={isPrivate}
-      isCompleted={isCompleted}
-      onDelete={onDelete}
-      onUpdate={onUpdate}
-      onReaction={onReaction}
-      onVote={onVote}
-      onMerge={onMerge}
-      sortableProps={{
-        attributes,
-        listeners,
-        setNodeRef,
-        style,
-        isDragging,
-      }}
-    />
+    <div className="relative group">
+      {/* Merge Target Overlay - High Z-index to capture drop and prevent sort */}
+      {isTargetForMerge && (
+         <div 
+            ref={setDroppableRef} 
+            className={`absolute inset-0 z-20 rounded-xl transition-all duration-200 ${isOver ? 'bg-brand-500/10 border-2 border-brand-500 backdrop-blur-[1px]' : ''}`}
+         >
+            {isOver && (
+                <div className="absolute inset-0 flex items-center justify-center animate-in fade-in zoom-in duration-200">
+                    <div className="bg-brand-500 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1.5">
+                        <Merge className="w-3.5 h-3.5" />
+                        <span>Drop to Merge</span>
+                    </div>
+                </div>
+            )}
+         </div>
+      )}
+
+      <Card
+        card={card}
+        boardId={boardId}
+        isPrivate={isPrivate}
+        isCompleted={isCompleted}
+        onDelete={onDelete}
+        onUpdate={onUpdate}
+        onReaction={onReaction}
+        onVote={onVote}
+
+        sortableProps={{
+            attributes,
+            listeners,
+            setNodeRef,
+            style,
+            isDragging,
+        }}
+      />
+    </div>
   );
 };
 
@@ -168,6 +200,26 @@ interface BoardProps {
 }
 
 const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
+  // Custom collision strategy to prioritize merge targets and empty columns
+  const customCollisionStrategy = (args: any) => {
+    // First, look for specific collisions under the pointer (Merge targets, Columns, Cards)
+    const pointerCollisions = pointerWithin(args);
+    
+    // 1. Check for Merge Target (Priority)
+    const mergeTarget = pointerCollisions.find((c: any) => c.id.toString().startsWith('merge-'));
+    if (mergeTarget) {
+      return [mergeTarget];
+    }
+
+    // 2. Return pointer collisions if found (Fixes empty column sorting)
+    if (pointerCollisions.length > 0) {
+      return pointerCollisions;
+    }
+
+    // 3. Fallback to closest corners for sorting if no direct pointer collision
+    return closestCorners(args);
+  };
+
   const [id, setId] = useState(propId);
 
   useEffect(() => {
@@ -216,9 +268,7 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
   const [showSettingsDialog, setShowSettingsDialog] = useState(false);
   const [newVoteLimit, setNewVoteLimit] = useState<number>(0);
   const [newDefaultSort, setNewDefaultSort] = useState<'date' | 'votes'>('date');
-  const [mergeSourceId, setMergeSourceId] = useState<string | null>(null);
-  const [mergeTargetId, setMergeTargetId] = useState<string>('');
-  const [isMerging, setIsMerging] = useState(false);
+
 
   const openAISmartAdd = () => {
     setIsAISmartAddOpen(true);
@@ -579,6 +629,61 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
 
     if (!over || !board || board.status === "completed") return;
 
+    // Check for Merge Drop
+    if (over.id.toString().startsWith('merge-')) {
+        const targetCardId = over.id.toString().replace('merge-', '');
+        const sourceCardId = active.id.toString();
+
+        if (targetCardId === sourceCardId) return;
+
+        // Perform Merge
+        const sourceCard = items.find(c => c.id === sourceCardId);
+        const targetCard = items.find(c => c.id === targetCardId);
+
+        if (!sourceCard || !targetCard) return;
+
+        // Optimistic UI Update
+        const mergedText = `${targetCard.text}\n\n---\n\n${sourceCard.text}`;
+        const mergedVotes = (targetCard.votes || 0) + (sourceCard.votes || 0);
+        
+        // Log analytics
+        if (analytics) {
+            logEvent(analytics, 'merge_cards_drag_drop', {
+                board_id: id,
+                source_id: sourceCardId,
+                target_id: targetCardId
+            });
+        }
+
+        // Remove source, update target
+        setItems(prev => prev.filter(c => c.id !== sourceCardId).map(c => {
+            if (c.id === targetCardId) {
+                return {
+                    ...c,
+                    text: mergedText,
+                    votes: mergedVotes,
+                    mergedCards: [
+                        ...(c.mergedCards || []),
+                        { id: sourceCard.id, text: sourceCard.text },
+                        ...(sourceCard.mergedCards || [])
+                    ]
+                };
+            }
+            return c;
+        }));
+
+        try {
+            await mergeCards(id, sourceCardId, targetCardId);
+            showSnackbar("Cards merged successfully", "success");
+        } catch (e) {
+            console.error("Merge failed", e);
+            showSnackbar("Failed to merge cards", "error");
+            // Revert would be complex here, assuming success for now or need reload
+        }
+        return;
+    }
+
+
     const activeCard = items.find((c) => c.id === active.id);
     if (!activeCard) return;
 
@@ -861,21 +966,7 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
 
 
 
-  const handleMergeCards = async () => {
-    if (!mergeSourceId || !mergeTargetId || !board) return;
-    setIsMerging(true);
-    try {
-        await mergeCards(id, mergeSourceId, mergeTargetId);
-        showSnackbar("Cards merged successfully", "success");
-        setMergeSourceId(null);
-        setMergeTargetId('');
-    } catch (e) {
-        console.error(e);
-        showSnackbar("Failed to merge cards", "error");
-    } finally {
-        setIsMerging(false);
-    }
-  };
+
 
   const handleSaveSettings = async () => {
     if (newVoteLimit < 0) return;
@@ -1514,56 +1605,7 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
       )}
 
       {/* Merge Cards Dialog */}
-      {mergeSourceId && (
-         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in">
-            <div className="bg-white dark:bg-dark-900 rounded-xl shadow-2xl max-w-lg w-full p-6 border border-gray-100 dark:border-gray-700">
-               <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-                  <Merge className="w-5 h-5" />
-                  Merge Card
-               </h2>
-               <p className="text-sm text-gray-500 mb-4">
-                  Select a card to merge into. The text will be combined.
-                  <br/>
-                  <span className="font-bold italic">"{cards.find(c => c.id === mergeSourceId)?.text.substring(0, 50)}..."</span>
-               </p>
-               
-               <div className="space-y-2 max-h-60 overflow-y-auto mb-4 border rounded p-2 border-gray-200 dark:border-gray-700">
-                  {items
-                    .filter(c => c.id !== mergeSourceId && !c.isActionItem) // Don't merge with self or tasks
-                    .map(c => (
-                     <button
-                        key={c.id}
-                        onClick={() => setMergeTargetId(c.id)}
-                        className={`w-full text-left p-2 rounded text-sm mb-1 ${mergeTargetId === c.id ? 'bg-brand-100 dark:bg-brand-900/30 border-brand-500 border' : 'hover:bg-gray-100 dark:hover:bg-gray-800'}`}
-                     >
-                        {c.text}
-                     </button>
-                  ))}
-               </div>
 
-               <div className="mt-6 flex justify-end gap-3">
-                  <button 
-                     onClick={() => {
-                        setMergeSourceId(null);
-                        setMergeTargetId('');
-                     }}
-                     className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg dark:text-gray-400 dark:hover:bg-gray-800"
-                  >
-                     Cancel
-                  </button>
-                  <button 
-                     onClick={handleMergeCards}
-                     disabled={!mergeTargetId || isMerging}
-                     className="px-4 py-2 bg-brand-500 text-white rounded-lg hover:bg-brand-600 font-medium disabled:opacity-50"
-                  >
-                     {isMerging ? 'Merging...' : 'Confirm Merge'}
-                  </button>
-               </div>
-            </div>
-         </div>
-      )}
-
-      {/* Focus Mode Overlay */}
       {focusModeIndex !== null && (
         <FocusMode
           cards={cards}
@@ -1615,11 +1657,14 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
       )}
 
 
+
+
+
       {/* Columns Area */}
       <div className="flex-1 overflow-x-hidden md:overflow-x-auto overflow-y-auto">
         <DndContext
           sensors={sensors}
-          collisionDetection={closestCorners}
+          collisionDetection={customCollisionStrategy}
           onDragStart={handleDragStart}
           onDragOver={handleDragOver}
           onDragEnd={handleDragEnd}
@@ -1638,12 +1683,43 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
                     <div
                       className={`absolute top-0 left-0 w-full h-1 ${COLUMN_COLORS[column.color] || COLUMN_COLORS.default}`}
                     ></div>
-                    <h3 className="font-bold text-gray-900 dark:text-white flex justify-between items-center text-md font-mono relative z-10">
+                    <h3 className="font-bold text-gray-900 dark:text-white flex justify-between items-center text-md font-mono relative z-10 mb-3">
                       {column.title}
                       <span className="bg-white/50 dark:bg-white/10 px-2 py-0.5 rounded text-xs text-gray-600 dark:text-gray-300 font-mono">
                         {items.filter((c) => c.columnId === column.id).length}
                       </span>
                     </h3>
+
+                   {/* Add Card Input (Sticky) */}
+                   {!isCompleted && (
+                     <div className="relative group/input mb-1 z-20">
+                       <textarea
+                         placeholder="> Add card..."
+                         className="w-full text-sm p-3 pr-10 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#18181b] dark:text-white focus:ring-1 focus:ring-brand-500 focus:border-brand-500 focus:shadow-[0_0_10px_rgba(45,212,191,0.2)] outline-none resize-none shadow-sm transition-all font-mono"
+                         rows={2}
+                         value={newCardText[column.id] || ""}
+                         onChange={(e) =>
+                           setNewCardText({
+                             ...newCardText,
+                             [column.id]: e.target.value,
+                           })
+                         }
+                         onKeyDown={(e) => {
+                           if (e.key === "Enter" && !e.shiftKey) {
+                             e.preventDefault();
+                             handleAddCard(column.id);
+                           }
+                         }}
+                       />
+                       <button
+                         onClick={() => handleAddCard(column.id)}
+                         className="absolute bottom-2 right-2 p-2 text-gray-400 hover:text-brand-500 transition-colors opacity-50 group-hover/input:opacity-100"
+                         title="Add Card"
+                       >
+                         ↵
+                       </button>
+                     </div>
+                   )}
                   </div>
 
                   {/* Cards Container */}
@@ -1669,44 +1745,13 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
                             onUpdate={handleUpdateCardOptimistic}
                             onReaction={handleReactionOptimistic}
                             onVote={handleVoteOptimistic}
-                            onMerge={(cardId) => setMergeSourceId(cardId)}
+
                           />
                         ))}
                     </SortableContext>
                   </div>
 
-                  {/* Add Card Input */}
-                  {!isCompleted && (
-                    <div className="p-3 bg-white/40 dark:bg-dark-900/40 rounded-b-lg border-t border-gray-100 dark:border-gray-800/50 backdrop-blur-sm">
-                      <div className="relative group/input">
-                        <textarea
-                          placeholder="> Type input..."
-                          className="w-full text-sm p-3 pr-10 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#18181b] dark:text-white focus:ring-1 focus:ring-brand-500 focus:border-brand-500 focus:shadow-[0_0_10px_rgba(45,212,191,0.2)] outline-none resize-none shadow-inner transition-all font-mono"
-                          rows={2}
-                          value={newCardText[column.id] || ""}
-                          onChange={(e) =>
-                            setNewCardText({
-                              ...newCardText,
-                              [column.id]: e.target.value,
-                            })
-                          }
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter" && !e.shiftKey) {
-                              e.preventDefault();
-                              handleAddCard(column.id);
-                            }
-                          }}
-                        />
-                        <button
-                          onClick={() => handleAddCard(column.id)}
-                          className="absolute bottom-2 right-2 p-2 text-gray-400 hover:text-brand-500 transition-colors opacity-50 group-hover/input:opacity-100"
-                          title="Add Card"
-                        >
-                          ↵
-                        </button>
-                      </div>
-                    </div>
-                  )}
+
                 </DroppableColumn>
               ))}
             </SortableContext>

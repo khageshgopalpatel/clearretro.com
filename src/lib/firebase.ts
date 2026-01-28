@@ -34,7 +34,7 @@ export const db = firestoreDb;
 
 // Connect to emulators if in test mode
 if (import.meta.env.PUBLIC_USE_EMULATORS) {
-  console.log("Using Firebase Emulators");
+
   connectAuthEmulator(auth, "http://localhost:9099");
   connectFirestoreEmulator(db, "localhost", 8080);
 }
@@ -50,7 +50,7 @@ if (typeof window !== "undefined") {
         // Initialize Analytics
         analytics = getAnalytics(app);
     } else {
-        console.log("Analytics and Performance disabled in Emulator mode");
+
     }
 }
 
@@ -60,7 +60,7 @@ if (typeof window !== "undefined") {
  */
 export const logEvent = (analyticsInstance: Analytics, eventName: string, eventParams?: { [key: string]: any }) => {
   if (typeof window !== "undefined" && localStorage.getItem("exclude_analytics") === "true") {
-    console.log(`[Analytics] Event suppressed: ${eventName}`, eventParams);
+    // Excluded from analytics
     return;
   }
   if (analyticsInstance) {

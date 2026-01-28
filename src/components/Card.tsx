@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import confetti from 'canvas-confetti';
 import { useDraggable, useDroppable } from '@dnd-kit/core';
 import { addReply, toggleReaction, toggleVote, updateCard, deleteReply, deleteCard } from '../hooks/useBoard';
@@ -244,6 +244,13 @@ const Card = ({ card, boardId, isPrivate, sortableProps, isCompleted, onDelete, 
                     </svg>
                 </div>
 
+                {card.mergedCards && card.mergedCards.length > 0 && (
+                    <div className="absolute top-2 right-2 z-20 rounded-full bg-white/90 dark:bg-gray-800/90 shadow-sm border border-indigo-100 dark:border-indigo-900 text-indigo-600 dark:text-indigo-400 p-1" title={`${card.mergedCards.length + 1} cards merged`}>
+                         <Merge className="w-3 h-3" />
+                         <span className="sr-only">Merged</span>
+                    </div>
+                )}
+
 
 
                 {isEditingCard ? (
@@ -257,9 +264,18 @@ const Card = ({ card, boardId, isPrivate, sortableProps, isCompleted, onDelete, 
                     />
                 ) : (
                     <div className="mt-1 flex justify-between items-start gap-2 relative z-10">
-                        <p className={`break-words flex-1 text-xs leading-relaxed text-gray-800 dark:text-gray-200 transition-all duration-300 font-medium ${isPrivate ? 'blur-sm select-none opacity-60' : ''} ${card.isDone ? 'line-through text-gray-400' : ''}`}>
-                            {card.text}
-                        </p>
+                        <div className={`break-words flex-1 text-xs leading-relaxed text-gray-800 dark:text-gray-200 transition-all duration-300 font-medium ${isPrivate ? 'blur-sm select-none opacity-60' : ''} ${card.isDone ? 'line-through text-gray-400' : ''}`}>
+                            {card.text.split(/\n\n---\n\n/).map((segment, index) => (
+                                <React.Fragment key={index}>
+                                    {index > 0 && (
+                                        <hr className="my-2 border-dashed border-gray-300 dark:border-gray-700 w-full" />
+                                    )}
+                                    <span className="block">{segment}</span>
+                                </React.Fragment>
+                            ))}
+                        </div>
+
+
 
                         {isPrivate && (
                             <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
@@ -464,32 +480,7 @@ const Card = ({ card, boardId, isPrivate, sortableProps, isCompleted, onDelete, 
                             </button>
                         )}
 
-                        {/* More Menu */}
-                        {!isCompleted && onMerge && (
-                            <div className="relative">
-                                <button
-                                    onClick={() => setShowMoreMenu(!showMoreMenu)}
-                                    className="text-gray-400 hover:text-gray-900 dark:hover:text-white transition-all active:scale-95 p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
-                                    title="More actions"
-                                >
-                                    <MoreHorizontal className="w-3.5 h-3.5" />
-                                </button>
-                                {showMoreMenu && (
-                                    <div className="absolute right-0 bottom-full mb-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl overflow-hidden min-w-[120px] z-50 animate-in fade-in zoom-in duration-200">
-                                         <button
-                                            onClick={() => {
-                                                setShowMoreMenu(false);
-                                                onMerge(card.id);
-                                            }}
-                                            className="w-full text-left px-3 py-2 text-xs flex items-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition-colors"
-                                         >
-                                            <Merge className="w-3.5 h-3.5" />
-                                            Merge With...
-                                         </button>
-                                    </div>
-                                )}
-                            </div>
-                        )}
+
                     </div>
                 </div>
 

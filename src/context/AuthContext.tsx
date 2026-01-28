@@ -32,8 +32,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         // Handle redirect result explicitly to ensure state clears
         getRedirectResult(auth).then((result) => {
             if (result?.user) {
-                console.log("Redirect login successful:", result.user);
-                // User state will be updated by onAuthStateChanged, but we can log it here
+                // Redirect login successful, state will be updated by onAuthStateChanged
             }
         }).catch((error) => {
             console.error("Redirect result error:", error);
@@ -41,7 +40,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         });
 
         const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-            console.log("Auth state changed:", currentUser ? "User logged in" : "No user");
             setAuthError(null); // Clear any previous error on successful state change
             if (currentUser) {
                 const userObj = {
