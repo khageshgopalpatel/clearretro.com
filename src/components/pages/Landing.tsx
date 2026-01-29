@@ -79,7 +79,7 @@ const Landing: React.FC = () => {
                   className="relative rounded-xl overflow-hidden border border-gray-200 dark:border-gray-800/50 shadow-2xl bg-gray-900 aspect-video group cursor-pointer backdrop-blur-sm"
                   onClick={togglePlay}
                >
-                  <iframe className="w-full h-full object-cover opacity-90" src="https://www.youtube.com/embed/CdalILjCL_k?si=p2yPJumnBbHXt0Fr" title="YouTube video player" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerPolicy="strict-origin-when-cross-origin" allowFullScreen></iframe>
+                  <iframe className="w-full h-full object-cover opacity-90" src="https://www.youtube.com/embed/2UxtVrsj_uk?si=ASJIlNi_SnDm-ILa" title="Clear Retro Demo" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerPolicy="strict-origin-when-cross-origin" allowFullScreen></iframe>
                </div>
             </div>
          </div>
