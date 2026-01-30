@@ -265,6 +265,7 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
   const [isTaskSidebarOpen, setIsTaskSidebarOpen] = useState(false);
   const [aiStatus, setAIStatus] = useState<string>("unknown");
   const [isChrome, setIsChrome] = useState(false);
+  const [isGuestLoading, setIsGuestLoading] = useState(false);
 
   // New Features State
   const [sortBy, setSortBy] = useState<"date" | "votes">("date");
@@ -1211,6 +1212,8 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
 
             <button
               onClick={async () => {
+                if (isGuestLoading) return;
+                setIsGuestLoading(true);
                 if (analytics) logEvent(analytics, "click_login_guest");
                 try {
                   await loginAsGuest();
@@ -1224,25 +1227,34 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
                   } else {
                     showSnackbar("Failed to sign in as guest", "error");
                   }
+                  setIsGuestLoading(false);
                 }
               }}
-              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-xl hover:opacity-90 transition-all font-bold shadow-lg shadow-gray-500/20"
+              disabled={isGuestLoading}
+              className={`w-full flex items-center justify-center gap-2 px-4 py-3 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-xl hover:opacity-90 transition-all font-bold shadow-lg shadow-gray-500/20 tap-feedback btn-animated ${isGuestLoading ? 'opacity-70 cursor-wait' : ''}`}
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                <circle cx="12" cy="7" r="4"></circle>
-              </svg>
-              Continue as Guest
+              {isGuestLoading ? (
+                <svg className="animate-spin h-5 w-5 text-brand-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+              ) : (
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+              )}
+              {isGuestLoading ? 'Signing in...' : 'Continue as Guest'}
             </button>
           </div>
         </div>
