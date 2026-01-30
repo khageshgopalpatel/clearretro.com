@@ -74,6 +74,8 @@ import { Logo } from "../Logo";
 import AISmartAdd from "../AISmartAdd";
 import ActionItemSidebar from "../ActionItemSidebar";
 import BoardNotFound from "./BoardNotFound";
+import KeyboardShortcutsHelp from "../KeyboardShortcutsHelp";
+import useKeyboardShortcuts from "../../hooks/useKeyboardShortcuts";
 
 // --- Sub Components ---
 
@@ -280,6 +282,48 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
   const [newDefaultSort, setNewDefaultSort] = useState<"date" | "votes">(
     "date",
   );
+
+  // Keyboard Shortcuts State
+  const [showKeyboardHelp, setShowKeyboardHelp] = useState(false);
+
+  // Keyboard Shortcuts Integration
+  useKeyboardShortcuts({
+    onShowHelp: () => setShowKeyboardHelp(true),
+    onCloseModals: () => {
+      setShowKeyboardHelp(false);
+      setShowSettingsDialog(false);
+      setShowEndRetroDialog(false);
+      setFocusModeIndex(null);
+      closeAISmartAdd();
+    },
+    onNewCard: () => {
+      if (board?.status !== "completed") {
+        openAISmartAdd();
+      }
+    },
+    onTogglePrivateMode: () => {
+      if (board && user?.uid === board.createdBy && board.status !== "completed") {
+        const newMode = !isPrivateMode;
+        setIsPrivateMode(newMode);
+        togglePrivateMode(id, newMode);
+        showSnackbar(newMode ? "Private Mode enabled" : "Cards revealed", "info");
+      }
+    },
+    onFocusMode: () => {
+      if (items.length > 0 && board?.status !== "completed") {
+        setFocusModeIndex(0);
+      }
+    },
+    onToggleTaskSidebar: () => {
+      setIsTaskSidebarOpen((prev) => !prev);
+    },
+    onToggleSort: () => {
+      setSortBy((prev) => (prev === "date" ? "votes" : "date"));
+      showSnackbar(`Sorted by ${sortBy === "date" ? "votes" : "date"}`, "info");
+    },
+    disabled: focusModeIndex !== null || isAISmartAddOpen,
+  });
+
 
   const openAISmartAdd = () => {
     setIsAISmartAddOpen(true);
@@ -1703,7 +1747,25 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
           </div>
 
           {/* Desktop User Dropdown */}
-          <div className="hidden md:block ml-2">
+          <div className="hidden md:flex items-center gap-2 ml-2">
+            {/* Keyboard Shortcuts Help Button */}
+            <button
+              onClick={() => setShowKeyboardHelp(true)}
+              className="p-2 text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-all"
+              title="Keyboard shortcuts (?)"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="2" y="4" width="20" height="16" rx="2"/>
+                <path d="M6 8h.001"/>
+                <path d="M10 8h.001"/>
+                <path d="M14 8h.001"/>
+                <path d="M18 8h.001"/>
+                <path d="M8 12h.001"/>
+                <path d="M12 12h.001"/>
+                <path d="M16 12h.001"/>
+                <path d="M7 16h10"/>
+              </svg>
+            </button>
             <HeaderDropdown
               user={user}
               onLogout={handleLogout}
@@ -1960,6 +2022,13 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
         confirmText="End Retro"
         cancelText="Cancel"
       />
+
+      {/* Keyboard Shortcuts Help Modal */}
+      <KeyboardShortcutsHelp
+        isOpen={showKeyboardHelp}
+        onClose={() => setShowKeyboardHelp(false)}
+      />
+
 
       {/* Private Mode Banner (Compact) */}
       {isPrivateMode && (
