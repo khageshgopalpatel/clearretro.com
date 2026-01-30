@@ -1395,26 +1395,50 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
                   <>
                     <button
                       onClick={handleGenerateSummary}
-                      className="p-2 text-gray-500 hover:bg-gray-100 dark:hover:bg-dark-800 rounded-lg"
-                      title="AI Summary"
+                      disabled={summaryStatus === AISummaryStatus.LOADING}
+                      className={`p-2 rounded-lg transition-all ${summaryStatus === AISummaryStatus.LOADING ? "opacity-50 cursor-not-allowed" : "text-gray-500 hover:bg-gray-100 dark:hover:bg-dark-800"}`}
+                      title={summaryStatus === AISummaryStatus.LOADING ? "Generating..." : "AI Summary"}
                     >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
-                        <path d="M5 3v4" />
-                        <path d="M19 17v4" />
-                        <path d="M3 5h4" />
-                        <path d="M17 19h4" />
-                      </svg>
+                      {summaryStatus === AISummaryStatus.LOADING ? (
+                        <svg
+                          className="animate-spin w-4 h-4 text-brand-500"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
+                        </svg>
+                      ) : (
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
+                          <path d="M5 3v4" />
+                          <path d="M19 17v4" />
+                          <path d="M3 5h4" />
+                          <path d="M17 19h4" />
+                        </svg>
+                      )}
                     </button>
                     <button
                       onClick={() => {
@@ -1518,30 +1542,56 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
                   {user?.uid === board.createdBy && (
                     <button
                       onClick={() => {
-                        handleGenerateSummary();
-                        setActiveId(null);
+                        if (summaryStatus !== AISummaryStatus.LOADING) {
+                          handleGenerateSummary();
+                          setActiveId(null);
+                        }
                       }}
-                      className="w-full text-left px-4 py-2.5 text-sm flex items-center gap-3 hover:bg-gray-50 dark:hover:bg-dark-800 text-gray-700 dark:text-gray-300 transition-colors"
+                      disabled={summaryStatus === AISummaryStatus.LOADING}
+                      className={`w-full text-left px-4 py-2.5 text-sm flex items-center gap-3 transition-colors ${summaryStatus === AISummaryStatus.LOADING ? "opacity-50 cursor-not-allowed bg-gray-50 dark:bg-dark-800" : "hover:bg-gray-50 dark:hover:bg-dark-800 text-gray-700 dark:text-gray-300"}`}
                     >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        className="text-gray-500"
-                      >
-                        <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
-                        <path d="M5 3v4" />
-                        <path d="M19 17v4" />
-                        <path d="M3 5h4" />
-                        <path d="M17 19h4" />
-                      </svg>
-                      <span>AI Summary</span>
+                      {summaryStatus === AISummaryStatus.LOADING ? (
+                        <svg
+                          className="animate-spin w-4 h-4 text-brand-500"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
+                        </svg>
+                      ) : (
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          className="text-gray-500"
+                        >
+                          <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
+                          <path d="M5 3v4" />
+                          <path d="M19 17v4" />
+                          <path d="M3 5h4" />
+                          <path d="M17 19h4" />
+                        </svg>
+                      )}
+                      <span>{summaryStatus === AISummaryStatus.LOADING ? "Generating..." : "AI Summary"}</span>
                     </button>
                   )}
 
