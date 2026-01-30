@@ -215,7 +215,7 @@ const calculateStreak = (boards: RetroBoard[]) => {
             </div> */}
             <button
             onClick={() => setShowCreateModal(true)}
-            className="flex-1 md:flex-none px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl shadow-lg shadow-brand-500/30 hover:shadow-brand-500/50 transition-all transform hover:-translate-y-0.5 font-medium flex items-center justify-center"
+            className="flex-1 md:flex-none px-5 py-3 md:py-2.5 min-h-[44px] bg-brand-600 hover:bg-brand-700 text-white rounded-xl shadow-lg shadow-brand-500/30 hover:shadow-brand-500/50 transition-all transform hover:-translate-y-0.5 font-medium flex items-center justify-center btn-animated tap-feedback"
             >
             <span className="text-xl mr-2 leading-none">+</span> New Retro
             </button>
@@ -334,11 +334,14 @@ const calculateStreak = (boards: RetroBoard[]) => {
 
       {/* Create Modal */}
       {showCreateModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4 animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-dark-900 rounded-3xl shadow-2xl w-full max-w-lg border border-gray-200 dark:border-gray-700 transform transition-all scale-100 relative overflow-hidden flex flex-col max-h-[90vh]">
+        <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/60 backdrop-blur-md p-0 md:p-4 animate-fadeIn">
+          <div className="bg-white dark:bg-dark-900 rounded-t-3xl md:rounded-3xl shadow-2xl w-full md:max-w-lg border border-gray-200 dark:border-gray-700 transform transition-all relative overflow-hidden flex flex-col max-h-[95vh] md:max-h-[90vh] bottom-sheet md:animate-bounceIn safe-bottom">
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-brand-500 to-purple-600 z-10"></div>
             
-            <div className="p-8 overflow-y-auto custom-scrollbar flex-1">
+            {/* Mobile Handle */}
+            <div className="md:hidden bottom-sheet-handle"></div>
+            
+            <div className="p-6 md:p-8 overflow-y-auto custom-scrollbar scroll-momentum flex-1">
             <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white font-mono sticky top-0 bg-white dark:bg-dark-900 z-10 pb-2">Create New Board</h2>
 
             <div className="mb-6">

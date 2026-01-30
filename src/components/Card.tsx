@@ -345,7 +345,7 @@ const Card = ({ card, boardId, isPrivate, sortableProps, isCompleted, onDelete, 
                 {/* Reactions Display */}
 
 
-                <div className="mt-2 pt-2 border-t border-gray-100 dark:border-gray-800 flex flex-wrap md:flex-nowrap justify-between items-center gap-y-2 relative z-10">
+                <div className="mt-2 pt-2 border-t border-gray-100 dark:border-gray-800 flex flex-wrap md:flex-nowrap justify-between items-center gap-y-2 relative z-10 gap-x-2">
                     <div className="flex items-center gap-2">
 
 
@@ -354,10 +354,10 @@ const Card = ({ card, boardId, isPrivate, sortableProps, isCompleted, onDelete, 
                             <div className="relative">
                                 <button
                                     onClick={() => setShowReactionPicker(!showReactionPicker)}
-                                    className="p-1 text-gray-400 hover:text-yellow-500 hover:bg-yellow-50 dark:hover:bg-yellow-900/20 rounded-md transition-all active:scale-90"
+                                    className="p-2 md:p-1 min-w-[36px] min-h-[36px] md:min-w-0 md:min-h-0 text-gray-400 hover:text-yellow-500 hover:bg-yellow-50 dark:hover:bg-yellow-900/20 rounded-md transition-all active:scale-90 flex items-center justify-center tap-feedback"
                                     title="Add reaction"
                                 >
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                         <circle cx="12" cy="12" r="10"></circle>
                                         <path d="M8 14s1.5 2 4 2 4-2 4-2"></path>
                                         <line x1="9" y1="9" x2="9.01" y2="9"></line>
@@ -371,7 +371,7 @@ const Card = ({ card, boardId, isPrivate, sortableProps, isCompleted, onDelete, 
                                             <button
                                                 key={emoji}
                                                 onClick={() => handleReaction(emoji)}
-                                                className="text-xl hover:scale-125 transition-transform cursor-pointer p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg icon-hover-bounce"
+                                                className="text-xl min-w-[40px] min-h-[40px] md:min-w-[32px] md:min-h-[32px] flex items-center justify-center hover:scale-125 transition-transform cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg icon-hover-bounce tap-feedback"
                                                 style={{ animationDelay: `${idx * 30}ms` }}
                                             >
                                                 {emoji}
@@ -405,7 +405,7 @@ const Card = ({ card, boardId, isPrivate, sortableProps, isCompleted, onDelete, 
                         {/* Vote Button */}
                         <button
                             onClick={handleVote}
-                            className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold transition-all click-scale border ${
+                            className={`flex items-center gap-1.5 px-3 py-1.5 md:px-2 md:py-0.5 min-h-[36px] md:min-h-0 rounded-full text-xs font-bold transition-all click-scale border tap-feedback ${
                                 card.votedBy?.includes(user?.uid || '')
                                 ? 'bg-amber-50 border-amber-200 text-amber-600 dark:bg-amber-900/30 dark:border-amber-800 dark:text-amber-400 animate-pulseScale'
                                 : 'bg-gray-50 border-gray-200 text-gray-400 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-500 hover:bg-amber-50 hover:border-amber-200 hover:text-amber-600 hover-scale'
@@ -413,10 +413,10 @@ const Card = ({ card, boardId, isPrivate, sortableProps, isCompleted, onDelete, 
                             title={card.votedBy?.includes(user?.uid || '') ? "Remove vote" : "Vote for this card"}
                             disabled={isCompleted}
                         >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill={card.votedBy?.includes(user?.uid || '') ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={card.votedBy?.includes(user?.uid || '') ? 'animate-wiggle' : ''}>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill={card.votedBy?.includes(user?.uid || '') ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={card.votedBy?.includes(user?.uid || '') ? 'animate-wiggle' : ''}>
                                 <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
                             </svg>
-                            <span className="count-change">{card.votes || 0}</span>
+                            <span className="count-change text-sm md:text-xs">{card.votes || 0}</span>
                         </button>
                     </div>
 

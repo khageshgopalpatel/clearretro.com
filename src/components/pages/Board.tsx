@@ -186,7 +186,7 @@ const DroppableColumn: React.FC<DroppableColumnProps> = ({
   return (
     <div
       ref={setNodeRef}
-      className="flex-1 min-w-[85vw] md:min-w-0 snap-center flex flex-col min-h-full bg-white/30 dark:bg-dark-900/40 backdrop-blur-md rounded-lg border border-gray-200/60 dark:border-gray-700/60 shadow-sm transition-all duration-300 group hover:border-gray-300 dark:hover:border-gray-600 hover:shadow-lg"
+      className="flex-shrink-0 w-[85vw] md:w-80 md:min-w-[20rem] md:flex-1 scroll-snap-item snap-center flex flex-col min-h-full bg-white/30 dark:bg-dark-900/40 backdrop-blur-md rounded-lg border border-gray-200/60 dark:border-gray-700/60 shadow-sm transition-all duration-300 group hover:border-gray-300 dark:hover:border-gray-600 hover:shadow-lg tap-feedback"
       {...props}
     >
       {children}
@@ -276,6 +276,9 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
 
   // Keyboard Shortcuts State
   const [showKeyboardHelp, setShowKeyboardHelp] = useState(false);
+  
+  // Mobile Column Navigation State
+  const [activeColumnIndex, setActiveColumnIndex] = useState(0);
 
   // Keyboard Shortcuts Integration
   useKeyboardShortcuts({
@@ -448,6 +451,35 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
     typeof setInterval
   > | null>(null);
   const [tick, setTick] = useState(0);
+
+  // Mobile Column Scroll Detection
+  useEffect(() => {
+    // Only run on mobile (screen width < 768px) and when board exists
+    if (typeof window === 'undefined' || window.innerWidth >= 768 || !board) return;
+    
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
+            const columnId = entry.target.getAttribute('data-testid')?.replace('column-', '');
+            const index = board.columns.findIndex(c => c.id === columnId);
+            if (index !== -1) {
+              setActiveColumnIndex(index);
+            }
+          }
+        });
+      },
+      { threshold: 0.5, root: null }
+    );
+
+    // Observe all column elements
+    board.columns.forEach((column) => {
+      const el = document.querySelector(`[data-testid="column-${column.id}"]`);
+      if (el) observer.observe(el);
+    });
+
+    return () => observer.disconnect();
+  }, [board?.columns?.length]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -2061,7 +2093,7 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
       )}
 
       {/* Columns Area */}
-      <div className="flex-1 overflow-x-hidden md:overflow-x-auto overflow-y-auto">
+      <div className="flex-1 overflow-x-hidden md:overflow-x-auto overflow-y-auto scroll-momentum">
         <DndContext
           sensors={sensors}
           collisionDetection={customCollisionStrategy}
@@ -2069,7 +2101,7 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
           onDragOver={handleDragOver}
           onDragEnd={handleDragEnd}
         >
-          <div className="min-h-full flex flex-col md:flex-row p-4 md:p-6 pt-2 sm:pt-6 gap-6 min-w-full mx-auto">
+          <div className="min-h-full flex flex-row md:flex-row p-4 md:p-6 pt-2 sm:pt-6 gap-4 md:gap-6 min-w-full mx-auto scroll-snap-x scroll-hide-bar md:overflow-visible safe-bottom">
             <SortableContext
               items={board.columns.map((c) => c.id)}
               strategy={verticalListSortingStrategy}
@@ -2171,6 +2203,29 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
             </DragOverlay>
           </div>
         </DndContext>
+        
+        {/* Mobile Column Indicator */}
+        <div className="md:hidden fixed bottom-4 left-1/2 -translate-x-1/2 z-40 safe-bottom">
+          <div className="flex items-center gap-2 px-3 py-2 bg-white/90 dark:bg-dark-900/90 backdrop-blur-md rounded-full shadow-lg border border-gray-200 dark:border-gray-700">
+            {board.columns.map((column, index) => (
+              <button
+                key={column.id}
+                onClick={() => {
+                  setActiveColumnIndex(index);
+                  // Scroll to column
+                  const columnEl = document.querySelector(`[data-testid="column-${column.id}"]`)?.parentElement;
+                  columnEl?.scrollIntoView({ behavior: 'smooth', inline: 'center' });
+                }}
+                className={`transition-all duration-300 tap-feedback ${
+                  activeColumnIndex === index 
+                    ? 'w-6 h-2 bg-brand-500 rounded-full' 
+                    : 'w-2 h-2 bg-gray-300 dark:bg-gray-600 rounded-full hover:bg-gray-400'
+                }`}
+                title={column.title}
+              />
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* AI Smart Add Bottom Sheet Overlay */}
