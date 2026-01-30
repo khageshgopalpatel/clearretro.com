@@ -224,25 +224,26 @@ const calculateStreak = (boards: RetroBoard[]) => {
       </div>
 
       {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[1, 2, 3].map(i => (
-            <div key={i} className="h-48 bg-gray-200/50 dark:bg-gray-800/50 rounded-2xl border border-gray-100 dark:border-gray-800"></div>
+            <div key={i} className="h-48 bg-gray-200/50 dark:bg-gray-800/50 rounded-2xl border border-gray-100 dark:border-gray-800 animate-shimmer"></div>
           ))}
         </div>
       ) : boards.length === 0 ? (
-        <div className="text-center py-24 bg-white/50 dark:bg-dark-800/50 rounded-3xl border-2 border-dashed border-gray-300 dark:border-gray-700 backdrop-blur-sm">
-          <div className="mx-auto w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center text-3xl mb-4">✨</div>
+        <div className="text-center py-24 bg-white/50 dark:bg-dark-800/50 rounded-3xl border-2 border-dashed border-gray-300 dark:border-gray-700 backdrop-blur-sm animate-fadeIn">
+          <div className="mx-auto w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center text-3xl mb-4 animate-float">✨</div>
           <h3 className="text-lg font-medium text-gray-900 dark:text-white">No retrospectives found</h3>
           <p className="text-gray-500 text-sm mt-2 max-w-sm mx-auto">Get started by creating your first board. It only takes a few seconds.</p>
-          <button onClick={() => setShowCreateModal(true)} className="mt-6 text-brand-600 font-bold hover:text-brand-700 underline underline-offset-4">Create New Board</button>
+          <button onClick={() => setShowCreateModal(true)} className="mt-6 text-brand-600 font-bold hover:text-brand-700 underline underline-offset-4 hover-scale">Create New Board</button>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {boards.filter(b => !deletedBoardIds.has(b.id)).map(board => (
+          {boards.filter(b => !deletedBoardIds.has(b.id)).map((board, index) => (
             <div
               key={board.id}
               onClick={() => window.location.href = `/board/${board.id}`}
-              className="group cursor-pointer bg-white/80 dark:bg-dark-800/80 p-6 rounded-2xl border border-gray-200 dark:border-gray-700 hover:border-brand-500 dark:hover:border-brand-500 transition-all shadow-sm hover:shadow-brand-500/20 backdrop-blur-sm relative overflow-hidden"
+              className="group cursor-pointer bg-white/80 dark:bg-dark-800/80 p-6 rounded-2xl border border-gray-200 dark:border-gray-700 hover:border-brand-500 dark:hover:border-brand-500 shadow-sm backdrop-blur-sm relative overflow-hidden hover-lift click-scale stagger-item"
+              style={{ animationDelay: `${index * 50}ms` }}
             >
               <div className="absolute top-0 left-0 w-1 h-full bg-gray-200 dark:bg-gray-700 group-hover:bg-brand-500 transition-colors"></div>
               <div className="flex justify-between items-start mb-4">
@@ -382,22 +383,26 @@ const calculateStreak = (boards: RetroBoard[]) => {
             <div className="mb-8">
               <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 font-mono">Select Template</label>
               <div className="space-y-3 max-h-60 overflow-y-auto custom-scrollbar pr-2">
-                {BOARD_TEMPLATES.map(t => (
+                {BOARD_TEMPLATES.map((t, idx) => (
                   <div
                     key={t.id}
                     onClick={() => setSelectedTemplate(t)}
-                    className={`p-4 rounded-xl border cursor-pointer transition-all flex items-center justify-between ${selectedTemplate.id === t.id
-                      ? 'border-brand-500 bg-brand-50 dark:bg-brand-900/20 ring-1 ring-brand-500'
+                    className={`p-4 rounded-xl border cursor-pointer transition-all flex items-center justify-between stagger-item hover-scale-sm click-scale ${selectedTemplate.id === t.id
+                      ? 'border-brand-500 bg-brand-50 dark:bg-brand-900/20 ring-1 ring-brand-500 animate-pulseScale'
                       : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800'
                       }`}
+                    style={{ animationDelay: `${idx * 50}ms` }}
                   >
                     <div>
-                      <h3 className="font-bold text-gray-900 dark:text-white mb-1 font-mono">{t.name}</h3>
+                      <h3 className="font-bold text-gray-900 dark:text-white mb-1 font-mono flex items-center gap-2">
+                        {t.columns[0]?.icon && <span>{t.columns[0].icon}</span>}
+                        {t.name}
+                      </h3>
                       <div className="text-xs text-gray-500 mt-1 flex gap-2">
-                        {t.columns.map(c => <span key={c.title} className="bg-white dark:bg-dark-900 px-1.5 py-0.5 rounded border border-gray-100 dark:border-gray-700">{c.title}</span>)}
+                        {t.columns.map(c => <span key={c.title} className="bg-white dark:bg-dark-900 px-1.5 py-0.5 rounded border border-gray-100 dark:border-gray-700">{c.icon} {c.title}</span>)}
                       </div>
                     </div>
-                    {selectedTemplate.id === t.id && <span className="text-brand-600">●</span>}
+                    {selectedTemplate.id === t.id && <span className="text-brand-600 animate-popIn">✓</span>}
                   </div>
                 ))}
               </div>
@@ -464,13 +469,13 @@ const calculateStreak = (boards: RetroBoard[]) => {
             <div className="p-6 pt-4 border-t border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-dark-800/50 flex justify-end gap-3 z-20">
               <button
                 onClick={() => setShowCreateModal(false)}
-                className="px-5 py-2.5 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg font-medium transition-colors font-mono"
+                className="px-5 py-2.5 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg font-medium transition-colors font-mono click-scale"
               >
                 Cancel
               </button>
               <button
                 onClick={handleCreateBoard}
-                className="px-6 py-2.5 bg-brand-600 text-white rounded-lg hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed font-bold shadow-lg shadow-brand-500/30 transition-all font-mono"
+                className="px-6 py-2.5 bg-brand-600 text-white rounded-lg hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed font-bold shadow-lg shadow-brand-500/30 transition-all font-mono btn-animated"
                 disabled={!newBoardName || creating}
               >
                 {creating ? 'Creating...' : 'Create Board'}

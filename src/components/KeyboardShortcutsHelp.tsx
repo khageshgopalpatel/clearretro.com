@@ -61,9 +61,10 @@ const KeyboardShortcutsHelp = ({ isOpen, onClose }: KeyboardShortcutsHelpProps) 
                     {shortcuts.map((shortcut, index) => (
                         <div 
                             key={index} 
-                            className="flex justify-between items-center p-3 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700 hover:border-brand-200 dark:hover:border-brand-800 transition-colors"
+                            className="flex justify-between items-center p-3 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700 hover:border-brand-200 dark:hover:border-brand-800 transition-all hover-scale-sm stagger-item"
+                            style={{ animationDelay: `${index * 50}ms` }}
                         >
-                            <span className="font-mono text-sm font-bold bg-white dark:bg-gray-900 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 shadow-sm">
+                            <span className="font-mono text-sm font-bold bg-white dark:bg-gray-900 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 shadow-sm hover-lift">
                                 {shortcut.key}
                             </span>
                             <span className="text-sm flex-1 ml-4 text-gray-600 dark:text-gray-400">{shortcut.description}</span>

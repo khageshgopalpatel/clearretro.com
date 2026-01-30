@@ -38,9 +38,9 @@ const ConfirmDialog = ({ isOpen, onClose, onCancel, onConfirm, title, message, c
     if (!isOpen) return null;
 
     return createPortal(
-        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 backdrop-blur-md p-4 animate-in fade-in duration-200" onClick={handleCancel}>
+        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 backdrop-blur-md p-4 animate-fadeIn" onClick={handleCancel}>
             <div
-                className="bg-white dark:bg-dark-900 p-8 rounded-3xl shadow-2xl w-full max-w-md border border-gray-200 dark:border-gray-700 transform transition-all scale-100 relative overflow-hidden"
+                className="bg-white dark:bg-dark-900 p-8 rounded-3xl shadow-2xl w-full max-w-md border border-gray-200 dark:border-gray-700 transform transition-all relative overflow-hidden animate-bounceIn"
                 onClick={(e) => e.stopPropagation()}
             >
                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-brand-500 to-purple-600"></div>
@@ -51,7 +51,7 @@ const ConfirmDialog = ({ isOpen, onClose, onCancel, onConfirm, title, message, c
                 <div className="flex justify-end gap-3">
                     <button
                         onClick={handleCancel}
-                        className="px-5 py-2.5 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg font-medium transition-colors font-mono"
+                        className="px-5 py-2.5 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg font-medium transition-colors font-mono click-scale"
                     >
                         {cancelText}
                     </button>
@@ -60,7 +60,7 @@ const ConfirmDialog = ({ isOpen, onClose, onCancel, onConfirm, title, message, c
                             onConfirm();
                             if (handleCancel) handleCancel();
                         }}
-                        className={confirmButtonClass}
+                        className={`${confirmButtonClass} btn-animated`}
                     >
                         {confirmText}
                     </button>

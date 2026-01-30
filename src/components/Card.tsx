@@ -225,8 +225,8 @@ const Card = ({ card, boardId, isPrivate, sortableProps, isCompleted, onDelete, 
     };
 
     return (
-        <div ref={setNodeRef} style={style} className={`mb-2 animate-fade-in ${isDragging ? 'z-50' : ''}`} {...attributes}>
-            <div className={`group bg-white dark:bg-gray-800 dark:text-white border border-gray-200 dark:border-gray-700 p-2.5 shadow-sm rounded-xl relative transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 hover:scale-[1.01] ${isOver ? 'ring-2 ring-blue-500 ring-offset-2 dark:ring-offset-gray-900 bg-blue-50 dark:bg-blue-900/20' : card.isActionItem ? 'border-l-4 border-l-blue-500 dark:border-l-blue-400 bg-blue-50/10 dark:bg-blue-900/10' : ''}`}>
+        <div ref={setNodeRef} style={style} className={`mb-2 card-enter ${isDragging ? 'z-50 card-dragging' : ''}`} {...attributes}>
+            <div className={`group bg-white dark:bg-gray-800 dark:text-white border border-gray-200 dark:border-gray-700 p-2.5 shadow-sm rounded-xl relative transition-all duration-200 hover:shadow-lg hover:-translate-y-1 hover:scale-[1.02] ${isOver ? 'ring-2 ring-blue-500 ring-offset-2 dark:ring-offset-gray-900 bg-blue-50 dark:bg-blue-900/20' : card.isActionItem ? 'border-l-4 border-l-blue-500 dark:border-l-blue-400 bg-blue-50/10 dark:bg-blue-900/10' : ''}`}>
                 {/* Drag Handle */}
                 {/* Drag Handle */}
                 <div
@@ -366,12 +366,13 @@ const Card = ({ card, boardId, isPrivate, sortableProps, isCompleted, onDelete, 
                                 </button>
 
                                 {showReactionPicker && (
-                                    <div className="absolute bottom-full left-0 mb-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-2 rounded-xl shadow-xl flex gap-1 z-50 animate-in fade-in zoom-in duration-200">
-                                        {EMOJIS.map(emoji => (
+                                    <div className="absolute bottom-full left-0 mb-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-2 rounded-xl shadow-xl flex gap-1 z-50 animate-scaleIn">
+                                        {EMOJIS.map((emoji, idx) => (
                                             <button
                                                 key={emoji}
                                                 onClick={() => handleReaction(emoji)}
-                                                className="text-xl hover:scale-125 transition-transform cursor-pointer p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+                                                className="text-xl hover:scale-125 transition-transform cursor-pointer p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg icon-hover-bounce"
+                                                style={{ animationDelay: `${idx * 30}ms` }}
                                             >
                                                 {emoji}
                                             </button>
@@ -390,11 +391,11 @@ const Card = ({ card, boardId, isPrivate, sortableProps, isCompleted, onDelete, 
                                     <button
                                         key={emoji}
                                         onClick={() => !isCompleted && toggleReaction(boardId, card.id, emoji, user?.uid || '')}
-                                        className={`text-[10px] px-1.5 py-0.5 rounded-full flex items-center gap-1 transition-all active:scale-90 ${userIds.includes(user?.uid || '') ? 'bg-blue-50 border border-blue-200 text-blue-700 dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-300' : 'bg-gray-50 border border-gray-200 text-gray-600 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:scale-105'}`}
+                                        className={`text-[10px] px-1.5 py-0.5 rounded-full flex items-center gap-1 transition-all click-scale hover-scale-sm ${userIds.includes(user?.uid || '') ? 'bg-blue-50 border border-blue-200 text-blue-700 dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-300 animate-popIn' : 'bg-gray-50 border border-gray-200 text-gray-600 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
                                         title={`${userIds.length} people reacted`}
                                         disabled={isCompleted}
                                     >
-                                        <span>{emoji}</span>
+                                        <span className="icon-hover-scale">{emoji}</span>
                                         <span className="font-bold opacity-80">{userIds.length}</span>
                                     </button>
                                 ))}
@@ -404,18 +405,18 @@ const Card = ({ card, boardId, isPrivate, sortableProps, isCompleted, onDelete, 
                         {/* Vote Button */}
                         <button
                             onClick={handleVote}
-                            className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold transition-all active:scale-95 border ${
+                            className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold transition-all click-scale border ${
                                 card.votedBy?.includes(user?.uid || '')
-                                ? 'bg-amber-50 border-amber-200 text-amber-600 dark:bg-amber-900/30 dark:border-amber-800 dark:text-amber-400'
-                                : 'bg-gray-50 border-gray-200 text-gray-400 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-500 hover:bg-amber-50 hover:border-amber-200 hover:text-amber-600'
+                                ? 'bg-amber-50 border-amber-200 text-amber-600 dark:bg-amber-900/30 dark:border-amber-800 dark:text-amber-400 animate-pulseScale'
+                                : 'bg-gray-50 border-gray-200 text-gray-400 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-500 hover:bg-amber-50 hover:border-amber-200 hover:text-amber-600 hover-scale'
                             }`}
                             title={card.votedBy?.includes(user?.uid || '') ? "Remove vote" : "Vote for this card"}
                             disabled={isCompleted}
                         >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill={card.votedBy?.includes(user?.uid || '') ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill={card.votedBy?.includes(user?.uid || '') ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={card.votedBy?.includes(user?.uid || '') ? 'animate-wiggle' : ''}>
                                 <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
                             </svg>
-                            <span>{card.votes || 0}</span>
+                            <span className="count-change">{card.votes || 0}</span>
                         </button>
                     </div>
 

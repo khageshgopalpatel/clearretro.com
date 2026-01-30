@@ -40,18 +40,19 @@ export const SnackbarProvider = ({ children }: { children: ReactNode }) => {
         <SnackbarContext.Provider value={{ showSnackbar }}>
             {children}
             <div className="fixed top-24 right-4 z-[110] flex flex-col gap-2">
-                {snackbars.map(snackbar => (
+                {snackbars.map((snackbar, index) => (
                     <div
                         key={snackbar.id}
-                        className={`px-4 py-3 rounded shadow-lg font-medium text-sm animate-slide-in flex items-center justify-between gap-4 min-w-[300px] border-l-4 ${
-                            snackbar.type === 'success' ? 'bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 border-green-500' :
-                            snackbar.type === 'error' ? 'bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 border-red-500' :
-                            snackbar.type === 'warning' ? 'bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 border-yellow-500' :
-                            'bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 border-blue-500'
+                        className={`px-4 py-3 rounded-lg shadow-xl font-medium text-sm animate-slideInRight flex items-center justify-between gap-4 min-w-[300px] border-l-4 backdrop-blur-sm hover-scale-sm transition-transform ${
+                            snackbar.type === 'success' ? 'bg-white/95 dark:bg-gray-800/95 text-gray-800 dark:text-gray-100 border-green-500' :
+                            snackbar.type === 'error' ? 'bg-white/95 dark:bg-gray-800/95 text-gray-800 dark:text-gray-100 border-red-500' :
+                            snackbar.type === 'warning' ? 'bg-white/95 dark:bg-gray-800/95 text-gray-800 dark:text-gray-100 border-yellow-500' :
+                            'bg-white/95 dark:bg-gray-800/95 text-gray-800 dark:text-gray-100 border-blue-500'
                         }`}
+                        style={{ animationDelay: `${index * 100}ms` }}
                     >
                         <div className="flex items-center gap-3">
-                            <span className="text-xl">
+                            <span className="text-xl animate-popIn">
                                 {snackbar.type === 'success' && '✅'}
                                 {snackbar.type === 'error' && '🚨'}
                                 {snackbar.type === 'warning' && '⚠️'}
@@ -61,7 +62,7 @@ export const SnackbarProvider = ({ children }: { children: ReactNode }) => {
                         </div>
                         <button
                             onClick={() => removeSnackbar(snackbar.id)}
-                            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 font-bold px-2"
+                            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 font-bold px-2 hover:scale-110 transition-transform"
                         >
                             ×
                         </button>
