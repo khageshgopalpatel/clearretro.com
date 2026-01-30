@@ -15,20 +15,9 @@ import type { RetroBoard, RetroColumn, RetroCard } from '../../types';
 import { Providers } from '../Providers';
 import { Logo } from '../Logo';
 import SlackConnectButton from '../SlackConnectButton';
+import ColorIconPicker from '../ColorIconPicker';
+import { getColumnColor, suggestIcon } from '../../data/columnConfig';
 
-
-
-const COLUMN_COLORS: Record<string, string> = {
-  green: 'bg-green-500',
-  red: 'bg-red-500',
-  blue: 'bg-blue-500',
-  yellow: 'bg-yellow-500',
-  purple: 'bg-purple-500',
-  pink: 'bg-pink-500',
-  indigo: 'bg-indigo-500',
-  gray: 'bg-gray-500',
-  default: 'bg-gray-500'
-};
 
 const DashboardContent: React.FC = () => {
   const { user, logout, loading: authLoading } = useAuth();
@@ -316,7 +305,7 @@ const calculateStreak = (boards: RetroBoard[]) => {
                 <div className="flex items-center gap-2">
                   {board.columns.slice(0, 3).map((col, idx) => (
                     <div key={idx} title={col.title} className="flex-1 h-1.5 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden">
-                      <div className={`h-full ${COLUMN_COLORS[col.color] || COLUMN_COLORS.default} w-full opacity-70`}></div>
+                      <div className={`h-full ${getColumnColor(col.color).bg} w-full opacity-70`}></div>
                     </div>
                   ))}
                 </div>
@@ -418,19 +407,36 @@ const calculateStreak = (boards: RetroBoard[]) => {
               <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 font-mono">Customize Columns (Max 5)</label>
               <div className="space-y-3">
                 {customColumns.map((col, idx) => (
-                  <div key={idx} className="flex gap-2">
+                  <div key={idx} className="flex gap-2 items-center">
+                    {/* Icon/Color Preview with Picker */}
+                    <ColorIconPicker
+                      color={col.color}
+                      icon={col.icon}
+                      onColorChange={(newColor) => {
+                        const newCols = [...customColumns];
+                        newCols[idx] = { ...newCols[idx], color: newColor };
+                        setCustomColumns(newCols);
+                      }}
+                      onIconChange={(newIcon) => {
+                        const newCols = [...customColumns];
+                        newCols[idx] = { ...newCols[idx], icon: newIcon };
+                        setCustomColumns(newCols);
+                      }}
+                    />
                     <input
                       type="text"
                       value={col.title}
                       onChange={(e) => {
                          const newCols = [...customColumns];
-                         newCols[idx] = { ...newCols[idx], title: e.target.value };
+                         const newTitle = e.target.value;
+                         // Suggest icon based on title if no icon is set
+                         const suggestedIcon = col.icon ? col.icon : suggestIcon(newTitle);
+                         newCols[idx] = { ...newCols[idx], title: newTitle, icon: suggestedIcon };
                          setCustomColumns(newCols);
                       }}
                       className="flex-1 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-dark-800 dark:text-white focus:ring-2 focus:ring-brand-500 outline-none transition-all font-mono text-sm"
                       placeholder="Column Title"
                     />
-                     <div className={`w-8 h-full rounded bg-${col.color}-500/20 border border-${col.color}-500`}></div>
                      {customColumns.length > 1 && (
                       <button
                         onClick={() => setCustomColumns(customColumns.filter((_, i) => i !== idx))}
@@ -443,7 +449,7 @@ const calculateStreak = (boards: RetroBoard[]) => {
                 ))}
                 {customColumns.length < 5 && (
                   <button
-                    onClick={() => setCustomColumns([...customColumns, { title: 'New Column', color: 'gray' }])}
+                    onClick={() => setCustomColumns([...customColumns, { title: 'New Column', color: 'gray', icon: '' }])}
                     className="w-full py-2 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg text-gray-500 hover:border-brand-500 hover:text-brand-500 transition-colors font-mono text-sm font-bold flex items-center justify-center gap-2"
                   >
                     + Add Column
@@ -451,6 +457,7 @@ const calculateStreak = (boards: RetroBoard[]) => {
                 )}
               </div>
             </div>
+
 
             </div>
 

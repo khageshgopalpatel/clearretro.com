@@ -92,17 +92,8 @@ interface SortableCardWrapperProps {
   onMerge?: (cardId: string) => void;
 }
 
-const COLUMN_COLORS: Record<string, string> = {
-  green: "bg-green-500",
-  red: "bg-red-500",
-  blue: "bg-blue-500",
-  yellow: "bg-yellow-500",
-  purple: "bg-purple-500",
-  pink: "bg-pink-500",
-  indigo: "bg-indigo-500",
-  gray: "bg-gray-500",
-  default: "bg-gray-500",
-};
+import { getColumnColor } from "../../data/columnConfig";
+
 
 const SortableCardWrapper: React.FC<SortableCardWrapperProps> = ({
   card,
@@ -2094,10 +2085,13 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
                     className={`p-4 border-b border-gray-100 dark:border-gray-800 bg-white/95 dark:bg-dark-900/95 rounded-t-lg backdrop-blur-sm sticky top-0 z-20 overflow-hidden shadow-sm`}
                   >
                     <div
-                      className={`absolute top-0 left-0 w-full h-1 ${COLUMN_COLORS[column.color] || COLUMN_COLORS.default}`}
+                      className={`absolute top-0 left-0 w-full h-1 ${getColumnColor(column.color).bg}`}
                     ></div>
                     <h3 className="font-bold text-gray-900 dark:text-white flex justify-between items-center text-md font-mono relative z-10 mb-3">
-                      {column.title}
+                      <span className="flex items-center gap-2">
+                        {column.icon && <span className="text-lg">{column.icon}</span>}
+                        {column.title}
+                      </span>
                       <span className="bg-white/50 dark:bg-white/10 px-2 py-0.5 rounded text-xs text-gray-600 dark:text-gray-300 font-mono">
                         {items.filter((c) => c.columnId === column.id).length}
                       </span>

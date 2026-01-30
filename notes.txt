@@ -16,3 +16,62 @@ Why Clear Retro? ✨ 100% Free & Unlimited: Create as many boards and invite as 
 Built for Agile teams who want a premium experience without the premium price tag.
 
 👉 Start your first retro instantly (No Login Required): clearretro.com
+
+
+
+
+
+
+
+
+
+
+"Are your team retrospectives feeling stale? Just another meeting where cards get added, forgotten, and nothing actually changes? It’s time for an upgrade."
+
+"Meet Clear Retro—the modern, AI-powered retrospective tool designed to make your agile ceremonies engaging, fun, and most importantly, effective."
+
+"Let’s dive in. Getting started is instant. No complex setups—just sign in with Google and you’re ready to go."
+
+Dashboard & Setup
+
+"Welcome to your Dashboard. It’s clean, intuitive, and gives you a quick snapshot of your team’s history."
+
+"Creating a new retro is a breeze. We have built-in templates for every scenario—whether you like the classic 'Start, Stop, Continue' or fun formats like 'Sailboat' or '4Ls'. Let's stick with a classic for today."
+
+"And here we are. This is your collaborative workspace. It updates in real-time, so your whole team is always in sync."
+
+Adding Cards & AI Smart Add
+
+"Adding thoughts is simple. Just type and hit enter. But typing everything out manually is so 2024."
+
+"Check out AI Smart Add. I can use my voice to dictate complex thoughts..."
+
+"...and Clear Retro’s AI automatically analyzes the context and places it in the right column for me. Magic."
+
+Collaboration being
+
+"Your team can join instantly via link. As ideas flow in, everyone can upvote the most important topics and react with emojis to keep the energy high."
+
+"Too many duplicate cards? Just drag and drop to merge them. Keep your board tidy and focused on unique topics."
+
+Focus & Gamification
+
+"When it's time to drill down, toggle Focus Mode to hide distractions and center the conversation. And keep the meeting on track with the built-in shared timer."
+
+
+
+Action Items & AI Summary
+
+"Retros are useless without action. You can instantly convert any discussion point into an Action Item, assign it to a team member, and track it in the dedicated sidebar."
+
+"But here is the real game-changer. Instead of spending 20 minutes writing notes, just hit Generate AI Summary."
+
+"Clear Retro reads the entire board, generates an executive summary, detects the overall team sentiment, and even suggests action items you might have missed."
+
+Export & Conclusion
+
+"Need to share this with leadership? Export a professional PDF report or a high-res screenshot in one click."
+
+"Clear Retro turns chaotic meetings into structured, actionable, and fun improvements. Stop wasting time and start improving."
+
+"Try it for free today at clearretro.com."

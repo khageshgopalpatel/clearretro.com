@@ -48,6 +48,7 @@ export interface RetroColumn {
   id: string;
   title: string;
   color: string;
+  icon?: string; // Emoji or icon identifier
 }
 
 export interface RetroBoard {
@@ -74,7 +75,7 @@ export interface RetroBoard {
 export interface BoardTemplate {
   id: string;
   name: string;
-  columns: { title: string; color: string }[];
+  columns: { title: string; color: string; icon?: string }[];
   description?: string;
 }
 
