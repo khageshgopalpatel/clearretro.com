@@ -126,7 +126,7 @@ const SortableCardWrapper: React.FC<SortableCardWrapperProps> = ({
   });
 
   const isDraggingSomething = !!active;
-  const isTargetForMerge = isDraggingSomething && active.id !== card.id;
+  const isTargetForMerge = isDraggingSomething && active.id !== card.id && !isCompleted;
 
   return (
     <div className="relative group">

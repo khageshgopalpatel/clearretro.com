@@ -3,11 +3,12 @@ import react from '@astrojs/react';
 import tailwind from '@astrojs/tailwind';
 import sitemap from '@astrojs/sitemap';
 
-const notAllowedPages = ['https://clearretro.com/board/', 'https://clearretro.com/dashboard/', 'https://clearretro.com/signin/', 'https://clearretro.com/signup/', 'https://clearretro.com/admin/'];
+const notAllowedPages = ['https://clearretro.com/board', 'https://clearretro.com/dashboard', 'https://clearretro.com/signin', 'https://clearretro.com/signup', 'https://clearretro.com/admin'];
 
 // https://astro.build/config
 export default defineConfig({
   site: 'https://clearretro.com',
+  trailingSlash: 'never',
   integrations: [react(), tailwind(), sitemap({
     filter: (page) => {
       return !notAllowedPages.includes(page);
