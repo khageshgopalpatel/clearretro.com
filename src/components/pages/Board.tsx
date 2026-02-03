@@ -244,6 +244,7 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
     error: any;
   };
   const { user, logout, loginAsGuest, loginWithGoogle } = useAuth();
+  const isCompleted = board?.status === "completed";
   const { showSnackbar } = useSnackbar();
   const [activeId, setActiveId] = useState<string | null>(null);
   const [newCardText, setNewCardText] = useState<{ [key: string]: string }>({});
@@ -483,9 +484,13 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
   }, [board?.columns?.length]);
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(PointerSensor, { 
+      activationConstraint: { distance: 5 },
+      disabled: isCompleted 
+    }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
+      disabled: isCompleted
     }),
   );
 
@@ -1267,8 +1272,6 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
     const secs = s % 60;
     return `${mins < 10 ? "0" : ""}${mins}:${secs < 10 ? "0" : ""}${secs}`;
   };
-
-  const isCompleted = board.status === "completed";
 
   // Gamification Stats
   const cardsCount = cards.length;
