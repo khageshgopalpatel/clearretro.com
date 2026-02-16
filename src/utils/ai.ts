@@ -1,73 +1,45 @@
 import type { RetroColumn } from "../types";
 import { auth } from "../lib/firebase";
 
-export interface LanguageModelSession {
-  prompt: (input: string) => Promise<string>;
-  destroy: () => void;
-}
-
-// Possible statuses based on Chrome specs
-export type AIAvailability = 'readily' | 'after-download' | 'downloadable' | 'downloading' | 'no' | 'unknown';
-
-/**
- * Checks if Chromium's built-in AI (Prompt API) is available.
- */
-export const checkChromiumAIAvailability = async (): Promise<AIAvailability> => {
-  const anyWindow = window as any;
-  
-  if (!window.isSecureContext) return 'no';
-
-  const ai = anyWindow.ai;
-  let namespaceName = "none";
-  let assistantNamespace = null;
-
-  if (ai?.languageModel) { namespaceName = "ai.languageModel"; assistantNamespace = ai.languageModel; }
-  else if (ai?.assistant) { namespaceName = "ai.assistant"; assistantNamespace = ai.assistant; }
-  else if (anyWindow.assistant) { namespaceName = "window.assistant"; assistantNamespace = anyWindow.assistant; }
-  else if (anyWindow.LanguageModel) { namespaceName = "window.LanguageModel"; assistantNamespace = anyWindow.LanguageModel; }
-
-  if (!assistantNamespace) return 'no';
-
-  try {
-    if (assistantNamespace.capabilities) {
-      const caps = await assistantNamespace.capabilities();
-      return caps.available;
-    }
-    
-    if (assistantNamespace.availability) {
-      const availability = await assistantNamespace.availability();
-      
-      if (availability === 'available' || availability === 'readily') return 'readily';
-      if (availability === 'downloading') return 'downloading';
-      
-      if (availability === 'after-download' || availability === 'downloadable') {
-        // FORCE TRIGGER: Attempting to create a session often kicks off the download
-        try {
-          assistantNamespace.create({
-            systemPrompt: "Trigger download"
-          }).catch(() => {}); // We expect this to fail initially
-        } catch (e) {
-          // Silent catch
-        }
-        return 'downloadable';
-      }
-      return 'no';
-    }
-    
-    return 'unknown';
-  } catch (error) {
-    return 'no';
-  }
-};
-
 export interface ClassificationResult {
   columnId: string | null;
   source: 'local' | 'cloud' | 'none';
 }
 
 /**
+ * Checks if Chromium's built-in AI (Prompt API) is readily available.
+ * Returns true only if the model is already downloaded and ready — never triggers a download.
+ */
+export const isLocalAIReady = async (): Promise<boolean> => {
+  const anyWindow = window as any;
+
+  if (!window.isSecureContext) return false;
+
+  const ai = anyWindow.ai;
+  const assistantNamespace = ai?.languageModel || ai?.assistant || anyWindow.assistant || anyWindow.LanguageModel;
+
+  if (!assistantNamespace) return false;
+
+  try {
+    if (assistantNamespace.capabilities) {
+      const caps = await assistantNamespace.capabilities();
+      return caps.available === 'readily';
+    }
+
+    if (assistantNamespace.availability) {
+      const availability = await assistantNamespace.availability();
+      return availability === 'available' || availability === 'readily';
+    }
+
+    return false;
+  } catch {
+    return false;
+  }
+};
+
+/**
  * Classifies a user's thought into one of the provided retro columns.
- * Tries Chromium's built-in AI first, then falls back to Cloud Gemini via Firebase Functions.
+ * Uses local Chrome AI if readily available, otherwise falls back to Gemini Cloud.
  */
 export const classifyThought = async (
   text: string,
@@ -77,16 +49,18 @@ export const classifyThought = async (
   const ai = anyWindow.ai;
   const assistantNamespace = ai?.languageModel || ai?.assistant || anyWindow.assistant || anyWindow.LanguageModel;
 
-  // 1. Try Built-in Chrome AI first
+  // 1. Try Built-in Chrome AI if readily available (no downloads)
   if (assistantNamespace) {
     try {
-      const session = await assistantNamespace.create({
-        expectedInputLanguages: ['en'],
-        expectedOutputLanguages: ['en'],
-        systemPrompt: `You are a strict data classification engine. You categorize text into these specific buckets: ${columns.map(c => `"${c.title}" (ID: ${c.id})`).join(', ')}.`,
-      });
+      const ready = await isLocalAIReady();
+      if (ready) {
+        const session = await assistantNamespace.create({
+          expectedInputLanguages: ['en'],
+          expectedOutputLanguages: ['en'],
+          systemPrompt: `You are a strict data classification engine. You categorize text into these specific buckets: ${columns.map(c => `"${c.title}" (ID: ${c.id})`).join(', ')}.`,
+        });
 
-      const prompt = `
+        const prompt = `
 Task: Classify the user thought into exactly one valid ID.
 
 Allowed IDs:
@@ -100,18 +74,19 @@ Now classify this:
 Thought: "${text}"
 ID:`;
 
-      const rawResponse = await session.prompt(prompt);
-      session.destroy();
+        const rawResponse = await session.prompt(prompt);
+        session.destroy();
 
-      const responseText = rawResponse.toLowerCase();
-      
-      // 1. Try exact match first
-      const exactMatch = columns.find(c => responseText.includes(c.id.toLowerCase()));
-      if (exactMatch) return { columnId: exactMatch.id, source: 'local' };
+        const responseText = rawResponse.toLowerCase();
 
-      // 2. Try matching title if ID fails
-      const titleMatch = columns.find(c => responseText.includes(c.title.toLowerCase()));
-      if (titleMatch) return { columnId: titleMatch.id, source: 'local' };
+        // 1. Try exact match first
+        const exactMatch = columns.find(c => responseText.includes(c.id.toLowerCase()));
+        if (exactMatch) return { columnId: exactMatch.id, source: 'local' };
+
+        // 2. Try matching title if ID fails
+        const titleMatch = columns.find(c => responseText.includes(c.title.toLowerCase()));
+        if (titleMatch) return { columnId: titleMatch.id, source: 'local' };
+      }
     } catch (error) {
       console.warn("Local AI classification failed, falling back to Cloud AI:", error);
     }
@@ -121,7 +96,7 @@ ID:`;
   try {
     const user = auth.currentUser;
     if (!user) {
-        console.error("User must be logged in to use Cloud AI Fallback");
+        console.error("User must be logged in to use Cloud AI");
         return { columnId: null, source: 'none' };
     }
 

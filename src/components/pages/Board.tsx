@@ -48,7 +48,7 @@ import { useAuth } from "../../hooks/useAuth";
 import { useSnackbar } from "../../context/SnackbarContext";
 import { generateBoardSummary } from "../../services/ai";
 import { analytics, logEvent } from "../../lib/firebase";
-import { checkChromiumAIAvailability } from "../../utils/ai";
+
 import {
   Settings,
   ArrowUpDown,
@@ -342,12 +342,6 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
     const isChromium =
       !!(window as any).chrome || navigator.userAgent.indexOf("Chrome") !== -1;
     setIsChrome(isChromium);
-
-    if (isChromium) {
-      checkChromiumAIAvailability().then((status) => {
-        setAIStatus(status);
-      });
-    }
   }, []);
 
   // Rollover States
@@ -2272,7 +2266,7 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
                 AI Smart Add
               </h3>
               <p className="text-sm text-gray-500 dark:text-gray-400 max-w-md mx-auto">
-                Type your thoughts and let our on-device AI sort them for you.
+                Type your thoughts and let Gemini AI sort them for you.
                 If it's not quite right, you can always drag and drop cards to
                 adjust them!
               </p>

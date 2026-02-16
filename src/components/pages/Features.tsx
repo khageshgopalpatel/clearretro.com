@@ -35,7 +35,7 @@ const Features: React.FC = () => {
             <div className="w-12 h-12 bg-white/10 dark:bg-gray-900/10 rounded-lg flex items-center justify-center mb-6 text-2xl">🤖</div>
             <h3 className="text-2xl font-bold mb-3 font-mono">Universal Gemini AI</h3>
             <p className="opacity-80 leading-relaxed">
-              Our hybrid AI engine (Local + Cloud) works on every browser. Use <strong>AI Smart Add</strong> to share thoughts in a single stream—they'll be categorized and grouped automatically using semantic clustering.
+              Our Gemini AI engine works on every browser. Use <strong>AI Smart Add</strong> to share thoughts in a single stream—they'll be categorized and grouped automatically using semantic clustering.
             </p>
           </div>
         </div>

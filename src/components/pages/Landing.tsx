@@ -144,7 +144,7 @@ const Landing: React.FC = () => {
                         </div>
                         <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-3 font-mono">Universal AI Smart Add</h3>
                         <p className="text-gray-500 dark:text-gray-400 max-w-md">
-                           Type your thoughts in one box. Our hybrid AI (On-device + Cloud) automatically categorizes them into the right columns. Works on every browser.
+                           Type your thoughts in one box. Gemini AI automatically categorizes them into the right columns. Works on every browser.
                         </p>
                      </div>
                   </div>

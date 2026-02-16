@@ -11,7 +11,7 @@ const Pricing = () => {
     },
     {
       q: "Are there any limits?",
-      a: "There are no hard limits on the number of boards or members. We use a hybrid AI model (On-device + Cloud) to ensure high availability. While we monitor for abuse, typical teams will never hit a limit."
+      a: "There are no hard limits on the number of boards or members. We use Gemini Cloud AI to ensure high availability. While we monitor for abuse, typical teams will never hit a limit."
     },
     {
       q: "How do you make money?",
