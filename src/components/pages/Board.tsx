@@ -186,7 +186,7 @@ const DroppableColumn: React.FC<DroppableColumnProps> = ({
   return (
     <div
       ref={setNodeRef}
-      className="flex-shrink-0 w-[85vw] md:w-80 md:min-w-[20rem] md:flex-1 scroll-snap-item snap-center flex flex-col min-h-full bg-white/30 dark:bg-dark-900/40 backdrop-blur-md rounded-lg border border-gray-200/60 dark:border-gray-700/60 shadow-sm transition-all duration-300 group hover:border-gray-300 dark:hover:border-gray-600 hover:shadow-lg tap-feedback"
+      className="flex-shrink-0 w-[85vw] md:w-80 md:min-w-[20rem] md:flex-1 scroll-snap-item snap-center flex flex-col min-h-full bg-white/30 dark:bg-dark-900/40 backdrop-blur-md rounded-lg border border-gray-200/60 dark:border-gray-700/60 shadow-sm transition-all duration-300 group hover:border-gray-300 dark:hover:border-gray-600 hover:shadow-lg"
       {...props}
     >
       {children}
@@ -2291,22 +2291,9 @@ const BoardContent: React.FC<BoardProps> = ({ id: propId }) => {
           </div>
         </div>
       )}
-      {/* AI Smart Add Floating Toggle (Compact & High Visibility) */}
+      {/* AI Smart Add Floating Toggle (Draggable & Persistent) */}
       {!isCompleted && !isAISmartAddOpen && (
-        <div className="fixed bottom-6 sm:bottom-6 left-1/2 -translate-x-1/2 z-40 mb-2 sm:mb-0">
-          <div className="animate-slideUp">
-            <button
-              onClick={openAISmartAdd}
-              className="flex items-center gap-2 bg-brand-500 dark:bg-brand-600 text-white px-4 py-2 rounded-full shadow-[0_4px_20px_rgb(20,184,166,0.4)] hover:shadow-[0_4px_25px_rgb(20,184,166,0.6)] hover:scale-105 active:scale-95 transition-all duration-300 font-bold group border border-white/20 relative"
-            >
-              <span className="text-sm group-hover:animate-bounce">✨</span>
-              <span className="text-xs uppercase tracking-tighter">
-                AI Smart Add
-              </span>
-              <div className="absolute -inset-0.5 rounded-full bg-brand-400 opacity-20 animate-ping pointer-events-none"></div>
-            </button>
-          </div>
-        </div>
+        <DraggableFloatingButton onOpen={openAISmartAdd} />
       )}
 
       <ActionItemSidebar
