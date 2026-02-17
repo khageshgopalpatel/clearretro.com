@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 
 import {
   DndContext,
@@ -59,6 +59,7 @@ import {
   Pause,
   Square,
   Share2,
+  GripVertical,
 } from "lucide-react";
 import { updateBoardSettings, mergeCards } from "../../hooks/useBoard";
 
@@ -190,6 +191,124 @@ const DroppableColumn: React.FC<DroppableColumnProps> = ({
       {...props}
     >
       {children}
+    </div>
+  );
+};
+
+// --- Draggable Floating Button ---
+
+const STORAGE_KEY = 'ai-smart-add-position';
+
+const DraggableFloatingButton: React.FC<{ onOpen: () => void }> = ({ onOpen }) => {
+  const btnRef = useRef<HTMLDivElement>(null);
+  const dragState = useRef<{ startX: number; startY: number; startLeft: number; startTop: number; dragging: boolean } | null>(null);
+  const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const hasDragged = useRef(false);
+
+  // Load saved position
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // Clamp to current viewport
+        const x = Math.min(Math.max(0, parsed.x), window.innerWidth - 50);
+        const y = Math.min(Math.max(0, parsed.y), window.innerHeight - 50);
+        setPos({ x, y });
+      }
+    } catch { /* ignore */ }
+  }, []);
+
+  // Clamp on resize
+  useEffect(() => {
+    const handleResize = () => {
+      setPos(prev => {
+        if (!prev) return prev;
+        const x = Math.min(Math.max(0, prev.x), window.innerWidth - 50);
+        const y = Math.min(Math.max(0, prev.y), window.innerHeight - 50);
+        return { x, y };
+      });
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const onPointerDown = useCallback((e: React.PointerEvent) => {
+    e.preventDefault();
+    const el = btnRef.current;
+    if (!el) return;
+    el.setPointerCapture(e.pointerId);
+    const rect = el.getBoundingClientRect();
+    dragState.current = {
+      startX: e.clientX,
+      startY: e.clientY,
+      startLeft: rect.left,
+      startTop: rect.top,
+      dragging: false,
+    };
+    hasDragged.current = false;
+  }, []);
+
+  const onPointerMove = useCallback((e: React.PointerEvent) => {
+    if (!dragState.current) return;
+    const dx = e.clientX - dragState.current.startX;
+    const dy = e.clientY - dragState.current.startY;
+    // Threshold to distinguish click from drag
+    if (!dragState.current.dragging && (Math.abs(dx) > 5 || Math.abs(dy) > 5)) {
+      dragState.current.dragging = true;
+      setIsDragging(true);
+      hasDragged.current = true;
+    }
+    if (dragState.current.dragging) {
+      const newX = Math.min(Math.max(0, dragState.current.startLeft + dx), window.innerWidth - 50);
+      const newY = Math.min(Math.max(0, dragState.current.startTop + dy), window.innerHeight - 50);
+      setPos({ x: newX, y: newY });
+    }
+  }, []);
+
+  const onPointerUp = useCallback((e: React.PointerEvent) => {
+    const wasDragging = hasDragged.current;
+    if (dragState.current?.dragging && pos) {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(pos));
+      } catch { /* ignore */ }
+    }
+    dragState.current = null;
+    setIsDragging(false);
+    if (!wasDragging) {
+      onOpen();
+    }
+  }, [pos, onOpen]);
+
+  // Default: centered at bottom
+  const style: React.CSSProperties = pos
+    ? { position: 'fixed', left: pos.x, top: pos.y, transform: 'none', zIndex: 40 }
+    : { position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', zIndex: 40 };
+
+  return (
+    <div
+      ref={btnRef}
+      style={style}
+      className={`select-none touch-none ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
+    >
+      <div className={`${pos ? '' : 'animate-slideUp'}`}>
+        <div
+          className={`flex items-center gap-1.5 bg-brand-500 dark:bg-brand-600 text-white pl-2 pr-4 py-2 rounded-full shadow-[0_4px_20px_rgb(20,184,166,0.4)] hover:shadow-[0_4px_25px_rgb(20,184,166,0.6)] ${isDragging ? 'scale-110 shadow-[0_8px_30px_rgb(20,184,166,0.6)]' : 'hover:scale-105 active:scale-95'} transition-all duration-300 font-bold group border border-white/20 relative`}
+        >
+          <GripVertical className="w-4 h-4 opacity-60 group-hover:opacity-100 transition-opacity" />
+          <span className="text-sm group-hover:animate-bounce">✨</span>
+          <span className="text-xs uppercase tracking-tighter">
+            AI Smart Add
+          </span>
+          {!isDragging && (
+            <div className="absolute -inset-0.5 rounded-full bg-brand-400 opacity-20 animate-ping pointer-events-none"></div>
+          )}
+        </div>
+      </div>
     </div>
   );
 };

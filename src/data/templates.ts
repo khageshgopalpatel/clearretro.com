@@ -52,5 +52,15 @@ export const BOARD_TEMPLATES: BoardTemplate[] = [
             { title: 'Rocks', color: 'gray', icon: '🪨' },
             { title: 'Goal', color: 'blue', icon: '🎯' }
         ]
+    },
+    {
+        id: 'what-went-well',
+        name: 'What Went Well',
+        description: 'A simple and effective format to reflect on wins, pain points, and actionable improvements. Perfect for teams new to retrospectives.',
+        columns: [
+            { title: 'What Went Well', color: 'green', icon: '🎉' },
+            { title: "What Didn't Go Well", color: 'red', icon: '😕' },
+            { title: 'What Can We Improve', color: 'yellow', icon: '💡' }
+        ]
     }
 ];
