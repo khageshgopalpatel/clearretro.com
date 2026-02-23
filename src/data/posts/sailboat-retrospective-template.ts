@@ -3,7 +3,7 @@ import type { BlogPost } from '../blogPosts';
 export const post10: BlogPost = {
   id: 'sailboat-retrospective-template-guide',
   slug: 'sailboat-retrospective-template-guide',
-  title: 'The Sailboat Retrospective Template: How to Use It (2025)',
+  title: 'The Sailboat Retrospective Template: How to Use It (2026)',
   excerpt: 'The Sailboat is one of the most popular visual retrospective formats. Learn how to use this metaphor to identify risks (Rocks), delays (Anchors), and enablers (Wind).',
   keywords: 'sailboat retrospective, agile retrospective ideas, visual retrospective, scrum master facilitation, team building',
   date: 'Dec 13, 2024',

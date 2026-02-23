@@ -3,7 +3,7 @@ import type { BlogPost } from '../blogPosts';
 export const post5: BlogPost = {
   id: 'sprint-retro-questions-40-examples',
   slug: 'sprint-retro-questions-40-examples',
-  title: 'Sprint Retro Questions: 40 Examples That Improve Team Culture (2025)',
+  title: 'Sprint Retro Questions: 40 Examples That Improve Team Culture (2026)',
   excerpt: 'Asking the right questions can unlock deep insights. Here are 40 powerful questions categorized by goal: from "Icebreakers" to "Deep Dives" and "Future Planning".',
   keywords: 'sprint retrospective questions, agile icebreakers, team culture questions, scrum master questions, retrospective prompts',
   date: 'Dec 08, 2024',

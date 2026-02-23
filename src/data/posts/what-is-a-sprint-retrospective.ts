@@ -3,36 +3,36 @@ import type { BlogPost } from '../blogPosts';
 export const post1: BlogPost = {
   id: 'what-is-a-sprint-retrospective',
   slug: 'what-is-a-sprint-retrospective',
-  title: 'What Is a Sprint Retrospective? The Complete Guide for 2025',
-  excerpt: 'Master the art of continuous improvement. We cover the 5 stages of a retrospective, new 2025 trends like AI-driven insights, anti-patterns to avoid, and how to use data to drive team velocity.',
-  keywords: 'what is a sprint retrospective, agile retro tool, scrum ceremony, retrospective trends 2025, data-driven agile',
+  title: 'What Is a Sprint Retrospective? The Complete Guide for 2026',
+  excerpt: 'Master the art of continuous improvement. We cover the 5 stages of a retrospective, new 2026 trends like AI-driven insights, anti-patterns to avoid, and how to use data to drive team velocity.',
+  keywords: 'what is a sprint retrospective, agile retro tool, scrum ceremony, retrospective trends 2026, data-driven agile',
   date: 'Dec 05, 2024',
   readTime: '15 min read',
   imageAlt: 'Agile team collaborating on a digital retrospective board with AI insights',
   image: '/images/blog/what-is-a-sprint-retrospective.png',
   faqs: [
-    { question: "What is the main goal of a sprint retrospective?", answer: "The primary goal is continuous improvement (Kaizen). The team inspects their people, processes, and tools to create an actionable plan for the next sprint. In 2025, this also includes reviewing 'Developer Experience' (DevEx) metrics." },
+    { question: "What is the main goal of a sprint retrospective?", answer: "The primary goal is continuous improvement (Kaizen). The team inspects their people, processes, and tools to create an actionable plan for the next sprint. In 2026, this also includes reviewing 'Developer Experience' (DevEx) metrics." },
     { question: "How long should a retrospective last?", answer: "For a two-week sprint, a retrospective should typically last between 60 to 90 minutes. A good rule of thumb is 45 minutes per week of sprint duration." },
     { question: "Can I run a retrospective without a Scrum Master?", answer: "Yes, teams can rotate the facilitator role. Using an online retrospective tool like Clear Retro helps structure the meeting even without a dedicated Scrum Master." },
-    { question: "How does AI change retrospectives in 2025?", answer: "AI tools now automate the grouping of feedback, analyze sentiment trends over time, and even suggest action items, allowing teams to focus more on solving problems than organizing sticky notes." }
+    { question: "How does AI change retrospectives in 2026?", answer: "AI tools now automate the grouping of feedback, analyze sentiment trends over time, and even suggest action items, allowing teams to focus more on solving problems than organizing sticky notes." }
   ],
   jsonLd: {
     "@context": "https://schema.org",
     "@type": "Article",
-    "headline": "What Is a Sprint Retrospective? The Complete Guide for 2025",
-    "image": ["https://placehold.co/1200x630/2dd4bf/ffffff?text=Sprint+Retro+Guide+2025"],
+    "headline": "What Is a Sprint Retrospective? The Complete Guide for 2026",
+    "image": ["https://placehold.co/1200x630/2dd4bf/ffffff?text=Sprint+Retro+Guide+2026"],
     "author": { "@type": "Organization", "name": "Clear Retro" },
     "publisher": { "@type": "Organization", "name": "Clear Retro", "logo": { "@type": "ImageObject", "url": "https://clearretro.com/logo.png" } }
   },
   content: `
-    <h1 class="text-3xl md:text-5xl font-extrabold text-gray-900 dark:text-white mb-8 font-mono">What Is a Sprint Retrospective? (Complete Guide for 2025)</h1>
+    <h1 class="text-3xl md:text-5xl font-extrabold text-gray-900 dark:text-white mb-8 font-mono">What Is a Sprint Retrospective? (Complete Guide for 2026)</h1>
     
     <div class="my-10 rounded-2xl overflow-hidden shadow-2xl border border-gray-200 dark:border-gray-800">
-       <img src="https://placehold.co/1200x600/18181b/2dd4bf?text=The+Evolution+of+Retrospectives+2025" alt="Team analyzing data-driven retrospective insights" class="w-full h-auto object-cover" />
+       <img src="https://placehold.co/1200x600/18181b/2dd4bf?text=The+Evolution+of+Retrospectives+2026" alt="Team analyzing data-driven retrospective insights" class="w-full h-auto object-cover" />
     </div>
 
     <p class="text-xl leading-relaxed text-gray-600 dark:text-gray-300 mb-8">
-      The <strong>Sprint Retrospective</strong> is widely considered the most important event in the Scrum framework. It is the dedicated time for a team to pause, reflect, and tune their engine. But in 2025, the retrospective has evolved. It's no longer just about "What went well" and "What didn't go well". It's about <strong>data-driven insights</strong>, <strong>AI-powered analysis</strong>, and <strong>psychological safety</strong> in distributed teams.
+      The <strong>Sprint Retrospective</strong> is widely considered the most important event in the Scrum framework. It is the dedicated time for a team to pause, reflect, and tune their engine. But in 2026, the retrospective has evolved. It's no longer just about "What went well" and "What didn't go well". It's about <strong>data-driven insights</strong>, <strong>AI-powered analysis</strong>, and <strong>psychological safety</strong> in distributed teams.
     </p>
 
     <p class="mb-8 text-lg leading-relaxed">
@@ -43,7 +43,7 @@ export const post1: BlogPost = {
 
     <h2 class="text-3xl font-bold text-gray-900 dark:text-white mt-12 mb-6 font-mono">The Shift to Data-Driven Retrospectives</h2>
     <p class="mb-6">
-      Historically, retrospectives were purely qualitative. "I felt the sprint was rushed." "I think the requirements were unclear." While valuable, feelings are subjective. The trend in 2025 is to back these feelings with <strong>quantitative data</strong>.
+      Historically, retrospectives were purely qualitative. "I felt the sprint was rushed." "I think the requirements were unclear." While valuable, feelings are subjective. The trend in 2026 is to back these feelings with <strong>quantitative data</strong>.
     </p>
     
     <div class="bg-blue-50 dark:bg-blue-900/20 p-6 rounded-xl border-l-4 border-blue-500 mb-8">
@@ -67,35 +67,35 @@ export const post1: BlogPost = {
     <p class="mb-4">
       <strong>Goal:</strong> Get the team engaged and safe to speak.
       <br />
-      <strong>2025 Twist:</strong> Use "Check-in" questions that relate to <em>energy levels</em> or <em>focus</em>. Example: "On a scale of 1-10, how much mental capacity do you have for this meeting?"
+      <strong>2026 Twist:</strong> Use "Check-in" questions that relate to <em>energy levels</em> or <em>focus</em>. Example: "On a scale of 1-10, how much mental capacity do you have for this meeting?"
     </p>
 
     <h3 class="text-2xl font-bold text-gray-800 dark:text-gray-200 mt-8 mb-4">2. Gather Data</h3>
     <p class="mb-4">
       <strong>Goal:</strong> Create a shared picture of what happened.
       <br />
-      <strong>2025 Twist:</strong> This is where your <a href="/#/dashboard" class="text-brand-700 dark:text-brand-400 underline">online retrospective tool</a> shines. Teams create cards for "What went well", "What didn't", etc. But now, we also overlay the <strong>Sprint Burndown Chart</strong> or <strong>DORA metrics</strong> on the screen.
+      <strong>2026 Twist:</strong> This is where your <a href="/#/dashboard" class="text-brand-700 dark:text-brand-400 underline">online retrospective tool</a> shines. Teams create cards for "What went well", "What didn't", etc. But now, we also overlay the <strong>Sprint Burndown Chart</strong> or <strong>DORA metrics</strong> on the screen.
     </p>
 
     <h3 class="text-2xl font-bold text-gray-800 dark:text-gray-200 mt-8 mb-4">3. Generate Insights</h3>
     <p class="mb-4">
       <strong>Goal:</strong> Interpret the data and find root causes.
       <br />
-      <strong>2025 Twist:</strong> Use <strong>AI Grouping</strong>. Instead of spending 20 minutes manually grouping similar sticky notes, tools like Clear Retro use Gemini/GPT models to instantly cluster themes (e.g., "Deployment Issues", "Requirements Churn"). This gives the team 20 extra minutes to actually <em>discuss</em> the solutions.
+      <strong>2026 Twist:</strong> Use <strong>AI Grouping</strong>. Instead of spending 20 minutes manually grouping similar sticky notes, tools like Clear Retro use Gemini/GPT models to instantly cluster themes (e.g., "Deployment Issues", "Requirements Churn"). This gives the team 20 extra minutes to actually <em>discuss</em> the solutions.
     </p>
 
     <h3 class="text-2xl font-bold text-gray-800 dark:text-gray-200 mt-8 mb-4">4. Decide What to Do</h3>
     <p class="mb-4">
       <strong>Goal:</strong> Select the top 1-2 items to improve.
       <br />
-      <strong>2025 Twist:</strong> Focus on <strong>SMART</strong> goals (Specific, Measurable, Achievable, Relevant, Time-bound). Don't just say "Improve testing." Say "Add E2E tests for the checkout flow by Friday."
+      <strong>2026 Twist:</strong> Focus on <strong>SMART</strong> goals (Specific, Measurable, Achievable, Relevant, Time-bound). Don't just say "Improve testing." Say "Add E2E tests for the checkout flow by Friday."
     </p>
 
     <h3 class="text-2xl font-bold text-gray-800 dark:text-gray-200 mt-8 mb-4">5. Close the Retro</h3>
     <p class="mb-4">
       <strong>Goal:</strong> Thank the team and formally end the meeting.
       <br />
-      <strong>2025 Twist:</strong> The "ROTI" (Return on Time Invested) score. Ask the team to rate the meeting itself. If the retro was a waste of time, you need to retro the retro!
+      <strong>2026 Twist:</strong> The "ROTI" (Return on Time Invested) score. Ask the team to rate the meeting itself. If the retro was a waste of time, you need to retro the retro!
     </p>
 
     <div class="my-10 rounded-xl overflow-hidden shadow-lg">
@@ -139,9 +139,9 @@ export const post1: BlogPost = {
        </div>
     </div>
 
-    <h2 class="text-3xl font-bold text-gray-900 dark:text-white mt-12 mb-6 font-mono">Tools for 2025</h2>
+    <h2 class="text-3xl font-bold text-gray-900 dark:text-white mt-12 mb-6 font-mono">Tools for 2026</h2>
     <p class="mb-6">
-      While sticky notes on a whiteboard are classic, distributed teams need digital tools. The best tools in 2025 offer:
+      While sticky notes on a whiteboard are classic, distributed teams need digital tools. The best tools in 2026 offer:
     </p>
     <ul class="list-disc pl-6 mb-6 space-y-2">
       <li><strong>Real-time Sync:</strong> No lag when typing.</li>

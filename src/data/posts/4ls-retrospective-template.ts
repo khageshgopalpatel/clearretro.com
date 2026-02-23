@@ -3,7 +3,7 @@ import type { BlogPost } from '../blogPosts';
 export const post9: BlogPost = {
   id: '4ls-retrospective-template-liked-learned-lacked-longed-for',
   slug: '4ls-retrospective-template-liked-learned-lacked-longed-for',
-  title: '4Ls Retrospective Template: Liked, Learned, Lacked, Longed For (2025)',
+  title: '4Ls Retrospective Template: Liked, Learned, Lacked, Longed For (2026)',
   excerpt: 'Move beyond "Good/Bad" with the 4Ls framework. This template encourages deep reflection on learning and desires, making it perfect for long-term projects.',
   keywords: '4Ls retrospective, liked learned lacked longed for, agile retrospective templates, scrum master guide, project post-mortem',
   date: 'Dec 12, 2024',

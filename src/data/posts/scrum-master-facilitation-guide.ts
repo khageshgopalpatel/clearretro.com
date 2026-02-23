@@ -3,7 +3,7 @@ import type { BlogPost } from '../blogPosts';
 export const post14: BlogPost = {
   id: 'scrum-master-guide-difficult-retrospectives',
   slug: 'scrum-master-guide-difficult-retrospectives',
-  title: 'The Scrum Master’s Guide to Facilitating Difficult Retrospectives (2025)',
+  title: 'The Scrum Master’s Guide to Facilitating Difficult Retrospectives (2026)',
   excerpt: 'Conflict. Silence. Blame games. Retrospectives aren\'t always easy. Here is your battle-tested guide to handling the toughest situations as a facilitator.',
   keywords: 'scrum master guide, facilitating conflict, retrospective silence, agile coaching, psychological safety',
   date: 'Dec 17, 2024',

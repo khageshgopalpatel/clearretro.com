@@ -3,7 +3,7 @@ import type { BlogPost } from '../blogPosts';
 export const post11: BlogPost = {
   id: 'agile-action-items-guide',
   slug: 'agile-action-items-guide',
-  title: 'Action Items in Agile: How to Make Them Stick (2025)',
+  title: 'Action Items in Agile: How to Make Them Stick (2026)',
   excerpt: 'A retrospective without action items is just a complaint session. Learn how to write SMART action items that actually get done.',
   keywords: 'agile action items, retrospective follow-up, smart goals, scrum master tips, continuous improvement',
   date: 'Dec 14, 2024',

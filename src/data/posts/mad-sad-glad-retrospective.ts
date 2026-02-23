@@ -3,7 +3,7 @@ import type { BlogPost } from '../blogPosts';
 export const post8: BlogPost = {
   id: 'mad-sad-glad-retrospective-template',
   slug: 'mad-sad-glad-retrospective-template',
-  title: 'Mad Sad Glad Template + Facilitation Guide (2025)',
+  title: 'Mad Sad Glad Template + Facilitation Guide (2026)',
   excerpt: 'Engineering is emotional work. Use the "Mad Sad Glad" retrospective to uncover hidden frustrations and build psychological safety.',
   keywords: 'mad sad glad retrospective, emotional retrospective, team morale, agile facilitation, psychological safety',
   date: 'Dec 11, 2024',

@@ -3,7 +3,7 @@ import type { BlogPost } from '../blogPosts';
 export const post13: BlogPost = {
   id: '20-best-retro-icebreakers-remote-teams',
   slug: '20-best-retro-icebreakers-remote-teams',
-  title: '20 Best Retro Icebreakers for Remote Teams (2025)',
+  title: '20 Best Retro Icebreakers for Remote Teams (2026)',
   excerpt: 'Awkward silence on Zoom? Break the ice with these 20 questions and games designed specifically for distributed agile teams.',
   keywords: 'remote icebreakers, zoom games for work, agile icebreakers, team building questions, remote retrospective ideas',
   date: 'Dec 16, 2024',

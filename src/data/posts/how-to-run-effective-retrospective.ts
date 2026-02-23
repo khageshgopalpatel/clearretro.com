@@ -3,7 +3,7 @@ import type { BlogPost } from '../blogPosts';
 export const post4: BlogPost = {
   id: 'how-to-run-an-effective-sprint-retrospective',
   slug: 'how-to-run-an-effective-sprint-retrospective',
-  title: 'How to Run an Effective Sprint Retrospective: The Step-by-Step Guide (2025)',
+  title: 'How to Run an Effective Sprint Retrospective: The Step-by-Step Guide (2026)',
   excerpt: 'Stop wasting time in retrospectives. This step-by-step guide covers everything from setting the stage to following up on action items, ensuring your team actually improves every sprint.',
   keywords: 'how to run a retrospective, sprint retrospective agenda, scrum master guide, effective retrospectives, agile facilitation',
   date: 'Dec 07, 2024',
@@ -18,7 +18,7 @@ export const post4: BlogPost = {
   jsonLd: {
     "@context": "https://schema.org",
     "@type": "Article",
-    "headline": "How to Run an Effective Sprint Retrospective (2025)",
+    "headline": "How to Run an Effective Sprint Retrospective (2026)",
     "image": ["https://placehold.co/1200x630/2dd4bf/ffffff?text=Run+Effective+Retros"],
     "author": { "@type": "Organization", "name": "Clear Retro" },
     "publisher": { "@type": "Organization", "name": "Clear Retro", "logo": { "@type": "ImageObject", "url": "https://clearretro.com/logo.png" } }
@@ -39,7 +39,7 @@ export const post4: BlogPost = {
     </p>
 
     <p class="mb-8 text-lg leading-relaxed">
-      In this guide, we will break down exactly how to facilitate a world-class retrospective in 2025, ensuring high engagement, psychological safety, and concrete results.
+      In this guide, we will break down exactly how to facilitate a world-class retrospective in 2026, ensuring high engagement, psychological safety, and concrete results.
     </p>
 
     <hr class="my-12 border-gray-200 dark:border-gray-800" />

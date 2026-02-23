@@ -3,7 +3,7 @@ import type { BlogPost } from '../blogPosts';
 export const post3: BlogPost = {
   id: '9-retrospective-templates-every-scrum-master-should-use',
   slug: '9-retrospective-templates-every-scrum-master-should-use',
-  title: '9 Retrospective Templates Every Scrum Master Should Use (2025 Guide)',
+  title: '9 Retrospective Templates Every Scrum Master Should Use (2026 Guide)',
   excerpt: 'From the classic "Start, Stop, Continue" to the psychological "Mad, Sad, Glad", here are the 9 essential templates to keep your retrospectives fresh and effective.',
   keywords: 'retrospective templates, scrum master tools, agile templates, sprint retro formats, continuous improvement',
   date: 'Dec 06, 2024',
@@ -39,7 +39,7 @@ export const post3: BlogPost = {
     </p>
 
     <p class="mb-8 text-lg leading-relaxed">
-      Here are the <strong>9 essential retrospective templates</strong> that every Scrum Master needs in their arsenal for 2025.
+      Here are the <strong>9 essential retrospective templates</strong> that every Scrum Master needs in their arsenal for 2026.
     </p>
 
     <hr class="my-12 border-gray-200 dark:border-gray-800" />

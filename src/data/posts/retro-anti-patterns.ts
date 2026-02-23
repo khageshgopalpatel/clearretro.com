@@ -3,7 +3,7 @@ import type { BlogPost } from '../blogPosts';
 export const post15: BlogPost = {
   id: '10-retrospective-anti-patterns',
   slug: '10-retrospective-anti-patterns',
-  title: '10 Retrospective Anti-Patterns (And How to Fix Them) (2025)',
+  title: '10 Retrospective Anti-Patterns (And How to Fix Them) (2026)',
   excerpt: 'Is your retro a "Groundhog Day" where the same issues come up every week? Or a "Blame Game"? Identify these 10 toxic patterns and learn how to break them.',
   keywords: 'retrospective anti-patterns, agile mistakes, scrum master tips, bad retrospectives, continuous improvement',
   date: 'Dec 18, 2024',

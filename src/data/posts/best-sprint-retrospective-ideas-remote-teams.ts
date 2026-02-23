@@ -3,7 +3,7 @@ import type { BlogPost } from '../blogPosts';
 export const post2: BlogPost = {
   id: 'best-sprint-retrospective-ideas-remote-teams',
   slug: 'best-sprint-retrospective-ideas-remote-teams',
-  title: '12 Best Sprint Retrospective Ideas for Remote Teams (2025 Edition)',
+  title: '12 Best Sprint Retrospective Ideas for Remote Teams (2026 Edition)',
   excerpt: 'Bored of "Start/Stop/Continue"? Here are 12 fresh, high-energy retrospective formats to engage your remote team, complete with facilitation guides and templates.',
   keywords: 'retrospective ideas for remote teams, fun retro ideas, agile retrospective formats, remote team building, scrum master tips',
   date: 'Dec 05, 2024',
@@ -18,16 +18,16 @@ export const post2: BlogPost = {
   jsonLd: {
     "@context": "https://schema.org",
     "@type": "Article",
-    "headline": "12 Best Sprint Retrospective Ideas for Remote Teams (2025)",
+    "headline": "12 Best Sprint Retrospective Ideas for Remote Teams (2026)",
     "image": ["https://placehold.co/1200x630/2dd4bf/ffffff?text=12+Best+Retro+Ideas"],
     "author": { "@type": "Organization", "name": "Clear Retro" },
     "publisher": { "@type": "Organization", "name": "Clear Retro", "logo": { "@type": "ImageObject", "url": "https://clearretro.com/logo.png" } }
   },
   content: `
-    <h1 class="text-3xl md:text-5xl font-extrabold text-gray-900 dark:text-white mb-8 font-mono">12 Best Sprint Retrospective Ideas for Remote Teams (2025 Edition)</h1>
+    <h1 class="text-3xl md:text-5xl font-extrabold text-gray-900 dark:text-white mb-8 font-mono">12 Best Sprint Retrospective Ideas for Remote Teams (2026 Edition)</h1>
 
     <div class="my-10 rounded-2xl overflow-hidden shadow-2xl border border-gray-200 dark:border-gray-800">
-       <img src="https://placehold.co/1200x600/18181b/2dd4bf?text=Fresh+Retro+Ideas+2025" alt="Collage of different retrospective templates" class="w-full h-auto object-cover" />
+       <img src="https://placehold.co/1200x600/18181b/2dd4bf?text=Fresh+Retro+Ideas+2026" alt="Collage of different retrospective templates" class="w-full h-auto object-cover" />
     </div>
 
     <p class="text-xl leading-relaxed text-gray-600 dark:text-gray-300 mb-8">
@@ -39,7 +39,7 @@ export const post2: BlogPost = {
     </p>
 
     <p class="mb-8 text-lg leading-relaxed">
-      To keep your agile process alive and kicking in 2025, you need to mix it up. Here are <strong>12 battle-tested retrospective ideas</strong> designed specifically for remote teams, ranging from data-driven analysis to fun, gamified formats.
+      To keep your agile process alive and kicking in 2026, you need to mix it up. Here are <strong>12 battle-tested retrospective ideas</strong> designed specifically for remote teams, ranging from data-driven analysis to fun, gamified formats.
     </p>
 
     <hr class="my-12 border-gray-200 dark:border-gray-800" />

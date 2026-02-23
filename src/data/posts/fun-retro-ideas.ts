@@ -3,7 +3,7 @@ import type { BlogPost } from '../blogPosts';
 export const post12: BlogPost = {
   id: '10-fun-retrospective-ideas-engagement',
   slug: '10-fun-retrospective-ideas-engagement',
-  title: '10 Fun Retro Ideas to Boost Engagement (2025 Edition)',
+  title: '10 Fun Retro Ideas to Boost Engagement (2026 Edition)',
   excerpt: 'Bored of "Start/Stop/Continue"? Try these 10 creative themes, from "Mario Kart" to "The Zombie Apocalypse", to get your team laughing and talking again.',
   keywords: 'fun retrospective ideas, creative retro themes, team engagement, agile games, remote team building',
   date: 'Dec 15, 2024',

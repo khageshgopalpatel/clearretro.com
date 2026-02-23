@@ -217,6 +217,41 @@ const Landing: React.FC = () => {
             </div>
          </div>
 
+         {/* Latest Guide Section */}
+         <div className="py-20 bg-white dark:bg-dark-950 border-y border-gray-200 dark:border-gray-800">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+               <div className="inline-flex items-center px-4 py-1.5 rounded-full bg-brand-50/50 dark:bg-brand-900/20 text-brand-700 dark:text-brand-300 text-xs font-mono font-semibold mb-6 border border-brand-100 dark:border-brand-800/50">
+                  Engineering Insights
+               </div>
+               <h2 className="text-3xl font-bold text-gray-900 dark:text-white font-mono mb-10">Latest Guide</h2>
+               
+               <a href="/blog/how-to-run-an-effective-sprint-retrospective" className="group block max-w-4xl mx-auto bg-gray-50 dark:bg-dark-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-8 hover:border-brand-500 hover:shadow-[0_0_30px_rgba(45,212,191,0.1)] transition-all text-left relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-brand-500/5 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-brand-500/10 transition-all"></div>
+                  <div className="relative z-10 flex flex-col md:flex-row gap-8 items-center">
+                     <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-4">
+                           <span className="text-xs font-bold text-gray-500 uppercase tracking-wider font-mono">Guide</span>
+                           <span className="w-1 h-1 rounded-full bg-gray-300 dark:bg-gray-700"></span>
+                           <span className="text-xs text-gray-400 font-mono">25 min read</span>
+                        </div>
+                        <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
+                           How to Run an Effective Sprint Retrospective (2026 Guide)
+                        </h3>
+                        <p className="text-gray-600 dark:text-gray-400 mb-6 leading-relaxed">
+                           Stop wasting time in retrospectives. This step-by-step guide covers everything from setting the stage to following up on action items, ensuring your team actually improves every sprint.
+                        </p>
+                        <div className="inline-flex items-center text-brand-600 dark:text-brand-400 font-bold font-mono group-hover:gap-3 transition-all">
+                           Read the Full Guide <span className="ml-2 group-hover:translate-x-1 transition-transform">→</span>
+                        </div>
+                     </div>
+                     <div className="w-full md:w-1/3 aspect-video bg-gray-200 dark:bg-gray-800 rounded-xl overflow-hidden shadow-inner flex-shrink-0">
+                        <img src="/images/blog/how-to-run-an-effective-sprint-retrospective.png" alt="Retrospective Guide" className="w-full h-full object-cover opacity-90 group-hover:scale-105 transition-transform duration-500" />
+                     </div>
+                  </div>
+               </a>
+            </div>
+         </div>
+
          {/* FAQ Section */}
          <div className="py-24 bg-white dark:bg-dark-950">
             <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">

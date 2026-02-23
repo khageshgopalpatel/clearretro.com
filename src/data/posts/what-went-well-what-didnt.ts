@@ -3,7 +3,7 @@ import type { BlogPost } from '../blogPosts';
 export const post7: BlogPost = {
   id: 'what-went-well-what-didnt-retrospective-examples',
   slug: 'what-went-well-what-didnt-retrospective-examples',
-  title: 'What Went Well, What Didn’t: Explained With Examples (2025)',
+  title: 'What Went Well, What Didn’t: Explained With Examples (2026)',
   excerpt: 'The most popular retrospective format explained. We provide 50+ examples of what to write on your sticky notes to get the conversation started.',
   keywords: 'what went well what didnt, retrospective examples, agile retrospective ideas, scrum master guide, retrospective sticky notes',
   date: 'Dec 10, 2024',
