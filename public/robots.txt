@@ -11,4 +11,4 @@ Disallow: /board
 Disallow: /app.html
 
 # Sitemap location
-Sitemap: https://clearretro.com/sitemap.xml
+Sitemap: https://clearretro.com/sitemap-index.xml
