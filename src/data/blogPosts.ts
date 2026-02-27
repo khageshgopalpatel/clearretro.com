@@ -35,8 +35,18 @@ import { post12 } from './posts/fun-retro-ideas';
 import { post13 } from './posts/retro-icebreakers';
 import { post14 } from './posts/scrum-master-facilitation-guide';
 import { post15 } from './posts/retro-anti-patterns';
+import { post16 } from './posts/what-is-an-agile-retrospective-definition';
+import { post17 } from './posts/remote-teams-different-timezones-retrospective';
+import { post18 } from './posts/15-minute-retrospective-formats';
+import { post19 } from './posts/why-developer-retrospectives-fail';
+import { post20 } from './posts/parabol-vs-teamretro';
 
 export const BLOG_POSTS: BlogPost[] = [
+  post20,
+  post16, // Feature latest SEO definition at the top
+  post19, 
+  post18,
+  post17,
   post1,
   post2,
   post3,
