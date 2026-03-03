@@ -7,7 +7,7 @@ import path from 'path';
 dotenv.config();
 
 // Configuration
-const SITEMAP_PATH = './dist/sitemap-0.xml'; 
+const SITEMAP_PATH = './dist/sitemap.xml'; 
 const SERVICE_ACCOUNT_KEY_FILE = process.env.GOOGLE_APPLICATION_CREDENTIALS || './service-account.json';
 
 async function submitSitemap() {
