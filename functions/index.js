@@ -17,6 +17,7 @@ function generateCacheKey(data) {
 }
 
 exports.generateBoardSummary = onRequest({
+    cors: true,
     secrets: ["GEMINI_API_KEY"],
 }, async (req, res) => {
     return cors(req, res, async () => {
@@ -138,6 +139,7 @@ exports.generateBoardSummary = onRequest({
 });
 
 exports.classifyThought = onRequest({
+    cors: true,
     secrets: ["GEMINI_API_KEY"],
 }, async (req, res) => {
     return cors(req, res, async () => {
