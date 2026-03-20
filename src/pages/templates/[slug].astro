@@ -62,8 +62,9 @@ const productSchema = {
 ---
 
 <Layout
-  title={`${template.name} Retrospective Template | Clear Retro`}
-  description={`Run a free ${template.name} retrospective online. ${template.description || ""}`}
+  title={template.seoTitle || `${template.name} Retrospective Template | Clear Retro`}
+  description={template.seoDescription || `Run a free ${template.name} retrospective online. ${template.description || ""}`}
+  keywords={template.keywords}
 >
   <script
     type="application/ld+json"

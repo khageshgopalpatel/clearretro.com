@@ -24,11 +24,11 @@ const TemplateLanding: React.FC<TemplateLandingProps> = ({ template }) => {
                     
                     <h1 className="text-4xl tracking-tight font-extrabold text-gray-900 dark:text-white sm:text-6xl md:text-7xl mb-8 font-mono leading-tight">
                         {template.name} <br />
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-500 via-brand-400 to-purple-500">Retrospective</span>
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-500 via-brand-400 to-purple-500">Retrospective Template</span>
                     </h1>
 
                     <p className="mt-8 text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto leading-relaxed">
-                        {template.description || `Run an effective ${template.name} retrospective with your team using our free, real-time board.`}
+                        {template.seoDescription || template.description || `Run an effective ${template.name} retrospective with your team using our free, real-time board.`}
                     </p>
 
                     <div className="mt-12 flex flex-col items-center gap-4">
@@ -36,7 +36,7 @@ const TemplateLanding: React.FC<TemplateLandingProps> = ({ template }) => {
                             href={createBoardUrl}
                             className="group relative px-8 py-4 bg-gray-900 dark:bg-white text-white dark:text-black text-lg font-bold rounded-xl shadow-[0_0_20px_rgba(0,0,0,0.2)] dark:shadow-[0_0_20px_rgba(255,255,255,0.3)] hover:shadow-[0_0_30px_rgba(45,212,191,0.4)] hover:-translate-y-1 transition-all duration-300 flex flex-col items-center border border-transparent hover:border-brand-500 overflow-hidden"
                         >
-                            <span className="relative z-10 font-mono">Start {template.name} Retro →</span>
+                            <span className="relative z-10 font-mono">Use Free {template.name} Template →</span>
                         </a>
                         <p className="text-sm text-gray-500 dark:text-gray-400 font-mono">
                             No account required • Instant setup

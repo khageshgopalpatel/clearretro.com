@@ -77,6 +77,9 @@ export interface BoardTemplate {
   name: string;
   columns: { title: string; color: string; icon?: string }[];
   description?: string;
+  seoTitle?: string;
+  seoDescription?: string;
+  keywords?: string[];
 }
 
 export enum AISummaryStatus {
