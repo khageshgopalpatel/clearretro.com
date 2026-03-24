@@ -13,6 +13,8 @@ export interface CompetitorData {
     competitor: boolean | string;
   }[];
   verdict: string;
+  seoTitle?: string;
+  keywords?: string[];
 }
 
 export const COMPETITORS: Record<string, CompetitorData> = {
@@ -31,7 +33,9 @@ export const COMPETITORS: Record<string, CompetitorData> = {
       { feature: 'AI Grouping', clearRetro: '✓ Yes', competitor: 'Limited' },
       { feature: 'Pricing (Team)', clearRetro: 'FREE', competitor: '$25/mo' },
     ],
-    verdict: "EasyRetro is a solid tool, but its pricing model punishes you for having more retrospectives. Clear Retro removes the limits so you can run as many sessions as you need without a credit card."
+    verdict: "EasyRetro is a solid tool, but its pricing model punishes you for having more retrospectives. Clear Retro removes the limits so you can run as many sessions as you need without a credit card.",
+    seoTitle: "Free EasyRetro Alternative | Clear Retro vs EasyRetro (FunRetro)",
+    keywords: ["easyretro alternative", "free easyretro alternative", "funretro alternative", "clear retro vs easyretro"]
   },
   'miro': {
     slug: 'miro',
@@ -48,7 +52,9 @@ export const COMPETITORS: Record<string, CompetitorData> = {
       { feature: 'Timer', clearRetro: '✓ Yes', competitor: '✓ Yes' },
       { feature: 'AI Summary', clearRetro: '✓ Yes', competitor: 'Credits System' },
     ],
-    verdict: "Miro is a fantastic whiteboard, but it's not a retrospective tool. It lacks the structure, privacy controls, and dedicated action item tracking that engineering teams need to actually improve."
+    verdict: "Miro is a fantastic whiteboard, but it's not a retrospective tool. It lacks the structure, privacy controls, and dedicated action item tracking that engineering teams need to actually improve.",
+    seoTitle: "Miro Retrospective Alternative | Best Retro Tool for Engineers",
+    keywords: ["miro retrospective alternative", "miro vs teamretro", "best miro alternative for retros", "clear retro vs miro", "miro vs infinity"]
   },
   'parabol': {
     slug: 'parabol',
@@ -65,7 +71,9 @@ export const COMPETITORS: Record<string, CompetitorData> = {
       { feature: 'Guest Access', clearRetro: '✓ Instant', competitor: 'Requires Invite' },
       { feature: 'Cost', clearRetro: 'FREE', competitor: 'Free or $6/user' },
     ],
-    verdict: "Parabol is great if you want to follow *their* specific process. If you want a fast, flexible tool that doesn't cap your monthly meetings, Clear Retro is the better choice."
+    verdict: "Parabol is great if you want to follow *their* specific process. If you want a fast, flexible tool that doesn't cap your monthly meetings, Clear Retro is the better choice.",
+    seoTitle: "Best Parabol Alternative | Clear Retro vs Parabol Retro",
+    keywords: ["parabol alternative", "parabol retro tool", "parabol retrospective tool", "parabol scrum", "clear retro vs parabol", "parabol vs teamretro", "parabol retro", "parabol retrospective templates"]
   },
   'teamretro': {
     slug: 'teamretro',
@@ -82,7 +90,9 @@ export const COMPETITORS: Record<string, CompetitorData> = {
       { feature: 'Health Checks', clearRetro: 'Coming Soon', competitor: '✓ Yes' },
       { feature: 'AI Automation', clearRetro: '✓ Yes', competitor: '✓ Yes' },
     ],
-    verdict: "TeamRetro is a premium enterprise tool with a premium price tag. Clear Retro covers 90% of the same features—including AI and SSO—for exactly $0. It's the smartest choice for lean engineering teams."
+    verdict: "TeamRetro is a premium enterprise tool with a premium price tag. Clear Retro covers 90% of the same features—including AI and SSO—for exactly $0. It's the smartest choice for lean engineering teams.",
+    seoTitle: "TeamRetro Alternative for Developers | Free TeamRetro Replacement",
+    keywords: ["teamretro alternative", "free teamretro alternative", "clear retro vs teamretro", "teamretro vs parabol"]
   },
   'metroretro': {
     slug: 'metroretro',
@@ -99,7 +109,9 @@ export const COMPETITORS: Record<string, CompetitorData> = {
       { feature: 'Mobile Support', clearRetro: '✓ Good', competitor: '✕ Poor' },
       { feature: 'AI Grouping', clearRetro: '✓ Yes', competitor: 'No' },
     ],
-    verdict: "Metro Retro is like a video game for retrospectives. It's fun once, but becomes distracting. Clear Retro is a professional tool designed to help you finish your retro on time with clear action items."
+    verdict: "Metro Retro is like a video game for retrospectives. It's fun once, but becomes distracting. Clear Retro is a professional tool designed to help you finish your retro on time with clear action items.",
+    seoTitle: "Metro Retro Alternative | Professional Agile Retrospective Tool",
+    keywords: ["metro retro alternative", "metroretro", "metro retro free alternative", "clear retro vs metroretro"]
   },
   // Legacy support for URL redirection or SEO
    'funretro': {

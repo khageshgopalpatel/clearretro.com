@@ -1,6 +1,7 @@
 
 import React from 'react';
 import type { BoardTemplate } from '../../types';
+import { BOARD_TEMPLATES } from '../../data/templates';
 
 interface TemplateLandingProps {
     template: BoardTemplate;
@@ -84,6 +85,19 @@ const TemplateLanding: React.FC<TemplateLandingProps> = ({ template }) => {
                                 ))}
                             </div>
                          </div>
+                    </div>
+                </div>
+
+                {/* Related Templates Internal Linking */}
+                <div className="max-w-5xl mx-auto mt-24">
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-8 font-mono">Explore More Free Templates</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        {BOARD_TEMPLATES.filter(t => t.id !== template.id).slice(0, 3).map(t => (
+                            <a key={t.id} href={`/templates/${t.id}`} className="block p-6 bg-white dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-brand-500 dark:hover:border-brand-500 transition-colors shadow-sm hover:shadow-md group">
+                                <h3 className="font-bold text-lg text-gray-900 dark:text-white mb-2 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">{t.name} Retro</h3>
+                                <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2">{t.description}</p>
+                            </a>
+                        ))}
                     </div>
                 </div>
             </div>

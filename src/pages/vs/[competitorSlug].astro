@@ -41,13 +41,28 @@ const breadcrumbSchema = {
 ---
 
 <Layout
-  title={`${competitor.heroTitle} | Clear Retro`}
+  title={competitor.seoTitle || `${competitor.heroTitle} | Clear Retro`}
   description={competitor.metaDescription}
+  keywords={competitor.keywords || [competitor.keyword, `${competitor.name} alternative`, `free ${competitor.name} alternative`]}
 >
   <script
     type="application/ld+json"
     slot="head"
-    set:html={JSON.stringify(breadcrumbSchema)}
+    set:html={JSON.stringify([
+      breadcrumbSchema,
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "Clear Retro",
+        "applicationCategory": "BusinessApplication",
+        "description": competitor.metaDescription,
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        }
+      }
+    ])}
   />
   <CompetitorComparison competitorSlug={competitorSlug} />
 </Layout>
