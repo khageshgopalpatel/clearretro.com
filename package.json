@@ -9,7 +9,8 @@
     "astro": "astro",
     "deploy:e2e": "npm run test:e2e && npm run build && npx firebase deploy",
     "test:e2e": "firebase emulators:exec --project demo-test 'npx playwright test'",
-    "deploy": "npm run build && npx firebase deploy --only hosting,functions:generateBoardSummary,functions:classifyThought && node scripts/submit-sitemap.js",
+    "deploy": "npm run build && npx firebase deploy --only hosting && node scripts/submit-sitemap.js",
+    "deploy:functions": "npm run build && npx firebase deploy --only functions:generateBoardSummary,functions:classifyThought",
     "deploy:hosting": "npm run build && npx firebase deploy --only hosting && node scripts/submit-sitemap.js"
   },
   "dependencies": {
